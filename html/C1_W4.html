@@ -1,0 +1,1854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Course 1 · Week 4 — Deep Neural Networks</title>
+
+<!-- MathJax with graceful fallback -->
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$','$'], ['\\(','\\)']], displayMath: [['$$','$$'], ['\\[','\\]']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+:root{
+  --bg:#f7f8fb;
+  --bg-elev:#ffffff;
+  --bg-soft:#eef2f7;
+  --text:#1c2330;
+  --text-soft:#4a5568;
+  --muted:#6b7280;
+  --border:#dfe5ee;
+  --accent:#2563eb;
+  --accent-soft:#e0ebff;
+  --accent-2:#7c3aed;
+
+  --def-bg:#eaf2ff;      --def-bd:#2563eb;
+  --intu-bg:#e9f9ef;     --intu-bd:#16a34a;
+  --imp-bg:#fff7e0;      --imp-bd:#d97706;
+  --warn-bg:#ffeaea;     --warn-bd:#dc2626;
+  --ex-bg:#f4ecff;       --ex-bd:#7c3aed;
+  --impl-bg:#e7f6fb;     --impl-bd:#0891b2;
+  --ins-bg:#fff0f6;      --ins-bd:#db2777;
+
+  --code-bg:#0f172a;
+  --code-fg:#e2e8f0;
+
+  --shadow: 0 1px 2px rgba(16,24,40,.04), 0 4px 14px rgba(16,24,40,.06);
+  --radius:14px;
+  --radius-sm:10px;
+  --maxw:960px;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+               Arial, "Noto Sans", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+               "Liberation Mono", "Courier New", monospace;
+}
+
+html[data-theme="dark"]{
+  --bg:#0d1117;
+  --bg-elev:#161b22;
+  --bg-soft:#1c2230;
+  --text:#e6edf3;
+  --text-soft:#c9d1d9;
+  --muted:#8b949e;
+  --border:#2a3240;
+  --accent:#58a6ff;
+  --accent-soft:#1b2a45;
+  --accent-2:#a78bfa;
+
+  --def-bg:#12233f;      --def-bd:#3b82f6;
+  --intu-bg:#0f2a1c;     --intu-bd:#22c55e;
+  --imp-bg:#2c220c;      --imp-bd:#f59e0b;
+  --warn-bg:#2b1313;     --warn-bd:#ef4444;
+  --ex-bg:#241640;       --ex-bd:#a78bfa;
+  --impl-bg:#0b2730;     --impl-bd:#06b6d4;
+  --ins-bg:#2b1220;      --ins-bd:#ec4899;
+
+  --code-bg:#010409;
+  --code-fg:#e6edf3;
+
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.35);
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-sans);
+  line-height:1.7;
+  font-size:16.5px;
+  -webkit-font-smoothing:antialiased;
+}
+img{max-width:100%;height:auto;display:block}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:color-mix(in srgb, var(--bg-elev) 92%, transparent);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--border);
+}
+.topbar-inner{
+  max-width:var(--maxw);margin:0 auto;
+  padding:.6rem 1rem;
+  display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;
+}
+.brand{
+  font-weight:700;font-size:.95rem;color:var(--accent);
+  text-decoration:none;white-space:nowrap;
+}
+.brand:hover{text-decoration:underline}
+.topbar .spacer{flex:1}
+.topbar button{
+  background:var(--bg-soft);border:1px solid var(--border);
+  color:var(--text);border-radius:999px;
+  padding:.4rem .8rem;font-size:.85rem;cursor:pointer;
+  font-family:inherit;
+}
+.topbar button:hover{border-color:var(--accent);color:var(--accent)}
+
+.wrap{
+  max-width:var(--maxw);
+  margin:0 auto;
+  padding:1.25rem 1rem 5rem;
+}
+
+/* ============================================================
+   HEADINGS
+   ============================================================ */
+h1,h2,h3,h4{line-height:1.28;color:var(--text);margin:1.6em 0 .6em}
+h1{font-size:2rem;margin-top:.4em;letter-spacing:-.02em}
+h2{
+  font-size:1.45rem;letter-spacing:-.01em;
+  padding-bottom:.35rem;border-bottom:2px solid var(--accent-soft);
+  margin-top:2.4em;
+}
+h3{font-size:1.15rem;color:var(--text-soft)}
+h4{color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;font-size:.8rem;margin:1.4em 0 .5em}
+
+p{margin:.7em 0}
+ul,ol{margin:.5em 0 .9em;padding-left:1.4em}
+li{margin:.35em 0}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+hr{border:none;border-top:1px solid var(--border);margin:2.5em 0}
+
+/* ============================================================
+   HERO / TITLE
+   ============================================================ */
+.hero{
+  background:linear-gradient(135deg, var(--accent-soft), transparent 65%);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:1.5rem 1.4rem 1.3rem;
+  box-shadow:var(--shadow);
+  margin-bottom:1.5rem;
+}
+.hero .eyebrow{
+  font-size:.78rem;text-transform:uppercase;letter-spacing:.14em;
+  color:var(--accent);font-weight:700;
+}
+.hero h1{margin:.15em 0 .25em;font-size:1.85rem}
+.hero .sub{color:var(--text-soft);font-size:1rem;margin:0}
+.hero .meta{
+  margin-top:.9rem;display:flex;flex-wrap:wrap;gap:.5rem;
+}
+.pill{
+  background:var(--bg-elev);border:1px solid var(--border);
+  border-radius:999px;padding:.25rem .7rem;font-size:.8rem;color:var(--text-soft);
+}
+
+/* ============================================================
+   TOC
+   ============================================================ */
+.toc{
+  background:var(--bg-elev);border:1px solid var(--border);
+  border-radius:var(--radius);padding:1rem 1.2rem;
+  box-shadow:var(--shadow);
+  margin-bottom:2rem;
+}
+.toc h2{
+  font-size:1.05rem;border:none;margin:.1em 0 .5em;padding:0;
+}
+.toc ol{
+  columns:1;
+  list-style:none;padding-left:0;margin:0;
+}
+@media(min-width:640px){
+  .toc ol{columns:2;column-gap:1.6rem}
+}
+.toc li{margin:.25em 0;break-inside:avoid}
+.toc a{
+  color:var(--text-soft);font-size:.94rem;
+  display:inline-block;
+}
+.toc a:hover{color:var(--accent)}
+.toc .num{color:var(--muted);font-variant-numeric:tabular-nums;margin-right:.4em}
+
+/* ============================================================
+   CALLOUT BOXES
+   ============================================================ */
+.box{
+  border-radius:var(--radius-sm);
+  padding:.9rem 1.1rem;
+  margin:1.1em 0;
+  border-left:5px solid;
+  background:var(--bg-elev);
+}
+.box .label{
+  display:inline-flex;align-items:center;gap:.4rem;
+  font-weight:700;font-size:.82rem;
+  text-transform:uppercase;letter-spacing:.08em;
+  margin-bottom:.35rem;
+}
+.box p:first-of-type{margin-top:.2em}
+.box p:last-child{margin-bottom:.2em}
+
+.box.def{background:var(--def-bg);border-color:var(--def-bd)}
+.box.def .label{color:var(--def-bd)}
+.box.intu{background:var(--intu-bg);border-color:var(--intu-bd)}
+.box.intu .label{color:var(--intu-bd)}
+.box.imp{background:var(--imp-bg);border-color:var(--imp-bd)}
+.box.imp .label{color:var(--imp-bd)}
+.box.warn{background:var(--warn-bg);border-color:var(--warn-bd)}
+.box.warn .label{color:var(--warn-bd)}
+.box.ex{background:var(--ex-bg);border-color:var(--ex-bd)}
+.box.ex .label{color:var(--ex-bd)}
+.box.impl{background:var(--impl-bg);border-color:var(--impl-bd)}
+.box.impl .label{color:var(--impl-bd)}
+.box.ins{background:var(--ins-bg);border-color:var(--ins-bd)}
+.box.ins .label{color:var(--ins-bd)}
+
+/* ============================================================
+   EQUATIONS
+   ============================================================ */
+.eq{
+  background:var(--bg-soft);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:.9rem 1.1rem;
+  margin:1em 0;
+  overflow-x:auto;
+  text-align:center;
+}
+.eq-caption{
+  font-size:.85rem;color:var(--muted);margin-top:.4rem;text-align:center;
+}
+
+/* ============================================================
+   TABLES
+   ============================================================ */
+.table-wrap{overflow-x:auto;margin:1.1em 0;border-radius:var(--radius-sm);border:1px solid var(--border)}
+table{
+  width:100%;border-collapse:collapse;
+  font-size:.93rem;background:var(--bg-elev);
+}
+th,td{
+  padding:.65rem .85rem;text-align:left;border-bottom:1px solid var(--border);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);font-weight:700;color:var(--text);
+  font-size:.83rem;text-transform:uppercase;letter-spacing:.05em;
+}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:color-mix(in srgb, var(--accent-soft) 40%, transparent)}
+
+/* ============================================================
+   CODE
+   ============================================================ */
+code{
+  font-family:var(--font-mono);font-size:.88em;
+  background:var(--bg-soft);color:var(--text);
+  padding:.15em .4em;border-radius:6px;border:1px solid var(--border);
+}
+pre{
+  background:var(--code-bg);color:var(--code-fg);
+  padding:1rem 1.1rem;border-radius:var(--radius-sm);
+  overflow-x:auto;font-size:.87rem;line-height:1.6;
+  margin:1em 0;border:1px solid var(--border);
+}
+pre code{background:none;border:none;color:inherit;padding:0}
+.kw{color:#ff79c6}.st{color:#f1fa8c}.cm{color:#7d8b9d;font-style:italic}
+.fn{color:#8be9fd}.nm{color:#bd93f9}
+
+/* ============================================================
+   SVG DIAGRAM WRAPPER
+   ============================================================ */
+.fig{
+  margin:1.3em 0;padding:1rem;
+  background:var(--bg-elev);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  box-shadow:var(--shadow);
+}
+.fig svg{display:block;width:100%;height:auto;max-width:100%}
+.fig figcaption{
+  font-size:.85rem;color:var(--muted);
+  text-align:center;margin-top:.6rem;line-height:1.5;
+}
+.svg-text{font-family:var(--font-sans);fill:var(--text)}
+.svg-text-soft{font-family:var(--font-sans);fill:var(--text-soft)}
+.svg-line{stroke:var(--text-soft);stroke-width:1.4;fill:none}
+.svg-node{fill:var(--bg-elev);stroke:var(--accent);stroke-width:1.6}
+.svg-node-2{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.6}
+.svg-label{font-family:var(--font-sans);font-size:12px;fill:var(--text);font-weight:600}
+.svg-label-sm{font-family:var(--font-sans);font-size:11px;fill:var(--text-soft)}
+.svg-axis{stroke:var(--text-soft);stroke-width:1.2}
+.svg-grid{stroke:var(--border);stroke-width:1;stroke-dasharray:3 4}
+
+/* ============================================================
+   SUMMARY BOXES / REVIEW
+   ============================================================ */
+.summary{
+  background:linear-gradient(180deg, var(--accent-soft), transparent 80%);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:1.2rem 1.3rem;
+  margin:2em 0 1em;
+}
+.summary h2{border:none;margin-top:.2em;padding:0}
+
+details.qa{
+  background:var(--bg-elev);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:.7rem 1rem;margin:.55em 0;
+}
+details.qa summary{
+  cursor:pointer;font-weight:600;color:var(--text);
+  list-style:none;display:flex;gap:.6rem;align-items:flex-start;
+}
+details.qa summary::-webkit-details-marker{display:none}
+details.qa summary::before{
+  content:"Q";flex:none;
+  background:var(--accent);color:#fff;font-size:.72rem;font-weight:800;
+  border-radius:6px;padding:.12rem .42rem;line-height:1.4;margin-top:.15rem;
+}
+details.qa[open] summary::before{content:"A";background:var(--intu-bd)}
+details.qa .ans{
+  margin-top:.55rem;padding-top:.55rem;
+  border-top:1px dashed var(--border);
+  color:var(--text-soft);font-size:.95rem;
+}
+
+/* ============================================================
+   NAV FOOTER
+   ============================================================ */
+.navfoot{
+  margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border);
+  display:flex;flex-wrap:wrap;gap:.6rem;justify-content:space-between;align-items:center;
+}
+.navfoot a, .navfoot button{
+  background:var(--bg-elev);border:1px solid var(--border);
+  color:var(--text);border-radius:999px;
+  padding:.5rem .9rem;font-size:.85rem;text-decoration:none;cursor:pointer;
+  font-family:inherit;
+}
+.navfoot a:hover{border-color:var(--accent);color:var(--accent)}
+.navfoot .disabled{opacity:.5;pointer-events:none}
+
+.backtop{
+  position:fixed;right:1rem;bottom:1rem;z-index:90;
+  background:var(--accent);color:#fff;border:none;
+  border-radius:999px;padding:.6rem .9rem;
+  font-size:.85rem;cursor:pointer;box-shadow:var(--shadow);
+  font-family:inherit;
+  opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.backtop.show{opacity:1;pointer-events:auto}
+
+/* ============================================================
+   SEARCH
+   ============================================================ */
+.searchbar{
+  display:flex;gap:.5rem;align-items:center;
+  margin:0 0 1rem;
+}
+.searchbar input{
+  flex:1;background:var(--bg-elev);border:1px solid var(--border);
+  color:var(--text);border-radius:999px;padding:.5rem .9rem;
+  font-family:inherit;font-size:.9rem;outline:none;
+}
+.searchbar input:focus{border-color:var(--accent)}
+.searchbar .clear{
+  background:var(--bg-soft);border:1px solid var(--border);color:var(--text-soft);
+  border-radius:999px;padding:.4rem .8rem;cursor:pointer;font-size:.8rem;font-family:inherit;
+}
+mark.hit{background:#fde68a;color:#1c2330;border-radius:3px;padding:0 .12em}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media(max-width:640px){
+  body{font-size:15.5px}
+  h1{font-size:1.55rem}
+  .hero h1{font-size:1.45rem}
+  h2{font-size:1.22rem}
+  h3{font-size:1.05rem}
+  .wrap{padding:1rem .8rem 4rem}
+  th,td{padding:.5rem .6rem;font-size:.86rem}
+  .box{padding:.75rem .85rem}
+}
+
+@media print{
+  .topbar,.backtop,.navfoot,.searchbar{display:none}
+  body{background:#fff;color:#000}
+  .box,.fig,.toc,.summary{box-shadow:none}
+}
+</style>
+</head>
+
+<body>
+
+<!-- ================= TOP BAR ================= -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#top">Deep Learning Specialization</a>
+    <span class="spacer"></span>
+    <button id="themeBtn" type="button" aria-label="Toggle theme">🌗 Theme</button>
+  </div>
+</header>
+
+<div class="wrap" id="top">
+
+  <!-- ================= HERO ================= -->
+  <section class="hero">
+    <div class="eyebrow">Course 1 · Week 4</div>
+    <h1>Deep Neural Networks</h1>
+    <p class="sub">Generalizing from a single hidden layer to L layers: notation, forward propagation, dimensions, why depth helps, the forward/backward building blocks, parameters vs hyperparameters, and the empirical nature of deep learning.</p>
+    <div class="meta">
+      <span class="pill">📘 Beginner friendly</span>
+      <span class="pill">🧮 Math explained step by step</span>
+      <span class="pill">💻 NumPy code</span>
+      <span class="pill">🎓 Course 1 wrap-up</span>
+      <span class="pill">⏱ ~80 min read</span>
+    </div>
+  </section>
+
+  <!-- ================= SEARCH ================= -->
+  <div class="searchbar">
+    <input id="searchInput" type="search" placeholder="Search this week's notes… (e.g. hyperparameter, circuit theory)" aria-label="Search notes">
+    <button class="clear" id="searchClear" type="button">Clear</button>
+  </div>
+
+  <!-- ================= TOC ================= -->
+  <nav class="toc" aria-label="Table of contents">
+    <h2>📑 Table of Contents</h2>
+    <ol>
+      <li><span class="num">1.</span><a href="#s1">What is a Deep Neural Network?</a></li>
+      <li><span class="num">2.</span><a href="#s2">Deep Neural Network Notation</a></li>
+      <li><span class="num">3.</span><a href="#s3">Forward Propagation in a Deep Network</a></li>
+      <li><span class="num">4.</span><a href="#s4">Getting Matrix Dimensions Right</a></li>
+      <li><span class="num">5.</span><a href="#s5">Vectorized Implementation</a></li>
+      <li><span class="num">6.</span><a href="#s6">Why Deep Representations?</a></li>
+      <li><span class="num">7.</span><a href="#s7">Circuit Theory and Deep Learning</a></li>
+      <li><span class="num">8.</span><a href="#s8">Building Blocks: Forward &amp; Backward Functions</a></li>
+      <li><span class="num">9.</span><a href="#s9">Forward and Backward Propagation for Layer l</a></li>
+      <li><span class="num">10.</span><a href="#s10">Full Forward and Backward Summary</a></li>
+      <li><span class="num">11.</span><a href="#s11">Parameters vs Hyperparameters</a></li>
+      <li><span class="num">12.</span><a href="#s12">Deep Learning is an Empirical Process</a></li>
+      <li><span class="num">13.</span><a href="#s13">What Does This Have to Do with the Brain?</a></li>
+      <li><span class="num">14.</span><a href="#s14">Common Mistakes &amp; Clarifications</a></li>
+      <li><span class="num">15.</span><a href="#s15">Weekly Summary &amp; Review</a></li>
+    </ol>
+  </nav>
+
+  <!-- ============================================================
+       1. WHAT IS A DEEP NEURAL NETWORK?
+       ============================================================ -->
+  <h2 id="s1">1. What is a Deep Neural Network?</h2>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — Deep Neural Network</div>
+    <p>A <strong>deep neural network</strong> is a neural network with <em>many</em> layers — typically more than one hidden layer. The word "deep" simply refers to the <em>number of layers</em> in the network.</p>
+  </div>
+
+  <p>The progression from logistic regression to a deep network can be visualized as a spectrum of increasing depth:</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 760 240" role="img" aria-label="Spectrum from logistic regression to deep networks">
+      <!-- Panel 1: logistic regression -->
+      <text class="svg-label" x="100" y="20" text-anchor="middle">Logistic Regression</text>
+      <text class="svg-label-sm" x="100" y="35" text-anchor="middle">"no hidden layers"</text>
+      <circle class="svg-node-2" cx="60" cy="90" r="10"/>
+      <circle class="svg-node-2" cx="60" cy="130" r="10"/>
+      <circle class="svg-node-2" cx="60" cy="170" r="10"/>
+      <circle class="svg-node" cx="140" cy="130" r="14"/>
+      <line x1="70" y1="90" x2="126" y2="125" stroke="#8b95a7" stroke-width="1"/>
+      <line x1="70" y1="130" x2="126" y2="130" stroke="#8b95a7" stroke-width="1"/>
+      <line x1="70" y1="170" x2="126" y2="135" stroke="#8b95a7" stroke-width="1"/>
+      <text class="svg-label-sm" x="150" y="135">ŷ</text>
+
+      <!-- Panel 2: 1 hidden -->
+      <text class="svg-label" x="330" y="20" text-anchor="middle">1 hidden layer</text>
+      <text class="svg-label-sm" x="330" y="35" text-anchor="middle">"shallow" (2-layer NN)</text>
+      <circle class="svg-node-2" cx="250" cy="90" r="10"/>
+      <circle class="svg-node-2" cx="250" cy="130" r="10"/>
+      <circle class="svg-node-2" cx="250" cy="170" r="10"/>
+      <circle class="svg-node" cx="320" cy="100" r="12"/>
+      <circle class="svg-node" cx="320" cy="160" r="12"/>
+      <circle class="svg-node" cx="400" cy="130" r="14"/>
+      <g stroke="#8b95a7" stroke-width="1" opacity="0.7">
+        <line x1="260" y1="90" x2="308" y2="100"/>
+        <line x1="260" y1="90" x2="308" y2="160"/>
+        <line x1="260" y1="130" x2="308" y2="100"/>
+        <line x1="260" y1="130" x2="308" y2="160"/>
+        <line x1="260" y1="170" x2="308" y2="100"/>
+        <line x1="260" y1="170" x2="308" y2="160"/>
+        <line x1="332" y1="100" x2="386" y2="130"/>
+        <line x1="332" y1="160" x2="386" y2="130"/>
+      </g>
+      <text class="svg-label-sm" x="410" y="135">ŷ</text>
+
+      <!-- Panel 3: many hidden -->
+      <text class="svg-label" x="620" y="20" text-anchor="middle">5 hidden layers</text>
+      <text class="svg-label-sm" x="620" y="35" text-anchor="middle">"deep"</text>
+      <circle class="svg-node-2" cx="540" cy="90" r="8"/>
+      <circle class="svg-node-2" cx="540" cy="130" r="8"/>
+      <circle class="svg-node-2" cx="540" cy="170" r="8"/>
+      <!-- hidden 1 -->
+      <circle class="svg-node" cx="580" cy="80" r="8"/>
+      <circle class="svg-node" cx="580" cy="120" r="8"/>
+      <circle class="svg-node" cx="580" cy="160" r="8"/>
+      <circle class="svg-node" cx="580" cy="200" r="8"/>
+      <!-- hidden 2 -->
+      <circle class="svg-node" cx="620" cy="80" r="8"/>
+      <circle class="svg-node" cx="620" cy="120" r="8"/>
+      <circle class="svg-node" cx="620" cy="160" r="8"/>
+      <circle class="svg-node" cx="620" cy="200" r="8"/>
+      <!-- hidden 3 -->
+      <circle class="svg-node" cx="660" cy="90" r="8"/>
+      <circle class="svg-node" cx="660" cy="130" r="8"/>
+      <circle class="svg-node" cx="660" cy="170" r="8"/>
+      <!-- hidden 4 -->
+      <circle class="svg-node" cx="700" cy="100" r="8"/>
+      <circle class="svg-node" cx="700" cy="160" r="8"/>
+      <!-- output -->
+      <circle class="svg-node" cx="740" cy="130" r="10"/>
+      <g stroke="#8b95a7" stroke-width="0.6" opacity="0.5">
+        <line x1="548" y1="90" x2="572" y2="80"/>
+        <line x1="548" y1="130" x2="572" y2="120"/>
+        <line x1="548" y1="170" x2="572" y2="160"/>
+        <line x1="588" y1="80" x2="612" y2="80"/>
+        <line x1="588" y1="120" x2="612" y2="120"/>
+        <line x1="588" y1="160" x2="612" y2="160"/>
+        <line x1="628" y1="80" x2="652" y2="90"/>
+        <line x1="628" y1="120" x2="652" y2="130"/>
+        <line x1="628" y1="160" x2="652" y2="170"/>
+        <line x1="668" y1="130" x2="692" y2="100"/>
+        <line x1="668" y1="130" x2="692" y2="160"/>
+        <line x1="708" y1="130" x2="730" y2="130"/>
+      </g>
+      <text class="svg-label-sm" x="750" y="150">ŷ</text>
+    </svg>
+    <figcaption><strong>Left:</strong> logistic regression has no hidden layers. <strong>Middle:</strong> a network with 1 hidden layer is called "shallow" (or a 2-layer NN). <strong>Right:</strong> a deep network has many hidden layers. In this course, we count only the hidden and output layers, so a network with 5 hidden layers is a 6-layer NN.</figcaption>
+  </div>
+
+  <div class="box intu">
+    <div class="label">🟢 Intuition — why "deep"?</div>
+    <p>The word "deep" is a <em>depth of layers</em>, not a metaphor for intellectual depth. Deep networks are able to represent increasingly abstract and complex features by composing simpler features across many layers. We'll see in §6–§7 why this matters.</p>
+  </div>
+
+  <div class="box imp">
+    <div class="label">⭐ Key Idea — the L-layer convention</div>
+    <p>A network with $L$ layers has layers $1, 2, \ldots, L$ where layer $L$ is the output layer. The input is sometimes called layer 0 ($a^{[0]} = x$). If the network has 1 hidden layer, then $L = 2$. If it has 5 hidden layers, then $L = 6$.</p>
+  </div>
+
+  <!-- ============================================================
+       2. DEEP NEURAL NETWORK NOTATION
+       ============================================================ -->
+  <h2 id="s2">2. Deep Neural Network Notation</h2>
+
+  <p>Let's formalize the notation for an L-layer neural network. This generalizes everything from Weeks 2 and 3.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 760 320" role="img" aria-label="An L-layer neural network with notation for layers, activations, and parameters">
+      <!-- Layer 0: input -->
+      <text class="svg-label" x="30" y="25">Layer 0</text>
+      <text class="svg-label-sm" x="30" y="42">a⁽⁰⁾ = X</text>
+      <circle class="svg-node-2" cx="60" cy="110" r="10"/>
+      <circle class="svg-node-2" cx="60" cy="160" r="10"/>
+      <circle class="svg-node-2" cx="60" cy="210" r="10"/>
+      <text class="svg-label-sm" x="30" y="114">x₁</text>
+      <text class="svg-label-sm" x="30" y="164">x₂</text>
+      <text class="svg-label-sm" x="30" y="214">x₃</text>
+
+      <!-- Layer 1 -->
+      <text class="svg-label" x="180" y="25">Layer 1</text>
+      <text class="svg-label-sm" x="180" y="42">W⁽¹⁾, b⁽¹⁾</text>
+      <circle class="svg-node" cx="220" cy="80" r="12"/>
+      <circle class="svg-node" cx="220" cy="130" r="12"/>
+      <circle class="svg-node" cx="220" cy="180" r="12"/>
+      <circle class="svg-node" cx="220" cy="230" r="12"/>
+      <circle class="svg-node" cx="220" cy="270" r="12"/>
+      <text class="svg-label-sm" x="240" y="84">a₁⁽¹⁾</text>
+      <text class="svg-label-sm" x="240" y="134">a₂⁽¹⁾</text>
+      <text class="svg-label-sm" x="240" y="184">a₃⁽¹⁾</text>
+      <text class="svg-label-sm" x="240" y="234">a₄⁽¹⁾</text>
+      <text class="svg-label-sm" x="240" y="274">a₅⁽¹⁾</text>
+
+      <!-- Layer 2 -->
+      <text class="svg-label" x="340" y="25">Layer 2</text>
+      <text class="svg-label-sm" x="340" y="42">W⁽²⁾, b⁽²⁾</text>
+      <circle class="svg-node" cx="380" cy="80" r="12"/>
+      <circle class="svg-node" cx="380" cy="130" r="12"/>
+      <circle class="svg-node" cx="380" cy="180" r="12"/>
+      <circle class="svg-node" cx="380" cy="230" r="12"/>
+      <circle class="svg-node" cx="380" cy="270" r="12"/>
+      <text class="svg-label-sm" x="400" y="84">a₁⁽²⁾</text>
+      <text class="svg-label-sm" x="400" y="134">a₂⁽²⁾</text>
+      <text class="svg-label-sm" x="400" y="184">a₃⁽²⁾</text>
+      <text class="svg-label-sm" x="400" y="234">a₄⁽²⁾</text>
+      <text class="svg-label-sm" x="400" y="274">a₅⁽²⁾</text>
+
+      <!-- Layer 3 -->
+      <text class="svg-label" x="500" y="25">Layer 3</text>
+      <text class="svg-label-sm" x="500" y="42">W⁽³⁾, b⁽³⁾</text>
+      <circle class="svg-node" cx="540" cy="110" r="12"/>
+      <circle class="svg-node" cx="540" cy="180" r="12"/>
+      <circle class="svg-node" cx="540" cy="250" r="12"/>
+      <text class="svg-label-sm" x="560" y="114">a₁⁽³⁾</text>
+      <text class="svg-label-sm" x="560" y="184">a₂⁽³⁾</text>
+      <text class="svg-label-sm" x="560" y="254">a₃⁽³⁾</text>
+
+      <!-- Layer L -->
+      <text class="svg-label" x="670" y="25">Layer L</text>
+      <text class="svg-label-sm" x="670" y="42">W⁽ᴸ⁾, b⁽ᴸ⁾</text>
+      <circle class="svg-node" cx="700" cy="160" r="14"/>
+      <text class="svg-label-sm" x="720" y="165">a⁽ᴸ⁾ = ŷ</text>
+
+      <!-- connections -->
+      <g stroke="#8b95a7" stroke-width="0.6" opacity="0.4">
+        <line x1="70" y1="110" x2="208" y2="80"/>
+        <line x1="70" y1="160" x2="208" y2="130"/>
+        <line x1="70" y1="210" x2="208" y2="180"/>
+        <line x1="70" y1="110" x2="208" y2="230"/>
+        <line x1="70" y1="160" x2="208" y2="270"/>
+        <line x1="232" y1="80" x2="368" y2="80"/>
+        <line x1="232" y1="130" x2="368" y2="130"/>
+        <line x1="232" y1="180" x2="368" y2="180"/>
+        <line x1="232" y1="230" x2="368" y2="230"/>
+        <line x1="232" y1="270" x2="368" y2="270"/>
+        <line x1="392" y1="80" x2="528" y2="110"/>
+        <line x1="392" y1="130" x2="528" y2="110"/>
+        <line x1="392" y1="180" x2="528" y2="180"/>
+        <line x1="392" y1="230" x2="528" y2="250"/>
+        <line x1="392" y1="270" x2="528" y2="250"/>
+        <line x1="552" y1="180" x2="686" y2="160"/>
+      </g>
+
+      <!-- ellipsis -->
+      <text class="svg-label" x="625" y="160">⋯</text>
+    </svg>
+    <figcaption>An L-layer neural network. Each layer $l$ has activation $a^{[l]}$, weights $W^{[l]}$, and bias $b^{[l]}$. The input is $a^{[0]} = X$; the output is $a^{[L]} = \hat{y}$. Hidden layers are $1$ through $L-1$; layer $L$ is the output layer.</figcaption>
+  </div>
+
+  <h3>2.1 The notation table</h3>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Symbol</th><th>Meaning</th><th>Example (for the 5-5-3-1 network in the slide)</th></tr></thead>
+      <tbody>
+        <tr><td>$L$</td><td>Total number of layers in the network</td><td>$L = 4$</td></tr>
+        <tr><td>$n^{[l]}$</td><td>Number of units (neurons) in layer $l$</td><td>$n^{[1]} = 5$, $n^{[2]} = 5$, $n^{[3]} = 3$, $n^{[4]} = 1$</td></tr>
+        <tr><td>$n^{[0]}$</td><td>Number of input features (same as $n_x$)</td><td>$n^{[0]} = n_x = 3$</td></tr>
+        <tr><td>$a^{[l]}$</td><td>Activation vector of layer $l$ (its outputs)</td><td>$a^{[1]} \in \mathbb{R}^5$, $a^{[2]} \in \mathbb{R}^5$, $\ldots$</td></tr>
+        <tr><td>$W^{[l]}$</td><td>Weight matrix of layer $l$</td><td>$W^{[1]}$ shape $(5, 3)$, $W^{[2]}$ shape $(5, 5)$, …</td></tr>
+        <tr><td>$b^{[l]}$</td><td>Bias vector of layer $l$</td><td>$b^{[1]} \in \mathbb{R}^5$, $b^{[2]} \in \mathbb{R}^5$, …</td></tr>
+        <tr><td>$g^{[l]}$</td><td>Activation function of layer $l$</td><td>Often ReLU for hidden, sigmoid for output</td></tr>
+        <tr><td>$a^{[0]}$</td><td>The input, also written $X$</td><td>$a^{[0]} = X$</td></tr>
+        <tr><td>$a^{[L]}$</td><td>The final output, also written $\hat{y}$</td><td>$a^{[L]} = \hat{y}$</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box ins">
+    <div class="label">💡 Insight — the shape rule for $W^{[l]}$</div>
+    <p>In any layer, <strong>$W^{[l]}$ has shape $(n^{[l]}, n^{[l-1]})$</strong>: rows = units in the current layer, columns = units in the previous layer. This is the general rule that generalizes from Weeks 2 and 3.</p>
+  </div>
+
+  <div class="box imp">
+    <div class="label">⭐ Key Idea — how activations are computed</div>
+    <p>Every layer computes the same pair of equations:</p>
+    <div class="eq">$$z^{[l]} = W^{[l]} a^{[l-1]} + b^{[l]}, \quad a^{[l]} = g^{[l]}(z^{[l]})$$</div>
+    <p>This is the fundamental repeated block of every neural network, no matter how deep.</p>
+  </div>
+
+  <!-- ============================================================
+       3. FORWARD PROPAGATION
+       ============================================================ -->
+  <h2 id="s3">3. Forward Propagation in a Deep Network</h2>
+
+  <p>Forward propagation means computing the output of the network from the input by passing data forward through the layers.</p>
+
+  <h3>3.1 The algorithm for a single example</h3>
+
+  <p>Given input $x = a^{[0]}$, for each layer $l = 1, 2, \ldots, L$, compute:</p>
+
+  <div class="eq">
+    $$z^{[l]} = W^{[l]} a^{[l-1]} + b^{[l]}$$
+    $$a^{[l]} = g^{[l]}(z^{[l]})$$
+  </div>
+  <p>The final activation $a^{[L]}$ is the prediction $\hat{y}$.</p>
+
+  <div class="box ex">
+    <div class="label">🟣 Worked example — a 3-layer network</div>
+    <p>Suppose $L = 3$ (two hidden layers + output). Forward propagation:</p>
+    <div class="eq">
+      $$z^{[1]} = W^{[1]}x + b^{[1]}, \quad a^{[1]} = g^{[1]}(z^{[1]})$$
+      $$z^{[2]} = W^{[2]}a^{[1]} + b^{[2]}, \quad a^{[2]} = g^{[2]}(z^{[2]})$$
+      $$z^{[3]} = W^{[3]}a^{[2]} + b^{[3]}, \quad a^{[3]} = g^{[3]}(z^{[3]}) = \hat{y}$$
+    </div>
+    <p>Each layer takes the output of the previous layer as its input. The activation function $g^{[l]}$ can differ per layer — e.g., ReLU for hidden layers and sigmoid for the output layer in binary classification.</p>
+  </div>
+
+  <h3>3.2 The general recurrence (vectorized over examples)</h3>
+
+  <p>With all $m$ training examples stacked as columns of $X = A^{[0]}$:</p>
+
+  <div class="eq">
+    $$Z^{[l]} = W^{[l]} A^{[l-1]} + b^{[l]}$$
+    $$A^{[l]} = g^{[l]}(Z^{[l]})$$
+  </div>
+
+  <p>for $l = 1, 2, \ldots, L$, where $A^{[L]} = \hat{Y}$.</p>
+
+  <div class="box impl">
+    <div class="label">⚙️ Implementation — deep forward propagation</div>
+    <pre><code><span class="kw">def</span> <span class="fn">forward_propagation</span>(X, params):
+    <span class="cm">"""X shape (n_x, m); params is a dict with W1, b1, W2, b2, ..."""</span>
+    L = len(params) // <span class="nm">2</span>
+    caches = []
+    A = X                                  <span class="cm"># A⁽⁰⁾ = X</span>
+    <span class="kw">for</span> l <span class="kw">in</span> range(<span class="nm">1</span>, L + <span class="nm">1</span>):
+        A_prev = A
+        W = params[f<span class="st">"W{l}"</span>]
+        b = params[f<span class="st">"b{l}"</span>]
+        Z = np.dot(W, A_prev) + b          <span class="cm"># Z⁽ˡ⁾</span>
+        <span class="kw">if</span> l &lt; L:
+            A = relu(Z)                    <span class="cm"># hidden layers → ReLU</span>
+        <span class="kw">else</span>:
+            A = sigmoid(Z)                 <span class="cm"># output layer → sigmoid</span>
+        caches.append((A_prev, W, b, Z))   <span class="cm"># save for backprop</span>
+    <span class="kw">return</span> A, caches</code></pre>
+    <p>Notice: the <em>same</em> two-line operation is repeated $L$ times. This is the essence of "deep" — a repeated block applied many times.</p>
+  </div>
+
+  <div class="box ins">
+    <div class="label">💡 Insight — depth as repetition</div>
+    <p>Forward propagation in a deep network is nothing more than applying the same 2-line transformation $L$ times. Once you understand one layer, you understand all of them.</p>
+  </div>
+
+  <!-- ============================================================
+       4. GETTING MATRIX DIMENSIONS RIGHT
+       ============================================================ -->
+  <h2 id="s4">4. Getting Matrix Dimensions Right</h2>
+
+  <p>Shape bugs are the #1 source of frustration in deep learning code. Getting dimensions right is essential.</p>
+
+  <h3>4.1 Layer-by-layer shape rules</h3>
+
+  <p>For a single example $x \in \mathbb{R}^{n^{[0]}}$:</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Quantity</th><th>Shape (single example)</th><th>Shape ($m$ examples)</th></tr></thead>
+      <tbody>
+        <tr><td>$a^{[l]}$</td><td>$(n^{[l]}, 1)$</td><td>$(n^{[l]}, m)$ — call it $A^{[l]}$</td></tr>
+        <tr><td>$z^{[l]}$</td><td>$(n^{[l]}, 1)$</td><td>$(n^{[l]}, m)$ — call it $Z^{[l]}$</td></tr>
+        <tr><td>$W^{[l]}$</td><td>$(n^{[l]}, n^{[l-1]})$</td><td>$(n^{[l]}, n^{[l-1]})$ — same</td></tr>
+        <tr><td>$b^{[l]}$</td><td>$(n^{[l]}, 1)$</td><td>$(n^{[l]}, 1)$ — same</td></tr>
+        <tr><td>$dW^{[l]}$</td><td>$(n^{[l]}, n^{[l-1]})$</td><td>$(n^{[l]}, n^{[l-1]})$</td></tr>
+        <tr><td>$db^{[l]}$</td><td>$(n^{[l]}, 1)$</td><td>$(n^{[l]}, 1)$</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box imp">
+    <div class="label">⭐ Key Idea — the two universal rules</div>
+    <ol>
+      <li><strong>W rule:</strong> $W^{[l]}$ always has shape $(n^{[l]}, n^{[l-1]})$.</li>
+      <li><strong>b rule:</strong> $b^{[l]}$ always has shape $(n^{[l]}, 1)$ — a column vector, one bias per unit.</li>
+    </ol>
+    <p>These two rules determine everything else.</p>
+  </div>
+
+  <h3>4.2 Verifying the forward pass shapes</h3>
+
+  <p>For the vectorized forward pass $Z^{[l]} = W^{[l]} A^{[l-1]} + b^{[l]}$:</p>
+
+  <div class="eq">
+    $$\underbrace{(n^{[l]}, m)}_{Z^{[l]}} = \underbrace{(n^{[l]}, n^{[l-1]})}_{W^{[l]}} \cdot \underbrace{(n^{[l-1]}, m)}_{A^{[l-1]}} + \underbrace{(n^{[l]}, 1)}_{b^{[l]}}$$
+  </div>
+
+  <p>Check:</p>
+  <ul>
+    <li>$W^{[l]} A^{[l-1]}$: $(n^{[l]}, n^{[l-1]}) \cdot (n^{[l-1]}, m) = (n^{[l]}, m)$ ✓</li>
+    <li>Adding $b^{[l]}$ (shape $(n^{[l]}, 1)$): broadcast to $(n^{[l]}, m)$ ✓</li>
+    <li>Result $Z^{[l]}$: shape $(n^{[l]}, m)$ ✓</li>
+  </ul>
+
+  <div class="fig">
+    <svg viewBox="0 0 720 220" role="img" aria-label="Shape check for the vectorized forward pass">
+      <rect x="40" y="80" width="80" height="60" fill="#e9f9ef" stroke="#16a34a" stroke-width="1.5"/>
+      <text class="svg-label" x="80" y="115" text-anchor="middle">Z⁽ˡ⁾</text>
+      <text class="svg-label-sm" x="80" y="160" text-anchor="middle">(n⁽ˡ⁾, m)</text>
+
+      <text x="140" y="115" font-size="20">=</text>
+
+      <rect x="180" y="80" width="80" height="60" fill="#e0ebff" stroke="#2563eb" stroke-width="1.5"/>
+      <text class="svg-label" x="220" y="115" text-anchor="middle">W⁽ˡ⁾</text>
+      <text class="svg-label-sm" x="220" y="160" text-anchor="middle">(n⁽ˡ⁾, n⁽ˡ⁻¹⁾)</text>
+
+      <text x="280" y="115" font-size="20">×</text>
+
+      <rect x="320" y="80" width="80" height="60" fill="#f4ecff" stroke="#7c3aed" stroke-width="1.5"/>
+      <text class="svg-label" x="360" y="115" text-anchor="middle">A⁽ˡ⁻¹⁾</text>
+      <text class="svg-label-sm" x="360" y="160" text-anchor="middle">(n⁽ˡ⁻¹⁾, m)</text>
+
+      <text x="420" y="115" font-size="20">+</text>
+
+      <rect x="460" y="80" width="60" height="60" fill="#fff7e0" stroke="#d97706" stroke-width="1.5"/>
+      <text class="svg-label" x="490" y="115" text-anchor="middle">b⁽ˡ⁾</text>
+      <text class="svg-label-sm" x="490" y="160" text-anchor="middle">(n⁽ˡ⁾, 1)</text>
+
+      <text x="550" y="115" font-size="12" fill="#6b7280">→ broadcasts</text>
+      <text x="550" y="135" font-size="12" fill="#6b7280">to (n⁽ˡ⁾, m)</text>
+    </svg>
+    <figcaption>Shape check for forward propagation. The matrix multiplication produces $(n^{[l]}, m)$, and the bias is broadcast from $(n^{[l]}, 1)$ to match.</figcaption>
+  </div>
+
+  <h3>4.3 A concrete numeric example</h3>
+
+  <p>Consider a 2-layer network with $n^{[0]} = 2$ inputs, $n^{[1]} = 3$ hidden units, $n^{[2]} = 1$ output, and $m = 5$ examples:</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Quantity</th><th>Shape</th></tr></thead>
+      <tbody>
+        <tr><td>$X = A^{[0]}$</td><td>$(2, 5)$</td></tr>
+        <tr><td>$W^{[1]}$</td><td>$(3, 2)$</td></tr>
+        <tr><td>$b^{[1]}$</td><td>$(3, 1)$</td></tr>
+        <tr><td>$Z^{[1]} = W^{[1]}X + b^{[1]}$</td><td>$(3, 5)$</td></tr>
+        <tr><td>$A^{[1]}$</td><td>$(3, 5)$</td></tr>
+        <tr><td>$W^{[2]}$</td><td>$(1, 3)$</td></tr>
+        <tr><td>$b^{[2]}$</td><td>$(1, 1)$</td></tr>
+        <tr><td>$Z^{[2]} = W^{[2]}A^{[1]} + b^{[2]}$</td><td>$(1, 5)$</td></tr>
+        <tr><td>$A^{[2]} = \hat{Y}$</td><td>$(1, 5)$</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Warning — debugging shapes</div>
+    <p>When writing deep-learning code, <strong>always print or assert shapes</strong> as you build up the forward pass. Use <code>assert Z.shape == (n_l, m)</code> after computing each layer. Shape bugs often don't throw exceptions — they silently produce wrong numbers.</p>
+  </div>
+
+  <!-- ============================================================
+       5. VECTORIZED IMPLEMENTATION
+       ============================================================ -->
+  <h2 id="s5">5. Vectorized Implementation</h2>
+
+  <p>We've already seen how to vectorize across examples in Week 3. Here we generalize it to $L$ layers.</p>
+
+  <p>The full vectorized forward pass for the deep network is:</p>
+
+  <div class="eq">
+    $$Z^{[l]} = W^{[l]} A^{[l-1]} + b^{[l]}, \quad A^{[l]} = g^{[l]}(Z^{[l]}), \quad l = 1, \ldots, L$$
+  </div>
+
+  <p>With all $m$ examples handled simultaneously as columns of $A^{[l]}$ and $Z^{[l]}$.</p>
+
+  <div class="box ins">
+    <div class="label">💡 Insight — why vectorization scales</div>
+    <p>Because each example is processed independently through the network, all $m$ examples can be processed with one matrix multiplication per layer. On a GPU, that's a single parallel operation over $m$ examples. Without vectorization, you'd need $m$ sequential passes through the network — orders of magnitude slower.</p>
+  </div>
+
+  <div class="box ex">
+    <div class="label">🟣 Example — 3-layer vectorized forward</div>
+    <pre><code><span class="cm"># X shape (n_x, m)</span>
+Z1 = np.dot(W1, X)   + b1    <span class="cm"># (n1, m)</span>
+A1 = relu(Z1)                <span class="cm"># (n1, m)</span>
+Z2 = np.dot(W2, A1)  + b2    <span class="cm"># (n2, m)</span>
+A2 = relu(Z2)                <span class="cm"># (n2, m)</span>
+Z3 = np.dot(W3, A2)  + b3    <span class="cm"># (n3, m)</span>
+A3 = sigmoid(Z3)             <span class="cm"># (n3, m) — final output Ŷ</span></code></pre>
+    <p>No loop over examples. Every layer processes all $m$ examples at once.</p>
+  </div>
+
+  <!-- ============================================================
+       6. WHY DEEP REPRESENTATIONS?
+       ============================================================ -->
+  <h2 id="s6">6. Why Deep Representations?</h2>
+
+  <p>Why go deep instead of just wide? Why not have one very wide hidden layer?</p>
+
+  <p>The answer involves <strong>composition of features</strong> — each layer builds on the features learned by the previous layer.</p>
+
+  <h3>6.1 The face-recognition intuition</h3>
+
+  <p>Andrew uses a classic example from computer vision: a deep network trained to recognize faces learns a hierarchy of increasingly abstract features.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 760 300" role="img" aria-label="Deep representation for face recognition: edges → parts → faces">
+      <!-- Layer 1: edges -->
+      <text class="svg-label" x="130" y="25" text-anchor="middle">Layer 1</text>
+      <text class="svg-label-sm" x="130" y="42" text-anchor="middle">simple edges</text>
+      <rect x="60" y="60" width="140" height="140" fill="#f9fafb" stroke="#dfe5ee" stroke-width="1"/>
+      <g stroke="#1c2330" stroke-width="1.5">
+        <line x1="70" y1="80" x2="100" y2="80"/>
+        <line x1="120" y1="100" x2="150" y2="130"/>
+        <line x1="80" y1="120" x2="80" y2="160"/>
+        <line x1="100" y1="140" x2="130" y2="140"/>
+        <line x1="140" y1="170" x2="180" y2="170"/>
+        <line x1="90" y1="180" x2="120" y2="190"/>
+        <line x1="150" y1="80" x2="190" y2="90"/>
+        <line x1="70" y1="150" x2="100" y2="150"/>
+        <line x1="120" y1="170" x2="150" y2="180"/>
+        <line x1="170" y1="120" x2="190" y2="150"/>
+      </g>
+
+      <!-- Layer 2: parts (eyes, nose, mouth) -->
+      <text class="svg-label" x="380" y="25" text-anchor="middle">Layer 2</text>
+      <text class="svg-label-sm" x="380" y="42" text-anchor="middle">parts of faces (eyes, nose, mouth)</text>
+      <rect x="310" y="60" width="140" height="140" fill="#f9fafb" stroke="#dfe5ee" stroke-width="1"/>
+      <g fill="none" stroke="#1c2330" stroke-width="1.5">
+        <!-- eye -->
+        <ellipse cx="345" cy="95" rx="15" ry="8"/>
+        <circle cx="345" cy="95" r="4" fill="#1c2330"/>
+        <!-- nose -->
+        <path d="M 380 110 Q 375 130 380 140 Q 385 140 390 130"/>
+        <!-- mouth -->
+        <path d="M 350 160 Q 380 175 410 160"/>
+        <!-- another eye -->
+        <ellipse cx="415" cy="100" rx="15" ry="8"/>
+        <circle cx="415" cy="100" r="4" fill="#1c2330"/>
+        <!-- eyebrow -->
+        <path d="M 330 80 Q 345 75 360 80"/>
+      </g>
+
+      <!-- Layer 3: full faces -->
+      <text class="svg-label" x="630" y="25" text-anchor="middle">Layer 3</text>
+      <text class="svg-label-sm" x="630" y="42" text-anchor="middle">whole faces</text>
+      <rect x="560" y="60" width="140" height="140" fill="#f9fafb" stroke="#dfe5ee" stroke-width="1"/>
+      <g fill="none" stroke="#1c2330" stroke-width="1.5">
+        <!-- face outline -->
+        <ellipse cx="630" cy="130" rx="45" ry="60"/>
+        <!-- eyes -->
+        <ellipse cx="610" cy="115" rx="8" ry="5"/>
+        <circle cx="610" cy="115" r="2.5" fill="#1c2330"/>
+        <ellipse cx="650" cy="115" rx="8" ry="5"/>
+        <circle cx="650" cy="115" r="2.5" fill="#1c2330"/>
+        <!-- nose -->
+        <path d="M 630 125 L 625 145 L 635 145"/>
+        <!-- mouth -->
+        <path d="M 615 160 Q 630 170 645 160"/>
+        <!-- eyebrows -->
+        <path d="M 600 105 Q 610 100 620 105"/>
+        <path d="M 640 105 Q 650 100 660 105"/>
+      </g>
+
+      <!-- arrows -->
+      <text x="215" y="135" font-size="22" fill="#6b7280">→</text>
+      <text x="465" y="135" font-size="22" fill="#6b7280">→</text>
+
+      <!-- output -->
+      <text x="720" y="135" font-size="22" fill="#6b7280">→</text>
+      <text class="svg-label" x="740" y="125" text-anchor="middle">ŷ</text>
+      <text class="svg-label-sm" x="740" y="145" text-anchor="middle">face</text>
+      <text class="svg-label-sm" x="740" y="160" text-anchor="middle">or not?</text>
+    </svg>
+    <figcaption>A deep network for face recognition. Layer 1 detects simple edges. Layer 2 combines edges into parts (eyes, nose, mouth). Layer 3 combines parts into whole faces. Each layer operates on the features learned by the previous layer.</figcaption>
+  </div>
+
+  <div class="box intu">
+    <div class="label">🟢 Intuition — building abstraction hierarchically</div>
+    <p>Simple features (edges) → medium features (eyes, noses) → complex features (faces) → prediction. Each layer composes the layer below it. This is <em>feature composition</em> and it's the core reason depth helps.</p>
+  </div>
+
+  <h3>6.2 The same idea in other domains</h3>
+
+  <p>This hierarchical composition appears everywhere in deep learning:</p>
+
+  <ul>
+    <li><strong>Audio:</strong> low-level audio waveforms → phonemes → words → sentences → meaning.</li>
+    <li><strong>Text (NLP):</strong> characters → words → phrases → sentences → document sentiment.</li>
+    <li><strong>Images:</strong> edges → textures → object parts → objects → scenes.</li>
+  </ul>
+
+  <div class="box imp">
+    <div class="label">⭐ Key Idea — early layers are simpler</div>
+    <p>In a deep network, the <em>early</em> layers learn simple, general features (edges, tones, common patterns). The <em>later</em> layers learn complex, task-specific features (faces, sentences, objects). This is why deep representations are so powerful.</p>
+  </div>
+
+  <!-- ============================================================
+       7. CIRCUIT THEORY
+       ============================================================ -->
+  <h2 id="s7">7. Circuit Theory and Deep Learning</h2>
+
+  <p>There's a theoretical result that explains why depth is fundamentally more powerful than width.</p>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — Circuit Theory Result</div>
+    <p>Informally: <strong>There are functions that a "small" $L$-layer deep neural network can compute, but that a shallower network would need <em>exponentially</em> more hidden units to compute.</strong></p>
+  </div>
+
+  <h3>7.1 XOR example</h3>
+
+  <p>Consider computing the XOR (exclusive-or) of many inputs:</p>
+
+  <div class="eq">
+    $$y = x_1 \oplus x_2 \oplus x_3 \oplus \cdots \oplus x_n$$
+  </div>
+
+  <p>XOR returns 1 if an <em>odd</em> number of inputs is 1, and 0 otherwise.</p>
+
+  <p>How does depth help here?</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 720 300" role="img" aria-label="Circuit theory comparison: deep network computes XOR in O(log n), shallow needs O(2^n)">
+      <!-- Left: deep (log depth) -->
+      <text class="svg-label" x="180" y="25" text-anchor="middle">Deep network (tree of XORs)</text>
+      <text class="svg-label-sm" x="180" y="42" text-anchor="middle">depth O(log n), width O(n)</text>
+
+      <!-- Tree structure -->
+      <!-- level 0 -->
+      <text class="svg-label-sm" x="20" y="80">x₁</text>
+      <text class="svg-label-sm" x="20" y="100">x₂</text>
+      <text class="svg-label-sm" x="20" y="140">x₃</text>
+      <text class="svg-label-sm" x="20" y="160">x₄</text>
+      <text class="svg-label-sm" x="20" y="200">x₅</text>
+      <text class="svg-label-sm" x="20" y="220">x₆</text>
+      <text class="svg-label-sm" x="20" y="260">x₇</text>
+
+      <!-- XOR nodes level 1 -->
+      <circle cx="80" cy="90" r="14" fill="#e0ebff" stroke="#2563eb" stroke-width="1.5"/>
+      <text class="svg-label-sm" x="80" y="94" text-anchor="middle">XOR</text>
+      <circle cx="80" cy="150" r="14" fill="#e0ebff" stroke="#2563eb" stroke-width="1.5"/>
+      <text class="svg-label-sm" x="80" y="154" text-anchor="middle">XOR</text>
+      <circle cx="80" cy="210" r="14" fill="#e0ebff" stroke="#2563eb" stroke-width="1.5"/>
+      <text class="svg-label-sm" x="80" y="214" text-anchor="middle">XOR</text>
+
+      <!-- XOR nodes level 2 -->
+      <circle cx="160" cy="120" r="14" fill="#e9f9ef" stroke="#16a34a" stroke-width="1.5"/>
+      <text class="svg-label-sm" x="160" y="124" text-anchor="middle">XOR</text>
+      <circle cx="160" cy="200" r="14" fill="#e9f9ef" stroke="#16a34a" stroke-width="1.5"/>
+      <text class="svg-label-sm" x="160" y="204" text-anchor="middle">XOR</text>
+
+      <!-- XOR nodes level 3 -->
+      <circle cx="240" cy="160" r="14" fill="#f4ecff" stroke="#7c3aed" stroke-width="1.5"/>
+      <text class="svg-label-sm" x="240" y="164" text-anchor="middle">XOR</text>
+
+      <!-- output -->
+      <text class="svg-label-sm" x="290" y="165">y</text>
+
+      <!-- connections -->
+      <g stroke="#8b95a7" stroke-width="1">
+        <line x1="30" y1="80" x2="66" y2="85"/>
+        <line x1="30" y1="100" x2="66" y2="95"/>
+        <line x1="30" y1="140" x2="66" y2="145"/>
+        <line x1="30" y1="160" x2="66" y2="155"/>
+        <line x1="30" y1="200" x2="66" y2="205"/>
+        <line x1="30" y1="220" x2="66" y2="215"/>
+        <line x1="94" y1="90" x2="146" y2="115"/>
+        <line x1="94" y1="150" x2="146" y2="125"/>
+        <line x1="94" y1="210" x2="146" y2="200"/>
+        <line x1="174" y1="120" x2="226" y2="155"/>
+        <line x1="174" y1="200" x2="226" y2="165"/>
+        <line x1="254" y1="160" x2="285" y2="160"/>
+      </g>
+
+      <text class="svg-label-sm" x="160" y="285" text-anchor="middle" fill="#16a34a">O(log n) depth</text>
+
+      <!-- Right: shallow (exponential width) -->
+      <text class="svg-label" x="540" y="25" text-anchor="middle">Shallow network (single hidden layer)</text>
+      <text class="svg-label-sm" x="540" y="42" text-anchor="middle">needs O(2ⁿ) hidden units</text>
+
+      <text class="svg-label-sm" x="410" y="80">x₁</text>
+      <text class="svg-label-sm" x="410" y="110">x₂</text>
+      <text class="svg-label-sm" x="410" y="140">x₃</text>
+      <text class="svg-label-sm" x="410" y="170">x₄</text>
+      <text class="svg-label-sm" x="410" y="200">⋮</text>
+      <text class="svg-label-sm" x="410" y="240">xₙ</text>
+
+      <!-- Tall rectangle of many hidden units -->
+      <rect x="460" y="60" width="60" height="200" fill="#e0ebff" stroke="#2563eb" stroke-width="1.5"/>
+      <circle cx="490" cy="80" r="8" fill="#ffffff" stroke="#2563eb" stroke-width="1"/>
+      <circle cx="490" cy="105" r="8" fill="#ffffff" stroke="#2563eb" stroke-width="1"/>
+      <circle cx="490" cy="130" r="8" fill="#ffffff" stroke="#2563eb" stroke-width="1"/>
+      <circle cx="490" cy="155" r="8" fill="#ffffff" stroke="#2563eb" stroke-width="1"/>
+      <circle cx="490" cy="180" r="8" fill="#ffffff" stroke="#2563eb" stroke-width="1"/>
+      <circle cx="490" cy="205" r="8" fill="#ffffff" stroke="#2563eb" stroke-width="1"/>
+      <circle cx="490" cy="230" r="8" fill="#ffffff" stroke="#2563eb" stroke-width="1"/>
+      <text class="svg-label-sm" x="490" y="260" text-anchor="middle">2ⁿ units</text>
+
+      <!-- connections -->
+      <g stroke="#8b95a7" stroke-width="0.6" opacity="0.7">
+        <line x1="430" y1="80" x2="482" y2="80"/>
+        <line x1="430" y1="80" x2="482" y2="105"/>
+        <line x1="430" y1="110" x2="482" y2="105"/>
+        <line x1="430" y1="140" x2="482" y2="130"/>
+        <line x1="430" y1="170" x2="482" y2="155"/>
+        <line x1="430" y1="240" x2="482" y2="230"/>
+      </g>
+
+      <!-- output -->
+      <circle cx="600" cy="160" r="14" fill="#e9f9ef" stroke="#16a34a" stroke-width="1.5"/>
+      <text class="svg-label-sm" x="600" y="164" text-anchor="middle">y</text>
+      <g stroke="#8b95a7" stroke-width="1">
+        <line x1="498" y1="80" x2="586" y2="155"/>
+        <line x1="498" y1="155" x2="586" y2="160"/>
+        <line x1="498" y1="230" x2="586" y2="170"/>
+      </g>
+
+      <text class="svg-label-sm" x="540" y="285" text-anchor="middle" fill="#dc2626">exponentially wide</text>
+    </svg>
+    <figcaption><strong>Left:</strong> a deep network computes XOR of $n$ inputs with a tree of XOR gates — depth $O(\log n)$, width $O(n)$. <strong>Right:</strong> a single-hidden-layer network needs $O(2^n)$ hidden units to do the same. Depth provides <em>exponential</em> savings over width for certain functions.</figcaption>
+  </div>
+
+  <div class="box intu">
+    <div class="label">🟢 Intuition — why depth gives exponential savings</div>
+    <p>Each layer can <em>reuse</em> the outputs of the layer below. In the XOR example, the tree structure means each output is computed from two sub-results, which are computed from two sub-sub-results, etc. This "divide and conquer" strategy is exponential in its savings.</p>
+    <p>A shallow network, by contrast, must compute every combination "from scratch" in a single layer, requiring an exponential number of units.</p>
+  </div>
+
+  <div class="box imp">
+    <div class="label">⭐ Key Idea — depth matters, but practically too</div>
+    <p>While this circuit-theory result is theoretical, it matches practice: deep networks often outperform shallow ones on complex tasks, especially in vision, speech, and language, <em>even with similar numbers of parameters</em>. This is one reason the field moved toward deeper and deeper networks.</p>
+  </div>
+
+  <!-- ============================================================
+       8. BUILDING BLOCKS
+       ============================================================ -->
+  <h2 id="s8">8. Building Blocks: Forward &amp; Backward Functions</h2>
+
+  <p>Deep networks are built out of repeated <em>blocks</em>. Each layer has a <strong>forward function</strong> (computing activations) and a <strong>backward function</strong> (computing gradients).</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 640 320" role="img" aria-label="Forward and backward functions for a single layer">
+      <!-- Forward block -->
+      <text class="svg-label" x="320" y="25" text-anchor="middle">Layer l — Forward and Backward Blocks</text>
+
+      <!-- Forward box -->
+      <rect x="180" y="50" width="280" height="80" rx="10" fill="#e9f9ef" stroke="#16a34a" stroke-width="1.6"/>
+      <text class="svg-label" x="320" y="80" text-anchor="middle">Forward: given a⁽ˡ⁻¹⁾</text>
+      <text class="svg-label" x="320" y="100" text-anchor="middle">compute z⁽ˡ⁾ = W⁽ˡ⁾a⁽ˡ⁻¹⁾ + b⁽ˡ⁾</text>
+      <text class="svg-label" x="320" y="120" text-anchor="middle">and a⁽ˡ⁾ = g⁽ˡ⁾(z⁽ˡ⁾)</text>
+
+      <!-- inputs to forward -->
+      <text class="svg-label-sm" x="60" y="80">a⁽ˡ⁻¹⁾ →</text>
+      <text class="svg-label-sm" x="480" y="80">→ a⁽ˡ⁾</text>
+      <text class="svg-label-sm" x="480" y="100">→ cache z⁽ˡ⁾</text>
+
+      <!-- Backward box -->
+      <rect x="180" y="170" width="280" height="100" rx="10" fill="#ffeaea" stroke="#dc2626" stroke-width="1.6"/>
+      <text class="svg-label" x="320" y="200" text-anchor="middle">Backward: given da⁽ˡ⁾</text>
+      <text class="svg-label" x="320" y="220" text-anchor="middle">compute dz⁽ˡ⁾ = da⁽ˡ⁾ * g⁽ˡ⁾'(z⁽ˡ⁾)</text>
+      <text class="svg-label" x="320" y="240" text-anchor="middle">compute dW⁽ˡ⁾, db⁽ˡ⁾, da⁽ˡ⁻¹⁾</text>
+      <text class="svg-label" x="320" y="260" text-anchor="middle">(using cached z⁽ˡ⁾, a⁽ˡ⁻¹⁾)</text>
+
+      <!-- inputs to backward -->
+      <text class="svg-label-sm" x="60" y="200">← da⁽ˡ⁻¹⁾</text>
+      <text class="svg-label-sm" x="480" y="200">da⁽ˡ⁾ →</text>
+      <text class="svg-label-sm" x="60" y="240">dW⁽ˡ⁾, db⁽ˡ⁾</text>
+
+      <!-- arrow connecting -->
+      <line x1="320" y1="130" x2="320" y2="170" stroke="#6b7280" stroke-width="1.4" stroke-dasharray="4 4"/>
+      <text class="svg-label-sm" x="340" y="155">cache</text>
+    </svg>
+    <figcaption>The forward function of layer $l$ takes $a^{[l-1]}$ and outputs $a^{[l]}$ (and caches $z^{[l]}$ for the backward pass). The backward function takes $da^{[l]}$ and outputs $da^{[l-1]}$, $dW^{[l]}$, $db^{[l]}$. This pair of functions is the "building block" of every deep network.</figcaption>
+  </div>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — Cache</div>
+    <p>A <strong>cache</strong> is the set of intermediate values saved during the forward pass so the backward pass can reuse them. For layer $l$, we cache $z^{[l]}$ (and possibly $a^{[l-1]}$, $W^{[l]}$, $b^{[l]}$). Without caching, we'd have to recompute these values during backprop — much slower.</p>
+  </div>
+
+  <div class="box ins">
+    <div class="label">💡 Insight — the modular pattern</div>
+    <p>Every layer has the same interface: forward takes $a^{[l-1]}$ and produces $a^{[l]}$; backward takes $da^{[l]}$ and produces $da^{[l-1]}$. This modularity is why deep networks can be implemented with a simple loop over layers — exactly the same operation, repeated $L$ times.</p>
+  </div>
+
+  <!-- ============================================================
+       9. FORWARD AND BACKWARD FOR LAYER l
+       ============================================================ -->
+  <h2 id="s9">9. Forward and Backward Propagation for Layer l</h2>
+
+  <h3>9.1 Forward function for layer l</h3>
+
+  <p>Input: $a^{[l-1]}$ (activations from previous layer). Output: $a^{[l]}$ (and a cache of $z^{[l]}$, $W^{[l]}$, $b^{[l]}$).</p>
+
+  <div class="eq">
+    $$z^{[l]} = W^{[l]} a^{[l-1]} + b^{[l]}$$
+    $$a^{[l]} = g^{[l]}(z^{[l]})$$
+  </div>
+
+  <h3>9.2 Backward function for layer l</h3>
+
+  <p>Input: $da^{[l]}$ (gradient from the next layer). Output: $da^{[l-1]}$, $dW^{[l]}$, $db^{[l]}$.</p>
+
+  <div class="eq">
+    $$dz^{[l]} = da^{[l]} * g^{[l]\prime}(z^{[l]})$$
+  </div>
+  <div class="eq">
+    $$dW^{[l]} = dz^{[l]} \cdot a^{[l-1]T}$$
+  </div>
+  <div class="eq">
+    $$db^{[l]} = dz^{[l]}$$
+  </div>
+  <div class="eq">
+    $$da^{[l-1]} = W^{[l]T} \cdot dz^{[l]}$$
+  </div>
+
+  <p>Where $*$ denotes element-wise multiplication, and $\cdot$ denotes matrix multiplication.</p>
+
+  <div class="box ex">
+    <div class="label">🟣 Explaining each equation</div>
+    <ul>
+      <li><strong>$dz^{[l]} = da^{[l]} * g^{[l]\prime}(z^{[l]})$:</strong> the chain rule. The gradient from above ($da^{[l]}$) is scaled by the local derivative of the activation function. The $*$ is element-wise because each unit has its own activation slope.</li>
+      <li><strong>$dW^{[l]} = dz^{[l]} \cdot a^{[l-1]T}$:</strong> how much each weight contributed to the error. It's the outer product of the error at layer $l$ and the input activations from layer $l-1$.</li>
+      <li><strong>$db^{[l]} = dz^{[l]}$:</strong> the bias gradient is just the error at layer $l$ (broadcast/averaged over examples in the vectorized case).</li>
+      <li><strong>$da^{[l-1]} = W^{[l]T} \cdot dz^{[l]}$:</strong> the error is propagated back through the transpose of the weight matrix.</li>
+    </ul>
+  </div>
+
+  <div class="box ins">
+    <div class="label">💡 Insight — the transpose is the key to backward flow</div>
+    <p>Forward: $z^{[l]} = W^{[l]}a^{[l-1]}$ (matrix times vector). Backward: $da^{[l-1]} = W^{[l]T}dz^{[l]}$ (transpose matrix times vector). The transposition is what allows error to "flow backward" through the same weights.</p>
+  </div>
+
+  <h3>9.3 Vectorized backward functions</h3>
+
+  <p>With $m$ examples, using capital letters for the vectorized versions:</p>
+
+  <div class="eq">
+    $$dZ^{[l]} = dA^{[l]} * g^{[l]\prime}(Z^{[l]})$$
+    $$dW^{[l]} = \frac{1}{m} dZ^{[l]} A^{[l-1]T}$$
+    $$db^{[l]} = \frac{1}{m} \texttt{np.sum}(dZ^{[l]}, \text{axis}=1, \text{keepdims=True})$$
+    $$dA^{[l-1]} = W^{[l]T} dZ^{[l]}$$
+  </div>
+
+  <div class="box impl">
+    <div class="label">⚙️ Implementation — one layer's backward pass</div>
+    <pre><code><span class="kw">def</span> <span class="fn">linear_activation_backward</span>(dA, cache, activation):
+    A_prev, W, b, Z = cache
+    m = A_prev.shape[<span class="nm">1</span>]
+    
+    <span class="kw">if</span> activation == <span class="st">"relu"</span>:
+        dZ = dA * relu_derivative(Z)
+    <span class="kw">elif</span> activation == <span class="st">"sigmoid"</span>:
+        A = sigmoid(Z)
+        dZ = dA * (A * (<span class="nm">1</span> - A))
+    
+    dW = (<span class="nm">1</span>/m) * np.dot(dZ, A_prev.T)
+    db = (<span class="nm">1</span>/m) * np.sum(dZ, axis=<span class="nm">1</span>, keepdims=<span class="kw">True</span>)
+    dA_prev = np.dot(W.T, dZ)
+    
+    <span class="kw">return</span> dA_prev, dW, db</code></pre>
+  </div>
+
+  <!-- ============================================================
+       10. FULL SUMMARY
+       ============================================================ -->
+  <h2 id="s10">10. Full Forward and Backward Summary</h2>
+
+  <p>Putting it all together for an $L$-layer network.</p>
+
+  <h3>10.1 Forward propagation (vectorized)</h3>
+
+  <div class="eq">
+    $$A^{[0]} = X$$
+    $$Z^{[1]} = W^{[1]} A^{[0]} + b^{[1]}, \quad A^{[1]} = g^{[1]}(Z^{[1]})$$
+    $$Z^{[2]} = W^{[2]} A^{[1]} + b^{[2]}, \quad A^{[2]} = g^{[2]}(Z^{[2]})$$
+    $$\vdots$$
+    $$Z^{[L]} = W^{[L]} A^{[L-1]} + b^{[L]}, \quad A^{[L]} = g^{[L]}(Z^{[L]}) = \hat{Y}$$
+  </div>
+
+  <h3>10.2 Backward propagation (vectorized)</h3>
+
+  <div class="eq">
+    $$dZ^{[L]} = A^{[L]} - Y$$
+    $$dW^{[L]} = \frac{1}{m} dZ^{[L]} A^{[L-1]T}, \quad db^{[L]} = \frac{1}{m}\texttt{sum}(dZ^{[L]})$$
+    $$dZ^{[L-1]} = W^{[L]T} dZ^{[L]} * g^{[L-1]\prime}(Z^{[L-1]})$$
+    $$\vdots$$
+    $$dZ^{[1]} = W^{[2]T} dZ^{[2]} * g^{[1]\prime}(Z^{[1]})$$
+    $$dW^{[1]} = \frac{1}{m} dZ^{[1]} X^T, \quad db^{[1]} = \frac{1}{m}\texttt{sum}(dZ^{[1]})$$
+  </div>
+
+  <div class="box imp">
+    <div class="label">⭐ Key Idea — the symmetry of forward and backward</div>
+    <p>Forward goes input → output, computing activations. Backward goes output → input, computing gradients. Both are loops over the $L$ layers; both use exactly the same parameters. This symmetry is the elegant structure at the heart of deep learning.</p>
+  </div>
+
+  <div class="box impl">
+    <div class="label">⚙️ Implementation — the full training loop</div>
+    <pre><code><span class="cm"># Pseudocode for one epoch of training</span>
+<span class="kw">for</span> i <span class="kw">in</span> range(num_iterations):
+    <span class="cm"># Forward pass — store caches</span>
+    AL, caches = forward_propagation(X, params)
+    
+    <span class="cm"># Compute cost</span>
+    cost = compute_cost(AL, Y)
+    
+    <span class="cm"># Backward pass</span>
+    grads = backward_propagation(AL, Y, caches)
+    
+    <span class="cm"># Update parameters</span>
+    <span class="kw">for</span> l <span class="kw">in</span> range(<span class="nm">1</span>, L + <span class="nm">1</span>):
+        params[f<span class="st">"W{l}"</span>] -= learning_rate * grads[f<span class="st">"dW{l}"</span>]
+        params[f<span class="st">"b{l}"</span>] -= learning_rate * grads[f<span class="st">"db{l}"</span>]</code></pre>
+  </div>
+
+  <div class="fig">
+    <svg viewBox="0 0 720 340" role="img" aria-label="Full forward and backward propagation through an L-layer network">
+      <!-- Forward row -->
+      <text class="svg-label" x="360" y="25" text-anchor="middle" fill="#16a34a">Forward propagation (left → right)</text>
+
+      <rect x="40" y="50" width="80" height="60" rx="8" fill="#e9f9ef" stroke="#16a34a" stroke-width="1.5"/>
+      <text class="svg-label" x="80" y="75" text-anchor="middle">Layer 1</text>
+      <text class="svg-label-sm" x="80" y="95" text-anchor="middle">Z⁽¹⁾, A⁽¹⁾</text>
+
+      <rect x="180" y="50" width="80" height="60" rx="8" fill="#e9f9ef" stroke="#16a34a" stroke-width="1.5"/>
+      <text class="svg-label" x="220" y="75" text-anchor="middle">Layer 2</text>
+      <text class="svg-label-sm" x="220" y="95" text-anchor="middle">Z⁽²⁾, A⁽²⁾</text>
+
+      <rect x="320" y="50" width="80" height="60" rx="8" fill="#e9f9ef" stroke="#16a34a" stroke-width="1.5"/>
+      <text class="svg-label" x="360" y="75" text-anchor="middle">Layer 3</text>
+      <text class="svg-label-sm" x="360" y="95" text-anchor="middle">Z⁽³⁾, A⁽³⁾</text>
+
+      <text class="svg-label" x="430" y="85">⋯</text>
+
+      <rect x="470" y="50" width="80" height="60" rx="8" fill="#e9f9ef" stroke="#16a34a" stroke-width="1.5"/>
+      <text class="svg-label" x="510" y="75" text-anchor="middle">Layer L</text>
+      <text class="svg-label-sm" x="510" y="95" text-anchor="middle">Z⁽ᴸ⁾, A⁽ᴸ⁾ = Ŷ</text>
+
+      <line x1="120" y1="80" x2="175" y2="80" stroke="#16a34a" stroke-width="1.6"/>
+      <line x1="260" y1="80" x2="315" y2="80" stroke="#16a34a" stroke-width="1.6"/>
+      <line x1="400" y1="80" x2="455" y2="80" stroke="#16a34a" stroke-width="1.6"/>
+      <line x1="550" y1="80" x2="620" y2="80" stroke="#16a34a" stroke-width="1.6"/>
+      <text class="svg-label" x="640" y="85">Cost J</text>
+
+      <!-- Backward row -->
+      <text class="svg-label" x="360" y="170" text-anchor="middle" fill="#dc2626">Backward propagation (right → left)</text>
+
+      <rect x="40" y="200" width="80" height="60" rx="8" fill="#ffeaea" stroke="#dc2626" stroke-width="1.5"/>
+      <text class="svg-label" x="80" y="225" text-anchor="middle">Layer 1</text>
+      <text class="svg-label-sm" x="80" y="245" text-anchor="middle">dW⁽¹⁾, db⁽¹⁾</text>
+
+      <rect x="180" y="200" width="80" height="60" rx="8" fill="#ffeaea" stroke="#dc2626" stroke-width="1.5"/>
+      <text class="svg-label" x="220" y="225" text-anchor="middle">Layer 2</text>
+      <text class="svg-label-sm" x="220" y="245" text-anchor="middle">dW⁽²⁾, db⁽²⁾</text>
+
+      <rect x="320" y="200" width="80" height="60" rx="8" fill="#ffeaea" stroke="#dc2626" stroke-width="1.5"/>
+      <text class="svg-label" x="360" y="225" text-anchor="middle">Layer 3</text>
+      <text class="svg-label-sm" x="360" y="245" text-anchor="middle">dW⁽³⁾, db⁽³⁾</text>
+
+      <text class="svg-label" x="430" y="235">⋯</text>
+
+      <rect x="470" y="200" width="80" height="60" rx="8" fill="#ffeaea" stroke="#dc2626" stroke-width="1.5"/>
+      <text class="svg-label" x="510" y="225" text-anchor="middle">Layer L</text>
+      <text class="svg-label-sm" x="510" y="245" text-anchor="middle">dW⁽ᴸ⁾, db⁽ᴸ⁾</text>
+
+      <line x1="470" y1="230" x2="405" y2="230" stroke="#dc2626" stroke-width="1.6"/>
+      <line x1="315" y1="230" x2="265" y2="230" stroke="#dc2626" stroke-width="1.6"/>
+      <line x1="175" y1="230" x2="125" y2="230" stroke="#dc2626" stroke-width="1.6"/>
+
+      <!-- gradient update -->
+      <text class="svg-label-sm" x="360" y="300" text-anchor="middle">Update: W⁽ˡ⁾ := W⁽ˡ⁾ - α·dW⁽ˡ⁾, &nbsp; b⁽ˡ⁾ := b⁽ˡ⁾ - α·db⁽ˡ⁾</text>
+    </svg>
+    <figcaption>The complete forward-backward cycle. Forward propagation computes activations and caches intermediate values. Backward propagation reuses caches to compute all gradients in one pass. Then parameters are updated.</figcaption>
+  </div>
+
+  <!-- ============================================================
+       11. PARAMETERS VS HYPERPARAMETERS
+       ============================================================ -->
+  <h2 id="s11">11. Parameters vs Hyperparameters</h2>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — Parameters</div>
+    <p><strong>Parameters</strong> are the values the network <em>learns</em> from data during training. Examples: $W^{[1]}, b^{[1]}, W^{[2]}, b^{[2]}, \ldots, W^{[L]}, b^{[L]}$. These are updated by gradient descent.</p>
+  </div>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — Hyperparameters</div>
+    <p><strong>Hyperparameters</strong> are settings that <em>you</em> choose — they control how the parameters are learned, but are not themselves updated by gradient descent. Examples: learning rate, number of iterations, number of hidden layers, number of hidden units per layer, choice of activation function.</p>
+  </div>
+
+  <div class="fig">
+    <svg viewBox="0 0 700 380" role="img" aria-label="Diagram showing hyperparameters control the learning of parameters">
+      <!-- Left: Hyperparameters -->
+      <text class="svg-label" x="140" y="25" text-anchor="middle">Hyperparameters</text>
+      <text class="svg-label-sm" x="140" y="42" text-anchor="middle">(set by you)</text>
+      <rect x="30" y="60" width="220" height="250" rx="10" fill="#fff7e0" stroke="#d97706" stroke-width="1.6"/>
+      <text class="svg-label-sm" x="50" y="90">• Learning rate α</text>
+      <text class="svg-label-sm" x="50" y="115">• Number of iterations</text>
+      <text class="svg-label-sm" x="50" y="140">• Number of hidden layers L</text>
+      <text class="svg-label-sm" x="50" y="165">• Number of hidden units n⁽¹⁾, n⁽²⁾, …</text>
+      <text class="svg-label-sm" x="50" y="190">• Choice of activation function</text>
+      <text class="svg-label-sm" x="50" y="220" fill="#6b7280">Advanced:</text>
+      <text class="svg-label-sm" x="50" y="245">• Momentum parameter</text>
+      <text class="svg-label-sm" x="50" y="270">• Mini-batch size</text>
+      <text class="svg-label-sm" x="50" y="295">• Regularization strength</text>
+
+      <!-- Arrow -->
+      <text x="270" y="190" font-size="26" fill="#6b7280">→</text>
+
+      <!-- Right: Parameters -->
+      <text class="svg-label" x="500" y="25" text-anchor="middle">Parameters</text>
+      <text class="svg-label-sm" x="500" y="42" text-anchor="middle">(learned from data)</text>
+      <rect x="320" y="60" width="360" height="250" rx="10" fill="#e0ebff" stroke="#2563eb" stroke-width="1.6"/>
+      <text class="svg-label" x="500" y="100" text-anchor="middle">W⁽¹⁾, b⁽¹⁾</text>
+      <text class="svg-label" x="500" y="130" text-anchor="middle">W⁽²⁾, b⁽²⁾</text>
+      <text class="svg-label" x="500" y="160" text-anchor="middle">⋮</text>
+      <text class="svg-label" x="500" y="195" text-anchor="middle">W⁽ᴸ⁾, b⁽ᴸ⁾</text>
+      <text class="svg-label-sm" x="500" y="240" text-anchor="middle">Updated by gradient descent:</text>
+      <text class="svg-label-sm" x="500" y="262" text-anchor="middle">W := W − α · dW</text>
+      <text class="svg-label-sm" x="500" y="284" text-anchor="middle">b := b − α · db</text>
+    </svg>
+    <figcaption>Hyperparameters (orange) control the training process. Parameters (blue) are learned from data and updated by gradient descent. The learning rate α, for example, is a hyperparameter that directly influences how parameters are updated.</figcaption>
+  </div>
+
+  <div class="box ins">
+    <div class="label">💡 Insight — why the distinction matters</div>
+    <p>You can't "train" hyperparameters with gradient descent the same way you train parameters — because the cost function is usually not differentiable with respect to them, or they're discrete choices. Instead, you tune hyperparameters empirically: try a value, run training, see how the cost behaves, and try again. This is the essence of applied deep learning.</p>
+  </div>
+
+  <div class="box imp">
+    <div class="label">⭐ Key Idea — some advanced hyperparameters</div>
+    <p>In later courses and in practice, you'll encounter more hyperparameters:</p>
+    <ul>
+      <li><strong>Momentum coefficient</strong> — smooths gradient updates.</li>
+      <li><strong>Mini-batch size</strong> — how many examples per gradient step.</li>
+      <li><strong>Regularization strength (λ)</strong> — penalizes large weights to prevent overfitting.</li>
+      <li><strong>Learning rate decay parameters</strong> — schedule for shrinking α over time.</li>
+    </ul>
+    <p>These all fall under the same "hyperparameter" umbrella: values you choose to guide training.</p>
+  </div>
+
+  <!-- ============================================================
+       12. EMPIRICAL PROCESS
+       ============================================================ -->
+  <h2 id="s12">12. Deep Learning is an Empirical Process</h2>
+
+  <p>How do you actually pick good hyperparameters? There's no magic formula — it's an <strong>iterative, empirical process</strong>.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 560 360" role="img" aria-label="The Idea → Code → Experiment loop">
+      <!-- Central circle arrows -->
+      <defs>
+        <marker id="arrowC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="#2563eb"/>
+        </marker>
+      </defs>
+
+      <!-- Circular arrow ring -->
+      <circle cx="280" cy="180" r="110" fill="none" stroke="#e0ebff" stroke-width="30"/>
+      <path d="M 175 130 A 110 110 0 0 1 355 90" fill="none" stroke="#2563eb" stroke-width="2.5" marker-end="url(#arrowC)"/>
+      <path d="M 385 175 A 110 110 0 0 1 340 275" fill="none" stroke="#2563eb" stroke-width="2.5" marker-end="url(#arrowC)"/>
+      <path d="M 235 275 A 110 110 0 0 1 165 200" fill="none" stroke="#2563eb" stroke-width="2.5" marker-end="url(#arrowC)"/>
+
+      <!-- Labels -->
+      <text class="svg-label" x="280" y="70" text-anchor="middle" font-size="18">Idea</text>
+      <text class="svg-label" x="435" y="200" text-anchor="middle" font-size="18">Code</text>
+      <text class="svg-label" x="120" y="200" text-anchor="middle" font-size="18">Experiment</text>
+
+      <!-- Small note -->
+      <text class="svg-label-sm" x="490" y="70">e.g. α = 0.01, 0.05, …</text>
+      <text class="svg-label-sm" x="70" y="310">Vision, Speech, NLP, …</text>
+      <text class="svg-label-sm" x="280" y="335" text-anchor="middle" fill="#6b7280">Iterate: tune a hyperparameter, try it, observe the result</text>
+    </svg>
+    <figcaption>The applied deep-learning loop. You get an idea (e.g., "try learning rate 0.01"), implement it in code, run an experiment, and use the results to form the next idea. This cycle repeats until you find a good configuration.</figcaption>
+  </div>
+
+  <div class="box intu">
+    <div class="label">🟢 Intuition — why it's empirical</div>
+    <p>Deep-learning models are complicated nonlinear systems. Unlike classical statistics, there's no closed-form formula that tells you the right learning rate for a given problem. The only reliable way is to run experiments and observe the results. Andrew emphasizes: "Applied deep learning is a very empirical process."</p>
+  </div>
+
+  <h3>12.1 Diagnosing from the learning curve</h3>
+
+  <p>One of the most useful practical skills is <em>reading</em> the cost-vs-iterations plot.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 560 320" role="img" aria-label="Cost vs iterations for different learning rates">
+      <line class="svg-axis" x1="60" y1="270" x2="520" y2="270"/>
+      <line class="svg-axis" x1="60" y1="30" x2="60" y2="270"/>
+      <text class="svg-label-sm" x="290" y="305" text-anchor="middle"># of iterations</text>
+      <text class="svg-label-sm" x="30" y="150" text-anchor="middle" transform="rotate(-90 30 150)">cost J</text>
+
+      <!-- α too small -->
+      <path d="M70,60 C120,180 200,220 300,230 C400,235 480,237 510,238"
+            fill="none" stroke="#d97706" stroke-width="2.4"/>
+      <text class="svg-label-sm" x="510" y="255" text-anchor="end" fill="#d97706">α too small — slow</text>
+
+      <!-- α just right -->
+      <path d="M70,60 C130,180 200,250 300,258 C400,262 480,263 510,263"
+            fill="none" stroke="#16a34a" stroke-width="2.4"/>
+      <text class="svg-label-sm" x="510" y="290" text-anchor="end" fill="#16a34a">α just right — converges</text>
+
+      <!-- α too large -->
+      <path d="M70,60 C100,180 120,140 150,230 C180,100 210,260 240,120 C270,250 300,130 340,240 C380,140 420,220 460,180"
+            fill="none" stroke="#dc2626" stroke-width="2.4"/>
+      <text class="svg-label-sm" x="510" y="60" text-anchor="end" fill="#dc2626">α too large — oscillates / diverges</text>
+    </svg>
+    <figcaption>Three learning-rate scenarios. If cost decreases very slowly, α is too small. If cost decreases smoothly and reaches a low plateau, α is about right. If cost oscillates or increases, α is too large.</figcaption>
+  </div>
+
+  <div class="box ins">
+    <div class="label">💡 Insight — how to actually tune</div>
+    <p>Try a few values of α on a logarithmic scale: 0.1, 0.03, 0.01, 0.003, 0.001, … Plot the cost curve for each. Pick the largest α that still gives a smooth decreasing curve. This is the kind of empirical loop Andrew is describing.</p>
+  </div>
+
+  <!-- ============================================================
+       13. BRAIN ANALOGY
+       ============================================================ -->
+  <h2 id="s13">13. What Does This Have to Do with the Brain?</h2>
+
+  <p>There's a common narrative: "neural networks are inspired by the brain." Andrew addresses this directly — and the takeaway is subtle but important.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 720 260" role="img" aria-label="Comparison of a biological neuron, a simplified NN diagram, and a function f: X → Y">
+      <!-- Biological neuron -->
+      <text class="svg-label" x="120" y="25" text-anchor="middle">Biological neuron</text>
+      <g>
+        <!-- dendrites -->
+        <line x1="30" y1="80" x2="80" y2="120" stroke="#d97706" stroke-width="3"/>
+        <line x1="40" y1="160" x2="80" y2="140" stroke="#d97706" stroke-width="3"/>
+        <line x1="60" y1="60" x2="90" y2="110" stroke="#d97706" stroke-width="3"/>
+        <!-- cell body -->
+        <circle cx="105" cy="130" r="22" fill="#fbbf24" stroke="#d97706" stroke-width="2"/>
+        <circle cx="105" cy="130" r="8" fill="#d97706"/>
+        <!-- axon -->
+        <line x1="127" y1="130" x2="180" y2="130" stroke="#d97706" stroke-width="3"/>
+        <!-- myelin -->
+        <rect x="140" y="124" width="12" height="12" rx="3" fill="#fde68a" stroke="#d97706" stroke-width="1"/>
+        <rect x="160" y="124" width="12" height="12" rx="3" fill="#fde68a" stroke="#d97706" stroke-width="1"/>
+        <!-- terminal -->
+        <circle cx="192" cy="130" r="6" fill="#d97706"/>
+        <line x1="192" y1="130" x2="212" y2="115" stroke="#d97706" stroke-width="2.5"/>
+        <line x1="192" y1="130" x2="212" y2="145" stroke="#d97706" stroke-width="2.5"/>
+      </g>
+      <text class="svg-label-sm" x="120" y="215" text-anchor="middle">input signals → integrate → output</text>
+
+      <!-- Simplified NN -->
+      <text class="svg-label" x="400" y="25" text-anchor="middle">Simplified NN</text>
+      <circle class="svg-node" cx="400" cy="130" r="20"/>
+      <line x1="330" y1="90" x2="380" y2="120" stroke="#8b95a7" stroke-width="1.6"/>
+      <line x1="330" y1="130" x2="380" y2="130" stroke="#8b95a7" stroke-width="1.6"/>
+      <line x1="330" y1="170" x2="380" y2="140" stroke="#8b95a7" stroke-width="1.6"/>
+      <line x1="420" y1="130" x2="480" y2="130" stroke="#8b95a7" stroke-width="1.6"/>
+      <text class="svg-label-sm" x="320" y="90">x₁</text>
+      <text class="svg-label-sm" x="320" y="134">x₂</text>
+      <text class="svg-label-sm" x="320" y="178">x₃</text>
+      <text class="svg-label-sm" x="490" y="135">ŷ</text>
+      <text class="svg-label-sm" x="400" y="215" text-anchor="middle">weighted sum + activation</text>
+
+      <!-- Function -->
+      <text class="svg-label" x="640" y="25" text-anchor="middle">Function</text>
+      <text class="svg-label" x="620" y="130" font-size="22">X</text>
+      <line x1="645" y1="130" x2="685" y2="130" stroke="#8b95a7" stroke-width="1.6"/>
+      <text class="svg-label" x="700" y="130" font-size="22">Y</text>
+      <text class="svg-label-sm" x="655" y="155" text-anchor="middle">f</text>
+      <text class="svg-label-sm" x="640" y="215" text-anchor="middle">input → output mapping</text>
+    </svg>
+    <figcaption><strong>Left:</strong> a biological neuron receives signals through dendrites, integrates them in the cell body, and fires through the axon. <strong>Middle:</strong> a simplified artificial neuron computes a weighted sum of inputs and applies an activation function. <strong>Right:</strong> mathematically, both are just functions mapping inputs to outputs.</figcaption>
+  </div>
+
+  <p>Historically, deep learning drew <em>some</em> inspiration from neuroscience. But the analogy is loose at best:</p>
+
+  <ul>
+    <li>Real neurons are vastly more complex than the simple "weighted sum + activation" model.</li>
+    <li>Real brains use sophisticated mechanisms (timing, spiking, plasticity, neuromodulators) that artificial neurons don't capture.</li>
+    <li>Modern deep-learning architectures (CNNs, transformers) are driven mostly by <em>mathematical</em> and <em>engineering</em> considerations, not by neuroscience.</li>
+  </ul>
+
+  <div class="box ins">
+    <div class="label">💡 Insight — Andrew's honest framing</div>
+    <p>Andrew's stance is: while the brain-inspired story is interesting, we should treat artificial neurons as <strong>mathematical functions</strong>, not as simulations of the brain. This framing has been far more productive for engineering. Don't over-claim the brain analogy.</p>
+  </div>
+
+  <div class="box imp">
+    <div class="label">⭐ Key Idea — why this matters</div>
+    <p>If you think of a neural network as "the brain," you may expect it to have brain-like properties (interpretability, general intelligence). If you think of it as a powerful function approximator trained by gradient descent, you'll be more clear-eyed about what it can and can't do. Andrew favors the second framing.</p>
+  </div>
+
+  <!-- ============================================================
+       14. COMMON MISTAKES
+       ============================================================ -->
+  <h2 id="s14">14. Common Mistakes &amp; Clarifications</h2>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 1 — Confusing depth with number of hidden layers</div>
+    <p>$L$ counts <em>all</em> layers (hidden + output). A network with 1 hidden layer is $L = 2$. Be careful when someone says "a 2-layer NN" — always clarify if they count the input.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 2 — Getting shapes wrong</div>
+    <p>$W^{[l]}$ has shape $(n^{[l]}, n^{[l-1]})$, and $b^{[l]}$ has shape $(n^{[l]}, 1)$. If a shape mismatch error appears, check these two rules first.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 3 — Forgetting to cache during forward pass</div>
+    <p>The backward pass needs $Z^{[l]}$, $A^{[l-1]}$, $W^{[l]}$, $b^{[l]}$. If you don't cache these during forward propagation, you'll have to recompute them — much slower, and error-prone.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 4 — Using the same activation everywhere</div>
+    <p>Different layers often benefit from different activations: ReLU for hidden layers, sigmoid (or softmax) for the output layer of a classifier. The choice is itself a hyperparameter.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 5 — Thinking more depth always helps</div>
+    <p>Deeper isn't automatically better. Very deep networks are harder to train (vanishing/exploding gradients, more hyperparameters). Depth helps when used with the right techniques — a theme for Course 2.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 6 — Treating hyperparameters like parameters</div>
+    <p>You don't update hyperparameters with gradient descent. You choose them, run experiments, and iterate. This is the "empirical process" Andrew emphasizes.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 7 — Over-interpreting the brain analogy</div>
+    <p>Artificial neurons are simplified mathematical functions, not biological simulations. Treating them as "mini-brains" leads to confusion about what they can do.</p>
+  </div>
+
+  <!-- ============================================================
+       15. SUMMARY & REVIEW
+       ============================================================ -->
+  <h2 id="s15">15. Weekly Summary &amp; Review</h2>
+
+  <section class="summary">
+    <h2 style="border:none">📌 Weekly Summary</h2>
+
+    <p><strong>1. Deep neural networks.</strong> A deep network has $L$ layers (hidden + output). A "1-hidden-layer" network is $L = 2$. "Deep" means many layers.</p>
+
+    <p><strong>2. Notation.</strong> $L$ = number of layers; $n^{[l]}$ = units in layer $l$; $a^{[l]}$ = activation of layer $l$; $W^{[l]}$ shape $(n^{[l]}, n^{[l-1]})$; $b^{[l]}$ shape $(n^{[l]}, 1)$; $a^{[0]} = x$; $a^{[L]} = \hat{y}$.</p>
+
+    <p><strong>3. Forward propagation.</strong> For $l = 1, \ldots, L$: $z^{[l]} = W^{[l]}a^{[l-1]} + b^{[l]}$, $a^{[l]} = g^{[l]}(z^{[l]})$. Vectorized over examples: $Z^{[l]} = W^{[l]}A^{[l-1]} + b^{[l]}$, $A^{[l]} = g^{[l]}(Z^{[l]})$.</p>
+
+    <p><strong>4. Matrix dimensions.</strong> $W^{[l]}$ is $(n^{[l]}, n^{[l-1]})$, $b^{[l]}$ is $(n^{[l]}, 1)$. Forward pass: $Z^{[l]}$ has shape $(n^{[l]}, m)$. Always assert shapes in code.</p>
+
+    <p><strong>5. Why depth helps.</strong> Deep networks learn hierarchical features — edges → parts → objects → scenes. Each layer composes the previous. In circuit theory, some functions need exponentially more units if computed by a shallow network.</p>
+
+    <p><strong>6. Building blocks.</strong> Each layer has a forward function (computes activations, caches values) and a backward function (computes gradients). Deep networks are just a loop over these blocks.</p>
+
+    <p><strong>7. Backward propagation for layer l.</strong> $dz^{[l]} = da^{[l]} * g^{[l]\prime}(z^{[l]})$; $dW^{[l]} = dz^{[l]} a^{[l-1]T}$; $db^{[l]} = dz^{[l]}$; $da^{[l-1]} = W^{[l]T}dz^{[l]}$.</p>
+
+    <p><strong>8. Parameters vs hyperparameters.</strong> Parameters ($W, b$) are learned by gradient descent. Hyperparameters (learning rate, network size, activation choice) are chosen by you and tuned empirically.</p>
+
+    <p><strong>9. Empirical process.</strong> Applied DL is iterative: form an idea, code it, run experiments, analyze results, iterate. Reading the cost-vs-iterations curve is a key diagnostic skill.</p>
+
+    <p><strong>10. Brain analogy.</strong> Artificial neurons are mathematical functions, not brain simulations. Treat them as function approximators trained by gradient descent.</p>
+  </section>
+
+  <h3>✅ Must-Know Concepts</h3>
+  <ul>
+    <li>What "deep" means and how to count layers ($L$).</li>
+    <li>Notation: $n^{[l]}$, $a^{[l]}$, $W^{[l]}$, $b^{[l]}$.</li>
+    <li>Forward propagation for an $L$-layer network.</li>
+    <li>Matrix dimension rules: $(n^{[l]}, n^{[l-1]})$ for $W$, $(n^{[l]}, 1)$ for $b$.</li>
+    <li>Why depth is more powerful than width (feature hierarchy + circuit theory).</li>
+    <li>The forward/backward building block pattern (with caching).</li>
+    <li>Backward propagation for a general layer $l$.</li>
+    <li>Difference between parameters and hyperparameters.</li>
+    <li>The empirical, iterative nature of deep-learning research.</li>
+    <li>The correct (mathematical) framing of the brain analogy.</li>
+  </ul>
+
+  <h3>🧮 Important Equations (Week 4)</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Equation</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>$z^{[l]} = W^{[l]}a^{[l-1]} + b^{[l]}$</td><td>Pre-activation for layer $l$ (single example)</td></tr>
+        <tr><td>$a^{[l]} = g^{[l]}(z^{[l]})$</td><td>Activation for layer $l$</td></tr>
+        <tr><td>$Z^{[l]} = W^{[l]}A^{[l-1]} + b^{[l]}$</td><td>Vectorized pre-activation (all $m$ examples)</td></tr>
+        <tr><td>$A^{[l]} = g^{[l]}(Z^{[l]})$</td><td>Vectorized activation</td></tr>
+        <tr><td>$W^{[l]} \in \mathbb{R}^{(n^{[l]}, n^{[l-1]})}$</td><td>Weight matrix shape rule</td></tr>
+        <tr><td>$b^{[l]} \in \mathbb{R}^{(n^{[l]}, 1)}$</td><td>Bias vector shape rule</td></tr>
+        <tr><td>$a^{[0]} = x$, &nbsp; $a^{[L]} = \hat{y}$</td><td>Boundary conditions: input and output</td></tr>
+        <tr><td>$dZ^{[l]} = dA^{[l]} * g^{[l]\prime}(Z^{[l]})$</td><td>Gradient of loss w.r.t. layer-$l$ pre-activation</td></tr>
+        <tr><td>$dW^{[l]} = \frac{1}{m} dZ^{[l]} A^{[l-1]T}$</td><td>Gradient w.r.t. layer-$l$ weights</td></tr>
+        <tr><td>$db^{[l]} = \frac{1}{m} \texttt{np.sum}(dZ^{[l]}, \text{axis}=1, \text{keepdims=True})$</td><td>Gradient w.r.t. layer-$l$ bias</td></tr>
+        <tr><td>$dA^{[l-1]} = W^{[l]T} dZ^{[l]}$</td><td>Propagate gradient back to layer $l-1$</td></tr>
+        <tr><td>$dZ^{[L]} = A^{[L]} - Y$</td><td>Output layer gradient (with cross-entropy loss)</td></tr>
+        <tr><td>$W^{[l]} := W^{[l]} - \alpha \, dW^{[l]}$</td><td>Parameter update rule</td></tr>
+        <tr><td>$b^{[l]} := b^{[l]} - \alpha \, db^{[l]}$</td><td>Parameter update rule (bias)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>⚠️ Common Confusions Recap</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Confusion</th><th>Resolution</th></tr></thead>
+      <tbody>
+        <tr><td>"L layers" vs "L hidden layers"</td><td>$L$ counts hidden + output layers, not the input. A network with 2 hidden layers is $L = 3$.</td></tr>
+        <tr><td>$W^{[l]}$ shape</td><td>$(n^{[l]}, n^{[l-1]})$ — rows are units in the current layer, columns in the previous.</td></tr>
+        <tr><td>$b^{[l]}$ shape</td><td>$(n^{[l]}, 1)$ — always a column vector, one bias per unit.</td></tr>
+        <tr><td>Parameters vs hyperparameters</td><td>Parameters are learned; hyperparameters are chosen.</td></tr>
+        <tr><td>Depth vs width</td><td>Depth = number of layers; width = number of units per layer. Both affect capacity, but depth gives exponential savings for compositional functions.</td></tr>
+        <tr><td>Forward vs backward</td><td>Forward computes activations; backward computes gradients. Both loop over layers, in opposite directions.</td></tr>
+        <tr><td>The brain analogy</td><td>Artificial neurons are simplified mathematical functions — not brain simulations.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>📝 Quick Review (Click to Reveal Answers)</h3>
+
+  <details class="qa">
+    <summary>What is a "deep" neural network?</summary>
+    <div class="ans">A neural network with many layers (typically more than one hidden layer). "Deep" refers to the number of layers, not the complexity of individual neurons.</div>
+  </details>
+
+  <details class="qa">
+    <summary>How many layers does a network with 3 hidden layers and 1 output layer have?</summary>
+    <div class="ans">$L = 4$. The convention counts hidden + output layers.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What does $n^{[l]}$ denote?</summary>
+    <div class="ans">The number of units (neurons) in layer $l$.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What is the shape of $W^{[l]}$?</summary>
+    <div class="ans">$(n^{[l]}, n^{[l-1]})$ — rows = units in layer $l$, columns = units in layer $l-1$.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Write the forward propagation equations for layer $l$.</summary>
+    <div class="ans">$z^{[l]} = W^{[l]}a^{[l-1]} + b^{[l]}$ and $a^{[l]} = g^{[l]}(z^{[l]})$.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What is the shape of $A^{[l]}$ when vectorized over $m$ examples?</summary>
+    <div class="ans">$(n^{[l]}, m)$ — one column per example.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Why do we cache values during the forward pass?</summary>
+    <div class="ans">Because the backward pass needs values like $z^{[l]}$ and $a^{[l-1]}$ to compute gradients. Caching avoids recomputation.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Explain why deep representations help, using the face-recognition example.</summary>
+    <div class="ans">Early layers detect simple features (edges). Middle layers combine edges into parts (eyes, nose). Later layers combine parts into whole objects (faces). This hierarchical composition lets each layer build increasingly abstract representations.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What does circuit theory say about the value of depth?</summary>
+    <div class="ans">Some functions can be computed by small deep networks but require exponentially more hidden units in a shallow network. Depth gives exponential efficiency for compositional functions.</div>
+  </details>
+
+  <details class="qa">
+    <summary>In the XOR example, how does a deep network's cost compare to a shallow one?</summary>
+    <div class="ans">A deep network can compute XOR of $n$ inputs with depth $O(\log n)$ and width $O(n)$. A shallow network needs $O(2^n)$ hidden units — exponentially more.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Write the backward propagation equations for layer $l$.</summary>
+    <div class="ans">$dz^{[l]} = da^{[l]} * g^{[l]\prime}(z^{[l]})$, $dW^{[l]} = dz^{[l]} a^{[l-1]T}$, $db^{[l]} = dz^{[l]}$, $da^{[l-1]} = W^{[l]T} dz^{[l]}$.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Why is the transpose used in $da^{[l-1]} = W^{[l]T} dz^{[l]}$?</summary>
+    <div class="ans">Because forward propagation uses $W^{[l]}$ to go from layer $l-1$ to layer $l$. To propagate the error backward, we need the transpose — it "reverses" the direction of information flow through the same weights.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What is the difference between a parameter and a hyperparameter?</summary>
+    <div class="ans">Parameters ($W, b$) are learned from data by gradient descent. Hyperparameters (learning rate, network size, activation choice) are set by the practitioner and tuned empirically.</div>
+  </details>
+
+  <details class="qa">
+    <summary>List four hyperparameters of a deep neural network.</summary>
+    <div class="ans">Any four of: learning rate α, number of iterations, number of hidden layers L, number of hidden units per layer, choice of activation function, mini-batch size, regularization strength, momentum coefficient.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Why is applied deep learning described as "empirical"?</summary>
+    <div class="ans">Because there's no closed-form way to know the best hyperparameters for a given problem. You must run experiments, observe results (e.g., cost curves), and iterate.</div>
+  </details>
+
+  <details class="qa">
+    <summary>If cost is decreasing very slowly, what might be wrong?</summary>
+    <div class="ans">The learning rate α might be too small. Try increasing it by a factor of 3 or 10 and re-run.</div>
+  </details>
+
+  <details class="qa">
+    <summary>If cost oscillates or increases, what's likely wrong?</summary>
+    <div class="ans">The learning rate α is probably too large. Try decreasing it.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What is the correct interpretation of the "brain analogy" for neural networks?</summary>
+    <div class="ans">Artificial neurons are simplified mathematical functions, not biological simulations. The brain-inspired narrative is historically interesting but not a productive frame for understanding what modern deep networks do.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What is the difference between "shallow" and "deep" networks?</summary>
+    <div class="ans">Shallow networks have few layers (often just one hidden layer). Deep networks have many. "Deep" refers to the number of layers in the network.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Why does vectorization matter in deep networks, not just in shallow ones?</summary>
+    <div class="ans">Because deep networks still process each example independently. Vectorization across examples (matrix multiplication) makes training feasible even for very deep networks and large datasets.</div>
+  </details>
+
+  <h3>🧠 Self-Test (Conceptual)</h3>
+
+  <details class="qa">
+    <summary>You build a network with 5 hidden layers, each with 100 units, and 1 output unit. How many layers L? What are the shapes of $W^{[1]}, W^{[2]}, W^{[3]}, W^{[4]}, W^{[5]}, W^{[6]}$ assuming 20 input features?</summary>
+    <div class="ans">$L = 6$ (5 hidden + 1 output). $W^{[1]}$: $(100, 20)$; $W^{[2]}, W^{[3]}, W^{[4]}, W^{[5]}$: $(100, 100)$; $W^{[6]}$: $(1, 100)$.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Your gradient-descent training produces NaN values after a few iterations. Where might you look first?</summary>
+    <div class="ans">Two common causes: (1) the learning rate is too large (updates overshoot and blow up); (2) log(0) or 0/0 in the cost computation (log of 0 or division by 0). Reduce α and/or use numerically stable cost formulas.</div>
+  </details>
+
+  <details class="qa">
+    <summary>You have two models: one with 3 hidden layers (each 100 units), one with 1 hidden layer (1000 units). Both have similar parameter counts. Which would you expect to perform better on a complex image classification task, and why?</summary>
+    <div class="ans">The deeper one, generally. Depth provides feature hierarchy — early layers detect simple features, deeper layers detect complex ones. Circuit theory suggests certain functions are exponentially cheaper with depth. In practice, deep networks tend to perform better on structured data like images.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Someone says: "I'll just use a very wide single hidden layer to avoid the complications of deep networks." What's the trade-off?</summary>
+    <div class="ans">Wide shallow networks can approximate many functions (universal approximation theorem), but for compositional functions, they may need exponentially more units — meaning far more parameters and more data to train. Depth is often more parameter-efficient, though it introduces training challenges (vanishing gradients, more hyperparameters).</div>
+  </details>
+
+  <details class="qa">
+    <summary>Why does backpropagation reuse the same $W^{[l]}$ and $b^{[l]}$ from the forward pass?</summary>
+    <div class="ans">Because they're the same parameters. The gradients tell us how to adjust them; there's only one set of parameters that defines the network's function. Backprop doesn't create new parameters — it computes derivatives w.r.t. the parameters already used.</div>
+  </details>
+
+  <details class="qa">
+    <summary>During backprop, you compute $dA^{[l-1]}$ but only need it to compute gradients for layer $l-1$. What happens for the input layer (i.e., when $l = 1$)?</summary>
+    <div class="ans">You don't compute $dA^{[0]}$ — the input is fixed, so we stop. In practice, you just don't propagate the gradient past layer 1.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What hyperparameter would you tune first if your training cost doesn't decrease at all in the first 100 iterations?</summary>
+    <div class="ans">Learning rate α. If cost is stuck, α may be too small (very slow progress) or too large (diverge). Also check that gradients are being computed correctly, and that the initialization isn't degenerate (e.g., all zeros).</div>
+  </details>
+
+  <details class="qa">
+    <summary>Why might a practitioner prefer to think of neural networks as mathematical functions rather than brain models?</summary>
+    <div class="ans">Because they're actually trained as function approximators via gradient descent. The "brain" framing leads to expectations (interpretability, general intelligence) that are not warranted. The mathematical framing keeps you focused on what the network does: mapping inputs to outputs through a parameter

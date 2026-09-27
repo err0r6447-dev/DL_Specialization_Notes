@@ -1,0 +1,4 @@
+system_prompt.txt
+user_prompt_per_week.txt
+generate_index.py
+fix_links.py

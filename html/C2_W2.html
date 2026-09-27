@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Course 2 Week 2 — Optimization Algorithms</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+  svg: { fontCache: 'global' },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+:root{
+  --bg:#f7f8fa; --card:#ffffff; --text:#1a1a1a; --muted:#5b6470;
+  --accent:#2b6cb0; --accent2:#2c7a7b; --border:#e2e8f0;
+  --def:#2b6cb0; --intu:#2c7a7b; --imp:#b7791f; --warn:#c53030;
+  --ex:#6b46c1; --impl:#2f855a; --insight:#805ad5;
+  --code-bg:#1e293b; --code-text:#e2e8f0;
+  --table-head:#edf2f7; --table-alt:#f7fafc;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
+  --radius:10px;
+}
+[data-theme="dark"]{
+  --bg:#0f1419; --card:#1a2028; --text:#e6e9ee; --muted:#9aa5b1;
+  --accent:#63b3ed; --accent2:#4fd1c5; --border:#2d3748;
+  --def:#63b3ed; --intu:#4fd1c5; --imp:#f6c177; --warn:#fc8181;
+  --ex:#b794f4; --impl:#68d391; --insight:#d6bcfa;
+  --code-bg:#0b0f14; --code-text:#e2e8f0;
+  --table-head:#243040; --table-alt:#1f2a37;
+  --shadow:0 1px 3px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:17px; line-height:1.7; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:920px; margin:0 auto; padding:0 18px 80px}
+header.top{
+  position:sticky; top:0; z-index:50; background:var(--card);
+  border-bottom:1px solid var(--border); box-shadow:var(--shadow);
+}
+.topbar{
+  max-width:920px; margin:0 auto; display:flex; align-items:center; gap:10px;
+  padding:10px 18px; flex-wrap:wrap;
+}
+.topbar .title{font-weight:700; font-size:.95rem; color:var(--accent); margin-right:auto}
+.topbar button, .topbar a.navbtn{
+  background:transparent; border:1px solid var(--border); color:var(--text);
+  padding:6px 10px; border-radius:8px; font-size:.82rem; cursor:pointer;
+  text-decoration:none; white-space:nowrap;
+}
+.topbar button:hover, .topbar a.navbtn:hover{background:var(--table-head)}
+#searchBox{
+  border:1px solid var(--border); background:var(--bg); color:var(--text);
+  padding:6px 10px; border-radius:8px; font-size:.82rem; width:150px;
+}
+h1{font-size:1.9rem; line-height:1.25; margin:28px 0 6px}
+h2{font-size:1.45rem; margin:44px 0 12px; padding-bottom:6px; border-bottom:2px solid var(--border)}
+h3{font-size:1.15rem; margin:28px 0 10px; color:var(--accent)}
+h4{font-size:1rem; margin:20px 0 8px}
+p{margin:10px 0}
+a{color:var(--accent)}
+code{background:var(--table-head); padding:2px 6px; border-radius:5px; font-size:.9em;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+pre{
+  background:var(--code-bg); color:var(--code-text); padding:14px 16px;
+  border-radius:var(--radius); overflow-x:auto; font-size:.86rem; line-height:1.55;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+pre code{background:none; padding:0; color:inherit; font-size:inherit}
+ul,ol{margin:10px 0; padding-left:26px}
+li{margin:4px 0}
+.card{
+  background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:16px 0; box-shadow:var(--shadow);
+}
+.callout{
+  border-left:4px solid var(--border); border-radius:8px;
+  padding:12px 16px; margin:16px 0; background:var(--card);
+}
+.callout .label{
+  font-weight:700; font-size:.78rem; letter-spacing:.06em; text-transform:uppercase;
+  display:block; margin-bottom:4px;
+}
+.callout.def{border-left-color:var(--def)} .callout.def .label{color:var(--def)}
+.callout.intu{border-left-color:var(--intu)} .callout.intu .label{color:var(--intu)}
+.callout.imp{border-left-color:var(--imp)} .callout.imp .label{color:var(--imp)}
+.callout.warn{border-left-color:var(--warn)} .callout.warn .label{color:var(--warn)}
+.callout.ex{border-left-color:var(--ex)} .callout.ex .label{color:var(--ex)}
+.callout.impl{border-left-color:var(--impl)} .callout.impl .label{color:var(--impl)}
+.callout.insight{border-left-color:var(--insight)} .callout.insight .label{color:var(--insight)}
+
+table{width:100%; border-collapse:collapse; margin:16px 0; font-size:.92rem;
+  display:block; overflow-x:auto; white-space:nowrap}
+table.tbl-fixed{display:table; white-space:normal}
+th,td{border:1px solid var(--border); padding:8px 12px; text-align:left; vertical-align:top}
+th{background:var(--table-head); font-weight:600}
+tr:nth-child(even) td{background:var(--table-alt)}
+
+figure{margin:22px 0; text-align:center}
+figure svg{max-width:100%; height:auto}
+figcaption{font-size:.86rem; color:var(--muted); margin-top:8px; text-align:left;
+  border-left:3px solid var(--accent); padding-left:10px}
+
+.toc{background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+  padding:14px 20px; margin:20px 0}
+.toc h3{margin-top:4px}
+.toc ol{columns:2; column-gap:30px; margin:6px 0}
+@media(max-width:640px){.toc ol{columns:1}}
+
+details{border:1px solid var(--border); border-radius:8px; padding:10px 14px;
+  margin:10px 0; background:var(--card)}
+details summary{cursor:pointer; font-weight:600; color:var(--accent)}
+details[open] summary{margin-bottom:8px}
+.qa details{margin:8px 0}
+
+.eqbox{background:var(--card); border:1px dashed var(--border); border-radius:8px;
+  padding:10px 16px; margin:14px 0; overflow-x:auto}
+
+#topBtn{
+  position:fixed; right:18px; bottom:18px; z-index:60;
+  background:var(--accent); color:#fff; border:none; border-radius:50%;
+  width:46px; height:46px; font-size:1.2rem; cursor:pointer;
+  box-shadow:0 4px 12px rgba(0,0,0,.25); display:none;
+}
+#topBtn.show{display:block}
+
+mark.hit{background:#fde68a; color:#1a1a1a; border-radius:3px}
+[data-theme="dark"] mark.hit{background:#b7791f; color:#fff}
+
+.weeknav{display:flex; justify-content:space-between; gap:10px; margin:30px 0; flex-wrap:wrap}
+.weeknav a{flex:1; min-width:140px; text-align:center; padding:10px;
+  border:1px solid var(--border); border-radius:8px; text-decoration:none;
+  background:var(--card); color:var(--text); font-size:.9rem}
+.weeknav a:hover{background:var(--table-head)}
+hr.soft{border:none; border-top:1px solid var(--border); margin:36px 0}
+.small{font-size:.85rem; color:var(--muted)}
+.tag{display:inline-block; background:var(--table-head); border:1px solid var(--border);
+  border-radius:999px; padding:1px 10px; font-size:.75rem; color:var(--muted); margin-left:6px}
+@media(max-width:600px){
+  body{font-size:16px}
+  h1{font-size:1.55rem}
+  h2{font-size:1.25rem}
+  .topbar .title{width:100%; margin-bottom:4px}
+  #searchBox{width:120px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="topbar">
+    <span class="title">C2·W2 — Optimization Algorithms</span>
+    <input id="searchBox" type="search" placeholder="Search this page…" aria-label="Search notes">
+    <button id="themeBtn" title="Toggle dark mode">🌙</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+<h1>Course 2 · Week 2<br>Optimization Algorithms</h1>
+<p class="small">Deep Learning Specialization — beginner-friendly standalone notes.
+Every concept is explained from first principles. Additional Context is labelled where the
+course slides assume prior knowledge.</p>
+
+<nav class="toc">
+  <h3>Table of Contents</h3>
+  <ol>
+    <li><a href="#intro">Why Optimization Matters</a></li>
+    <li><a href="#minibatch">Mini-batch Gradient Descent</a></li>
+    <li><a href="#choosemb">Choosing Your Mini-batch Size</a></li>
+    <li><a href="#ewa">Exponentially Weighted Averages</a></li>
+    <li><a href="#ewaimpl">Implementing Exponentially Weighted Averages</a></li>
+    <li><a href="#biascorr">Bias Correction</a></li>
+    <li><a href="#momentum">Gradient Descent with Momentum</a></li>
+    <li><a href="#rmsprop">RMSprop</a></li>
+    <li><a href="#adam">Adam Optimization Algorithm</a></li>
+    <li><a href="#lrdecay">Learning Rate Decay</a></li>
+    <li><a href="#localopt">The Problem of Local Optima</a></li>
+    <li><a href="#summary">Weekly Summary</a></li>
+    <li><a href="#review">Review Questions</a></li>
+    <li><a href="#selftest">Self-Test</a></li>
+  </ol>
+</nav>
+
+<!-- ============================================================= -->
+<h2 id="intro">1. Why Optimization Matters</h2>
+
+<p>Up to now you have learned how to build a neural network and how to make it generalize
+well (regularization, normalization, and so on). But there is a third ingredient that
+determines whether your model actually trains in a reasonable amount of time:
+<strong>how you optimize the cost function</strong>.</p>
+
+<div class="callout def">
+<span class="label">🔵 Definition — Optimization Algorithm</span>
+An <strong>optimization algorithm</strong> is a procedure for adjusting the parameters of a
+model (weights and biases) in order to minimize the cost function \(J\). Standard gradient
+descent is the simplest example; this week we study faster, more robust alternatives.
+</div>
+
+<div class="callout intu">
+<span class="label">🟢 Intuition — why "faster" matters</span>
+Training a deep network can take hours, days, or weeks. If a better optimizer halves that
+time, you can run twice as many experiments. Optimization algorithms do not change what the
+model can represent — they change how quickly and reliably you can find good parameters.
+</div>
+
+<p>This week builds up a toolkit of optimization algorithms:</p>
+<ul>
+<li><strong>Mini-batch gradient descent</strong> — process the training set in chunks rather
+than all at once.</li>
+<li><strong>Exponentially weighted averages</strong> — a smoothing technique used by many
+advanced optimizers.</li>
+<li><strong>Momentum</strong> — accumulate direction to accelerate through flat regions.</li>
+<li><strong>RMSprop</strong> — adapt the learning rate per parameter based on recent
+gradient magnitudes.</li>
+<li><strong>Adam</strong> — combine momentum and RMSprop; the current default choice for
+most deep learning problems.</li>
+<li><strong>Learning rate decay</strong> — gradually shrink the learning rate over time.</li>
+</ul>
+
+<!-- ============================================================= -->
+<h2 id="minibatch">2. Mini-batch Gradient Descent</h2>
+
+<h3>2.1 The problem with batch gradient descent</h3>
+<p>In <strong>batch gradient descent</strong>, you compute the gradient of the cost over the
+<em>entire</em> training set before taking a single step. If you have \(m = 5{,}000{,}000\)
+training examples, one update requires processing all five million examples. That is very
+slow — especially when you could be making progress with much less work.</p>
+
+<h3>2.2 The mini-batch idea</h3>
+<div class="callout def">
+<span class="label">🔵 Definition — Mini-batch gradient descent</span>
+In <strong>mini-batch gradient descent</strong>, you split the training set into small
+chunks called <strong>mini-batches</strong>. You compute the gradient on one mini-batch,
+take a step, then move to the next mini-batch. One full pass through the entire training
+set is called an <strong>epoch</strong>.
+</div>
+
+<figure>
+<svg viewBox="0 0 620 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Batch vs mini-batch">
+  <rect x="20" y="20" width="580" height="40" rx="6" fill="#bee3f8" stroke="#2b6cb0"/>
+  <text x="310" y="46" text-anchor="middle" font-size="13" font-family="sans-serif" fill="#1a202c">Batch gradient descent: 1 update per full pass</text>
+
+  <rect x="20" y="90" width="70" height="40" rx="6" fill="#fefcbf" stroke="#b7791f"/>
+  <rect x="100" y="90" width="70" height="40" rx="6" fill="#fefcbf" stroke="#b7791f"/>
+  <rect x="180" y="90" width="70" height="40" rx="6" fill="#fefcbf" stroke="#b7791f"/>
+  <rect x="260" y="90" width="70" height="40" rx="6" fill="#fefcbf" stroke="#b7791f"/>
+  <rect x="340" y="90" width="70" height="40" rx="6" fill="#fefcbf" stroke="#b7791f"/>
+  <rect x="420" y="90" width="70" height="40" rx="6" fill="#fefcbf" stroke="#b7791f"/>
+  <rect x="500" y="90" width="100" height="40" rx="6" fill="#fefcbf" stroke="#b7791f"/>
+  <text x="310" y="148" text-anchor="middle" font-size="13" font-family="sans-serif" fill="#1a202c">Mini-batch: 1 update per mini-batch (many updates per epoch)</text>
+</svg>
+<figcaption><strong>Figure 1.</strong> Batch gradient descent makes one parameter update
+per full pass. Mini-batch gradient descent makes one update per mini-batch, so many more
+updates per epoch — and progress is much faster in wall-clock time.</figcaption>
+</figure>
+
+<div class="callout ex">
+<span class="label">🟣 Example — big data split</span>
+<p>Suppose \(m = 5{,}000{,}000\) examples. You choose a mini-batch size of \(1{,}000\).
+Then you have \(5{,}000\) mini-batches. Define:</p>
+<ul>
+<li>\(X^{\{t\}}\) — the inputs of mini-batch \(t\).</li>
+<li>\(Y^{\{t\}}\) — the labels of mini-batch \(t\).</li>
+</ul>
+<p>For \(t = 1, \dots, 5{,}000\): forward propagate on \(X^{\{t\}}\), compute the cost on
+the mini-batch, backpropagate, and update the parameters. One pass over all \(5{,}000\)
+mini-batches is one epoch.</p>
+</div>
+
+<h3>2.3 The training loop</h3>
+<p>For each epoch, for each mini-batch \(t\):</p>
+<ol>
+<li><strong>Forward propagation</strong> on the mini-batch:
+\[
+Z^{[l]} = W^{[l]} A^{[l-1]} + b^{[l]}, \quad A^{[l]} = g^{[l]}(Z^{[l]})
+\]</li>
+<li><strong>Compute cost</strong> on the mini-batch (with \(m_{\text{mb}}\) examples):
+\[
+J^{\{t\}} = \frac{1}{m_{\text{mb}}} \sum_{i=1}^{m_{\text{mb}}} \mathcal{L}(y^{(i)}, \hat{y}^{(i)})
+\;+\; \frac{\lambda}{2 m_{\text{mb}}} \sum_l \|W^{[l]}\|_F^2
+\]</li>
+<li><strong>Backward propagation</strong> on the mini-batch to get \(dW^{[l]}, db^{[l]}\).</li>
+<li><strong>Update parameters</strong>:
+\[
+W^{[l]} := W^{[l]} - \alpha \, dW^{[l]}, \qquad b^{[l]} := b^{[l]} - \alpha \, db^{[l]}
+\]</li>
+</ol>
+
+<p>Important notation: \(X^{\{t\}}, Y^{\{t\}}\) use <em>curly braces</em> to denote the
+\(t\)-th mini-batch, distinguishing from \(X^{(i)}\) (the \(i\)-th example) and \(X^{[l]}\)
+(the \(l\)-th layer).</p>
+
+<h3>2.4 The cost curve</h3>
+
+<figure>
+<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cost curves batch vs mini-batch">
+  <!-- batch -->
+  <g transform="translate(20,20)">
+    <text x="160" y="15" text-anchor="middle" font-size="13" font-family="sans-serif" fill="#1a202c">Batch gradient descent</text>
+    <line x1="40" y1="190" x2="300" y2="190" stroke="#1a202c"/>
+    <line x1="40" y1="190" x2="40" y2="30" stroke="#1a202c"/>
+    <path d="M45,45 C90,110 150,160 290,180" fill="none" stroke="#2b6cb0" stroke-width="2.5"/>
+    <text x="170" y="215" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470"># iterations</text>
+    <text x="20" y="110" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470" transform="rotate(-90 20 110)">cost</text>
+  </g>
+  <!-- mini-batch -->
+  <g transform="translate(380,20)">
+    <text x="160" y="15" text-anchor="middle" font-size="13" font-family="sans-serif" fill="#1a202c">Mini-batch gradient descent</text>
+    <line x1="40" y1="190" x2="300" y2="190" stroke="#1a202c"/>
+    <line x1="40" y1="190" x2="40" y2="30" stroke="#1a202c"/>
+    <path d="M45,45 L55,60 L65,55 L75,80 L85,72 L95,95 L105,85 L115,105 L125,100 L135,118
+             L145,110 L155,125 L165,120 L175,135 L185,130 L195,145 L205,140 L215,152 L225,148
+             L235,158 L245,155 L255,162 L265,160 L275,168 L285,165 L295,172"
+          fill="none" stroke="#c53030" stroke-width="2" stroke-linejoin="round"/>
+    <text x="170" y="215" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470">mini-batch # (t)</text>
+    <text x="20" y="110" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470" transform="rotate(-90 20 110)">cost</text>
+  </g>
+</svg>
+<figcaption><strong>Figure 2.</strong> Left: with batch gradient descent, the cost decreases
+smoothly because each update uses the same (full) training set. Right: with mini-batch
+gradient descent, the cost oscillates — each update is based on a different mini-batch, so
+the cost is noisy. But overall it trends downward. The oscillation is normal.</figcaption>
+</figure>
+
+<div class="callout intu">
+<span class="label">🟢 Intuition — why the oscillation?</span>
+Each mini-batch is a small, possibly biased sample of the full training set. Its gradient
+points in a slightly different direction from the "true" gradient. So individual updates
+are noisy. But on average, the direction is correct, and the cost trends downward.
+</div>
+
+<div class="callout imp">
+<span class="label">🟡 Important — why mini-batch is faster in practice</span>
+With vectorization, processing 1,000 examples is roughly as fast as processing 1 example.
+So mini-batch gradient descent gets ~1,000× more updates per unit of computation than batch
+gradient descent. Even with slightly noisier steps, this is a huge wall-clock speedup.
+</div>
+
+<div class="callout warn">
+<span class="label">🔴 Warning — noise in the cost curve</span>
+If you plot the cost on each mini-batch, it will go up and down. This is not a bug. A common
+debugging tip: compute the cost on a fixed small set of examples to see a smooth curve, or
+average over several mini-batches.
+</div>
+
+<!-- ============================================================= -->
+<h2 id="choosemb">3. Choosing Your Mini-batch Size</h2>
+
+<h3>3.1 The two extremes</h3>
+<table class="tbl-fixed">
+<thead><tr><th>Mini-batch size</th><th>Name</th><th>Behavior</th></tr></thead>
+<tbody>
+<tr>
+<td>\(= m\) (all examples)</td>
+<td><strong>Batch gradient descent</strong></td>
+<td>Smooth cost curve, but very slow — one update per full pass, no vectorization gains
+beyond a single large matrix operation, and memory pressure.</td>
+</tr>
+<tr>
+<td>\(= 1\) (one example)</td>
+<td><strong>Stochastic gradient descent (SGD)</strong></td>
+<td>Very noisy, one update per example. Loses all vectorization benefits (processing one
+example at a time is inefficient).</td>
+</tr>
+<tr>
+<td>In between</td>
+<td><strong>Mini-batch gradient descent</strong></td>
+<td>Best of both worlds — fast vectorized updates with reasonable noise.</td>
+</tr>
+</tbody>
+</table>
+
+<figure>
+<svg viewBox="0 0 720 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Contours for batch, SGD, mini-batch">
+  <!-- batch -->
+  <g transform="translate(20,20)">
+    <text x="110" y="15" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#1a202c">Batch (size = m)</text>
+    <ellipse cx="110" cy="120" rx="95" ry="35" fill="none" stroke="#2b6cb0"/>
+    <ellipse cx="110" cy="120" rx="65" ry="24" fill="none" stroke="#2b6cb0"/>
+    <ellipse cx="110" cy="120" rx="35" ry="13" fill="none" stroke="#2b6cb0"/>
+    <circle cx="110" cy="120" r="3" fill="#2b6cb0"/>
+    <path d="M35,175 L105,125" fill="none" stroke="#2b6cb0" stroke-width="2" marker-end="url(#arr)"/>
+    <text x="110" y="210" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470">smooth, direct path</text>
+  </g>
+  <!-- SGD -->
+  <g transform="translate(260,20)">
+    <text x="110" y="15" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#1a202c">SGD (size = 1)</text>
+    <ellipse cx="110" cy="120" rx="95" ry="35" fill="none" stroke="#2b6cb0"/>
+    <ellipse cx="110" cy="120" rx="65" ry="24" fill="none" stroke="#2b6cb0"/>
+    <ellipse cx="110" cy="120" rx="35" ry="13" fill="none" stroke="#2b6cb0"/>
+    <circle cx="110" cy="120" r="3" fill="#2b6cb0"/>
+    <path d="M35,175 L55,150 L45,140 L70,128 L60,118 L85,128 L75,115 L95,125 L88,112 L105,122 L98,114 L110,120"
+          fill="none" stroke="#c53030" stroke-width="2"/>
+    <text x="110" y="210" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470">noisy, wiggly</text>
+  </g>
+  <!-- mini-batch -->
+  <g transform="translate(500,20)">
+    <text x="110" y="15" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#1a202c">Mini-batch</text>
+    <ellipse cx="110" cy="120" rx="95" ry="35" fill="none" stroke="#2b6cb0"/>
+    <ellipse cx="110" cy="120" rx="65" ry="24" fill="none" stroke="#2b6cb0"/>
+    <ellipse cx="110" cy="120" rx="35" ry="13" fill="none" stroke="#2b6cb0"/>
+    <circle cx="110" cy="120" r="3" fill="#2b6cb0"/>
+    <path d="M35,175 L65,155 L55,145 L85,130 L75,120 L100,128 L90,118 L108,122 L102,117 L110,120"
+          fill="none" stroke="#2f855a" stroke-width="2"/>
+    <text x="110" y="210" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470">moderate noise, fast</text>
+  </g>
+</svg>
+<figcaption><strong>Figure 3.</strong> Three behaviors. Batch: smooth but slow. SGD: fast
+but noisy — may never sit still at the minimum. Mini-batch: a good middle ground — noisy
+enough to escape bad regions, smooth enough to converge.</figcaption>
+</figure>
+
+<h3>3.2 Practical guidelines</h3>
+<div class="callout impl">
+<span class="label">⚙️ Implementation — choosing mini-batch size</span>
+<ul>
+<li>If your training set is <strong>small</strong> (say \(m \leq 2{,}000\)), just use batch
+gradient descent. Mini-batching gives no benefit for such small datasets.</li>
+<li>If your training set is <strong>large</strong>, use mini-batches. Typical sizes are
+powers of 2: \(64, 128, 256, 512, 1024\).</li>
+<li>The reason for powers of 2 is purely practical: computer memory and GPU/CPU memory
+are organized in powers of 2, so these sizes tend to be slightly more efficient.</li>
+<li>Make sure a mini-batch <strong>fits in CPU/GPU memory</strong>. Too large and you will
+run out of memory; too small and you lose vectorization.</li>
+</ul>
+</div>
+
+<div class="callout warn">
+<span class="label">🔴 Warning — the "default" mini-batch size</span>
+A common starting point is <strong>64</strong> or <strong>128</strong> for small networks,
+and larger (256, 512) for bigger ones. But there is no universal best value — treat it as a
+hyperparameter to tune. You will often find that a range of sizes works fine.
+</div>
+
+<!-- ============================================================= -->
+<h2 id="ewa">4. Exponentially Weighted Averages</h2>
+
+<p>Before we look at the advanced optimizers (Momentum, RMSprop, Adam), we need one key
+building block: the <strong>exponentially weighted average</strong> (EWA). This is a simple
+technique for smoothing a noisy sequence of numbers.</p>
+
+<h3>4.1 The temperature example</h3>
+<p>Imagine you are recording the daily temperature in London. Each day's reading \(\theta_t\)
+is somewhat noisy — the weather fluctuates. You want a smoothed version \(v_t\) that shows
+the underlying trend without the day-to-day jitter.</p>
+
+<figure>
+<svg viewBox="0 0 720 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Temperature and EWA">
+  <line x1="40" y1="220" x2="700" y2="220" stroke="#1a202c"/>
+  <line x1="40" y1="220" x2="40" y2="20" stroke="#1a202c"/>
+  <text x="370" y="250" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#5b6470">days</text>
+  <text x="20" y="120" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#5b6470" transform="rotate(-90 20 120)">temperature</text>
+  <!-- noisy dots -->
+  <g fill="#2b6cb0">
+    <circle cx="60" cy="140" r="3"/><circle cx="80" cy="155" r="3"/><circle cx="100" cy="135" r="3"/>
+    <circle cx="120" cy="160" r="3"/><circle cx="140" cy="145" r="3"/><circle cx="160" cy="170" r="3"/>
+    <circle cx="180" cy="150" r="3"/><circle cx="200" cy="130" r="3"/><circle cx="220" cy="145" r="3"/>
+    <circle cx="240" cy="120" r="3"/><circle cx="260" cy="140" r="3"/><circle cx="280" cy="115" r="3"/>
+    <circle cx="300" cy="130" r="3"/><circle cx="320" cy="105" r="3"/><circle cx="340" cy="120" r="3"/>
+    <circle cx="360" cy="100" r="3"/><circle cx="380" cy="115" r="3"/><circle cx="400" cy="90" r="3"/>
+    <circle cx="420" cy="110" r="3"/><circle cx="440" cy="95" r="3"/><circle cx="460" cy="115" r="3"/>
+    <circle cx="480" cy="100" r="3"/><circle cx="500" cy="120" r="3"/><circle cx="520" cy="105" r="3"/>
+    <circle cx="540" cy="125" r="3"/><circle cx="560" cy="110" r="3"/><circle cx="580" cy="130" r="3"/>
+    <circle cx="600" cy="115" r="3"/><circle cx="620" cy="135" r="3"/><circle cx="640" cy="120" r="3"/>
+  </g>
+  <!-- EWA curves -->
+  <path d="M60,142 L80,148 L100,145 L120,150 L140,148 L160,152 L180,150 L200,145 L220,143 L240,140
+           L260,138 L280,133 L300,130 L320,126 L340,124 L360,120 L380,118 L400,116 L420,115 L440,115
+           L460,116 L480,117 L500,119 L520,120 L540,122 L560,124 L580,126 L600,128 L620,130 L640,131"
+        fill="none" stroke="#e53e3e" stroke-width="2.5"/>
+  <path d="M60,145 L80,148 L100,150 L120,152 L140,152 L160,153 L180,152 L200,150 L220,148 L240,145
+           L260,142 L280,139 L300,135 L320,131 L340,128 L360,124 L380,122 L400,120 L420,118 L440,117
+           L460,117 L480,118 L500,119 L520,120 L540,122 L560,124 L580,127 L600,130 L620,132 L640,134"
+        fill="none" stroke="#2f855a" stroke-width="3.5"/>
+  <text x="580" y="105" font-size="12" font-family="sans-serif" fill="#e53e3e">β = 0.9</text>
+  <text x="580" y="145" font-size="12" font-family="sans-serif" fill="#2f855a">β = 0.98</text>
+</svg>
+<figcaption><strong>Figure 4.</strong> Blue dots: the raw daily temperatures (noisy).
+Red curve: exponentially weighted average with \(\beta = 0.9\) (reacts faster, more jitter).
+Green curve: \(\beta = 0.98\) (smoother, but lags behind changes). The choice of \(\beta\)
+controls the trade-off between smoothness and responsiveness.</figcaption>
+</figure>
+
+<h3>4.2 The formula</h3>
+<div class="callout def">
+<span class="label">🔵 Definition — Exponentially Weighted Average</span>
+The <strong>exponentially weighted average</strong> of a sequence \(\theta_1, \theta_2,
+\theta_3, \dots\) is defined recursively by:
+\[
+v_t = \beta \, v_{t-1} + (1 - \beta) \, \theta_t
+\]
+where \(0 \leq \beta < 1\) is a hyperparameter controlling the amount of smoothing, and
+\(v_0 = 0\).
+</div>
+
+<p>Symbols:</p>
+<ul>
+<li>\(\theta_t\) — the raw value at time \(t\) (e.g. today's temperature).</li>
+<li>\(v_t\) — the smoothed (averaged) value at time \(t\).</li>
+<li>\(\beta\) — a hyperparameter between 0 and 1. Larger \(\beta\) = smoother average.</li>
+<li>\((1 - \beta)\) — the weight given to the current observation.</li>
+</ul>
+
+<div class="callout ex">
+<span class="label">🟣 Example — a few steps</span>
+<p>Take \(\beta = 0.9\) and \(v_0 = 0\). Suppose the temperatures are \(40, 49, 45, \dots\)</p>
+\[
+\begin{aligned}
+v_1 &= 0.9 \cdot 0 + 0.1 \cdot 40 = 4 \\
+v_2 &= 0.9 \cdot 4 + 0.1 \cdot 49 = 3.6 + 4.9 = 8.5 \\
+v_3 &= 0.9 \cdot 8.5 + 0.1 \cdot 45 = 7.65 + 4.5 = 12.15
+\end{aligned}
+\]
+<p>You can see the average is slowly climbing toward the actual temperatures.</p>
+</div>
+
+<h3>4.3 What "exponential" means</h3>
+<p>If you unroll the recursion, \(v_t\) is a weighted sum of all past \(\theta\) values:</p>
+<div class="eqbox">
+\[
+v_t = (1-\beta) \left[ \theta_t + \beta \theta_{t-1} + \beta^2 \theta_{t-2} + \beta^3 \theta_{t-3} + \cdots \right]
+\]
+</div>
+<p>The weight given to \(\theta_{t-k}\) is \((1-\beta)\beta^k\), which decays exponentially
+as \(k\) grows. That is why it is called an <strong>exponentially weighted</strong>
+average: recent values count more, old values fade away.</p>
+
+<h3>4.4 How much history does the average use?</h3>
+<div class="callout imp">
+<span class="label">🟡 Important — rule of thumb</span>
+The effective window of the average is roughly \(\frac{1}{1-\beta}\) time steps.
+<ul>
+<li>\(\beta = 0.9\) → effective window of ~10 observations.</li>
+<li>\(\beta = 0.98\) → effective window of ~50 observations.</li>
+<li>\(\beta = 0.5\) → effective window of ~2 observations (a very reactive average).</li>
+</ul>
+</div>
+
+<p>This follows from \((1 - \varepsilon)^{1/\varepsilon} \approx 1/e \approx 0.35\), where
+\(\varepsilon = 1 - \beta\). After \(1/(1-\beta)\) steps, the weight has dropped to about
+1/3 of the initial weight.</p>
+
+<!-- ============================================================= -->
+<h2 id="ewaimpl">5. Implementing Exponentially Weighted Averages</h2>
+
+<p>Implementation is extremely cheap. You keep just one running number \(v\) and update it
+each step:</p>
+
+<pre><code>v = 0
+for theta_t in theta_sequence:
+    v = beta * v + (1 - beta) * theta_t
+    # Optionally: store or use v
+</code></pre>
+
+<div class="callout insight">
+<span class="label">💡 Insight — memory efficiency</span>
+The exponentially weighted average requires <strong>O(1) memory</strong> — you only need
+to remember \(v\), not the entire history. This is why it is so appealing in optimizers:
+you get a smoothed estimate of a quantity without storing a big window of past values.
+</div>
+
+<!-- ============================================================= -->
+<h2 id="biascorr">6. Bias Correction</h2>
+
+<h3>6.1 The problem</h3>
+<p>When you initialize \(v_0 = 0\), the first few values of \(v_t\) are biased toward zero.
+Example: with \(\beta = 0.98\), the first few values look like:</p>
+\[
+\begin{aligned}
+v_1 &= 0.98 \cdot 0 + 0.02 \theta_1 = 0.02 \theta_1 \\
+v_2 &= 0.98 \cdot 0.02 \theta_1 + 0.02 \theta_2 \approx 0.02 \theta_2 \\
+\end{aligned}
+\]
+<p>For a while, \(v_t\) is only about \(2\%\) of \(\theta_t\), instead of being close to it.
+This produces a "starting low" bias in the average — visible in Figure 5 as a curve that
+begins well below the data.</p>
+
+<figure>
+<svg viewBox="0 0 620 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bias correction">
+  <line x1="40" y1="200" x2="600" y2="200" stroke="#1a202c"/>
+  <line x1="40" y1="200" x2="40" y2="20" stroke="#1a202c"/>
+  <text x="320" y="230" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#5b6470">days</text>
+  <text x="20" y="110" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#5b6470" transform="rotate(-90 20 110)">temperature</text>
+  <path d="M50,180 L100,175 L150,165 L200,150 L250,135 L300,120 L350,105 L400,95 L450,90 L500,95 L550,105"
+        fill="none" stroke="#2b6cb0" stroke-width="2"/>
+  <text x="510" y="90" font-size="11" font-family="sans-serif" fill="#2b6cb0">raw θ</text>
+  <path d="M50,195 L100,192 L150,180 L200,165 L250,148 L300,130 L350,114 L400,100 L450,92 L500,92 L550,100"
+        fill="none" stroke="#c53030" stroke-width="2.5"/>
+  <text x="100" y="205" font-size="11" font-family="sans-serif" fill="#c53030">biased EWA</text>
+  <path d="M50,185 L100,180 L150,170 L200,152 L250,138 L300,122 L350,106 L400,96 L450,90 L500,92 L550,100"
+        fill="none" stroke="#2f855a" stroke-width="2.5" stroke-dasharray="4 3"/>
+  <text x="240" y="115" font-size="11" font-family="sans-serif" fill="#2f855a">corrected EWA</text>
+</svg>
+<figcaption><strong>Figure 5.</strong> Without bias correction, the EWA starts near zero
+and takes many steps to climb up to the data. With bias correction, the early values are
+already close to the data.</figcaption>
+</figure>
+
+<h3>6.2 The fix</h3>
+<div class="callout def">
+<span class="label">🔵 Definition — Bias Correction</span>
+Instead of using \(v_t\) directly, use:
+\[
+v_t^{\text{corrected}} = \frac{v_t}{1 - \beta^t}
+\]
+where \(t\) is the current time step (starting at \(t=1\)). As \(t\) grows, \(\beta^t\)
+becomes very small, so the correction factor approaches 1 and has almost no effect.
+</div>
+
+<div class="callout ex">
+<span class="label">🟣 Example</span>
+<p>With \(\beta = 0.98\):</p>
+<ul>
+<li>At \(t=1\): \(1 - \beta^1 = 0.02\), so we divide \(v_1\) by 0.02 — this "undoes" the
+initial shrink.</li>
+<li>At \(t=2\): \(1 - \beta^2 = 1 - 0.9604 = 0.0396\).</li>
+<li>At \(t=50\): \(1 - \beta^{50} \approx 0.636\).</li>
+<li>At \(t=200\): \(1 - \beta^{200} \approx 1\), so the correction is negligible.</li>
+</ul>
+<p>So the correction only matters in the early steps.</p>
+</div>
+
+<div class="callout imp">
+<span class="label">🟡 Important — is bias correction always needed?</span>
+In practice, many implementations skip bias correction and still work fine — especially
+when there are many iterations, since the correction becomes negligible. But it is
+standard in Adam and is worth knowing.
+</div>
+
+<!-- ============================================================= -->
+<h2 id="momentum">7. Gradient Descent with Momentum</h2>
+
+<h3>7.1 The problem it solves</h3>
+<p>Standard gradient descent can oscillate when the cost surface is elongated — for example,
+when one parameter needs a large change and another needs a small one. The updates zig-zag,
+and progress in the "right" direction is slow.</p>
+
+<figure>
+<svg viewBox="0 0 620 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Oscillating gradient descent">
+  <ellipse cx="310" cy="100" rx="280" ry="60" fill="none" stroke="#2b6cb0"/>
+  <ellipse cx="310" cy="100" rx="200" ry="42" fill="none" stroke="#2b6cb0"/>
+  <ellipse cx="310" cy="100" rx="120" ry="25" fill="none" stroke="#2b6cb0"/>
+  <ellipse cx="310" cy="100" rx="40" ry="9" fill="none" stroke="#2b6cb0"/>
+  <circle cx="310" cy="100" r="4" fill="#c53030"/>
+  <path d="M40,90 L80,130 L120,80 L160,120 L200,90 L240,115 L280,95 L300,105 L310,100"
+        fill="none" stroke="#c53030" stroke-width="2"/>
+  <text x="140" y="160" font-size="12" font-family="sans-serif" fill="#c53030">standard gradient descent: zig-zag</text>
+  <path d="M40,90 Q120,80 200,100 Q280,110 310,100" fill="none" stroke="#2f855a" stroke-width="2.5" stroke-dasharray="4 3"/>
+  <text x="120" y="185" font-size="12" font-family="sans-serif" fill="#2f855a">with momentum: smoother, faster</text>
+</svg>
+<figcaption><strong>Figure 6.</strong> Standard gradient descent (red) oscillates. With
+momentum (green), the oscillations cancel out and progress in the true direction is
+accumulated, so we converge faster.</figcaption>
+</figure>
+
+<h3>7.2 The idea</h3>
+<div class="callout intu">
+<span class="label">🟢 Intuition — a ball rolling downhill</span>
+Imagine a ball rolling down a hill. On flat ground it still moves — because of the
+<em>momentum</em> it built up. In the same way, if we accumulate past gradients, the
+optimizer keeps moving in a consistent direction even if the current gradient is small
+or points sideways.
+</div>
+
+<h3>7.3 The algorithm</h3>
+<p>On each iteration \(t\) (using the current mini-batch):</p>
+<ol>
+<li><strong>Compute</strong> \(dW, db\) on the current mini-batch.</li>
+<li><strong>Update the velocity</strong> for each parameter:
+\[
+v_{dW} = \beta \, v_{dW} + (1-\beta)\, dW
+\]
+\[
+v_{db} = \beta \, v_{db} + (1-\beta)\, db
+\]</li>
+<li><strong>Update the parameters</strong> using the velocity instead of the raw gradient:
+\[
+W := W - \alpha \, v_{dW}, \qquad b := b - \alpha \, v_{db}
+\]</li>
+</ol>
+
+<div class="callout imp">
+<span class="label">🟡 Important — two variants of the update</span>
+There are two conventions in the literature:
+<ul>
+<li><strong>Andrew Ng's slides:</strong> \(v_{dW} = \beta v_{dW} + (1-\beta) dW\), then
+\(W := W - \alpha v_{dW}\).</li>
+<li><strong>Some other texts:</strong> \(v_{dW} = \beta v_{dW} + dW\), then
+\(W := W - \alpha v_{dW}\).</li>
+</ul>
+<p>Both work; the first is the "exponentially weighted average of gradients" view, the
+second uses a slightly different scaling. Pick one and stick with it. Below we use the
+first, which matches the course slides.</p>
+</div>
+
+<div class="callout ex">
+<span class="label">🟣 Example — a simple case</span>
+<p>Suppose \(\beta = 0.9\), and over three iterations the gradient \(dW\) is
+\(1, 1, 1\). Then:</p>
+<ul>
+<li>\(v_{dW}^{(1)} = 0.9 \cdot 0 + 0.1 \cdot 1 = 0.1\)</li>
+<li>\(v_{dW}^{(2)} = 0.9 \cdot 0.1 + 0.1 \cdot 1 = 0.19\)</li>
+<li>\(v_{dW}^{(3)} = 0.9 \cdot 0.19 + 0.1 \cdot 1 = 0.271\)</li>
+</ul>
+<p>The velocity builds up over iterations, so the effective step size gets larger —
+which is exactly what we want when gradients consistently point the same way.</p>
+</div>
+
+<h3>7.4 Hyperparameters</h3>
+<div class="callout impl">
+<span class="label">⚙️ Implementation — momentum hyperparameters</span>
+<ul>
+<li>\(\alpha\) — learning rate. Tune as usual.</li>
+<li>\(\beta\) — momentum coefficient, typically \(0.9\). It is the same \(\beta\) as in the
+exponentially weighted average, applied to gradients rather than to temperatures.</li>
+<li>\(v_{dW}, v_{db}\) — initialized to <strong>zero</strong>.</li>
+</ul>
+</div>
+
+<div class="callout warn">
+<span class="label">🔴 Warning — no bias correction needed in practice</span>
+Unlike in the EWA temperature example, we usually do not apply bias correction in momentum.
+With a reasonable \(\beta\) (e.g. 0.9) and many iterations, the initial bias washes out
+quickly and has negligible effect on the final result.
+</div>
+
+<!-- ============================================================= -->
+<h2 id="rmsprop">8. RMSprop</h2>
+
+<h3>8.1 The idea</h3>
+<div class="callout def">
+<span class="label">🔵 Definition — RMSprop</span>
+<strong>RMSprop</strong> (Root Mean Square propagation) is an optimization algorithm that
+adapts the learning rate for each parameter individually, based on the recent magnitude of
+the gradients. Parameters with consistently large gradients get a smaller effective
+learning rate; parameters with small gradients get a larger one.
+</div>
+
+<div class="callout intu">
+<span class="label">🟢 Intuition — normalizing by the gradient magnitude</span>
+Suppose \(W_1\) has a large gradient and \(W_2\) has a small one. Standard gradient descent
+moves \(W_1\) too fast and \(W_2\) too slow. RMSprop divides each update by a running
+average of the recent squared gradients. Large gradients → large denominator → smaller
+step. This equalizes progress across parameters.
+</div>
+
+<h3>8.2 The algorithm</h3>
+<p>On each iteration \(t\):</p>
+<ol>
+<li><strong>Compute</strong> \(dW, db\).</li>
+<li><strong>Update the squared-gradient accumulators:</strong>
+\[
+S_{dW} = \beta_2 \, S_{dW} + (1-\beta_2)\, (dW)^2
+\]
+\[
+S_{db} = \beta_2 \, S_{db} + (1-\beta_2)\, (db)^2
+\]
+Note: \((dW)^2\) is element-wise squaring.</li>
+<li><strong>Update the parameters:</strong>
+\[
+W := W - \alpha \, \frac{dW}{\sqrt{S_{dW}} + \varepsilon}, \qquad
+b := b - \alpha \, \frac{db}{\sqrt{S_{db}} + \varepsilon}
+\]
+where \(\varepsilon\) is a very small number (e.g. \(10^{-8}\)) to avoid division by zero.</li>
+</ol>
+
+<h3>8.3 Why it works</h3>
+<p>Consider a parameter whose gradient has been oscillating. The accumulator \(S\) grows.
+Dividing by \(\sqrt{S}\) shrinks the effective step size — dampening oscillations. A
+parameter whose gradient has been consistently small has a small \(S\), so its step size
+stays relatively large — letting it catch up.</p>
+
+<div class="callout imp">
+<span class="label">🟡 Important — hyperparameters</span>
+<ul>
+<li>\(\alpha\) — learning rate. Needs tuning.</li>
+<li>\(\beta_2\) — decay rate for the squared gradients. Typical value: 0.999.</li>
+<li>\(\varepsilon\) — small constant, e.g. \(10^{-8}\), to prevent division by zero.</li>
+</ul>
+</div>
+
+<div class="callout warn">
+<span class="label">🔴 Warning — \(\varepsilon\) position</span>
+\(\varepsilon\) must be added <em>outside</em> the square root, in the denominator:
+\(\sqrt{S} + \varepsilon\). Putting it inside as \(\sqrt{S + \varepsilon}\) changes the
+behavior subtly and is not standard.
+</div>
+
+<!-- ============================================================= -->
+<h2 id="adam">9. Adam Optimization Algorithm</h2>
+
+<h3>9.1 The idea</h3>
+<div class="callout def">
+<span class="label">🔵 Definition — Adam</span>
+<strong>Adam</strong> (Adaptive Moment Estimation) combines <strong>Momentum</strong> and
+<strong>RMSprop</strong>. It keeps both a running average of the gradients (first moment,
+like momentum) and a running average of the squared gradients (second moment, like
+RMSprop). It also applies bias correction to both. Adam is currently the most widely used
+optimizer in deep learning.
+</div>
+
+<div class="callout intu">
+<span class="label">🟢 Intuition</span>
+Adam is like momentum (which smooths the direction of updates) plus RMSprop (which scales
+each update by the recent gradient magnitude) plus bias correction (which fixes the early
+underestimation). The result is a robust, fast, low-tuning optimizer.
+</div>
+
+<h3>9.2 The algorithm</h3>
+<p>Initialize the accumulators to zero: \(v_{dW} = 0, v_{db} = 0, S_{dW} = 0, S_{db} = 0\).
+Also initialize the step counter \(t = 0\).</p>
+
+<p>On each iteration:</p>
+<ol>
+<li>Increment \(t := t + 1\).</li>
+<li>Compute \(dW, db\) on the current mini-batch.</li>
+<li><strong>Momentum terms (first moment):</strong>
+\[
+v_{dW} = \beta_1 \, v_{dW} + (1-\beta_1)\, dW
+\]
+\[
+v_{db} = \beta_1 \, v_{db} + (1-\beta_1)\, db
+\]</li>
+<li><strong>RMSprop terms (second moment):</strong>
+\[
+S_{dW} = \beta_2 \, S_{dW} + (1-\beta_2)\, (dW)^2
+\]
+\[
+S_{db} = \beta_2 \, S_{db} + (1-\beta_2)\, (db)^2
+\]</li>
+<li><strong>Bias corrections:</strong>
+\[
+v_{dW}^{\text{corrected}} = \frac{v_{dW}}{1 - \beta_1^{\,t}}, \qquad
+v_{db}^{\text{corrected}} = \frac{v_{db}}{1 - \beta_1^{\,t}}
+\]
+\[
+S_{dW}^{\text{corrected}} = \frac{S_{dW}}{1 - \beta_2^{\,t}}, \qquad
+S_{db}^{\text{corrected}} = \frac{S_{db}}{1 - \beta_2^{\,t}}
+\]</li>
+<li><strong>Parameter update:</strong>
+\[
+W := W - \alpha \, \frac{v_{dW}^{\text{corrected}}}{\sqrt{S_{dW}^{\text{corrected}}} + \varepsilon}
+\]
+\[
+b := b - \alpha \, \frac{v_{db}^{\text{corrected}}}{\sqrt{S_{db}^{\text{corrected}}} + \varepsilon}
+\]</li>
+</ol>
+
+<h3>9.3 Hyperparameters</h3>
+<div class="callout impl">
+<span class="label">⚙️ Implementation — Adam default hyperparameters</span>
+<table class="tbl-fixed">
+<thead><tr><th>Hyperparameter</th><th>Meaning</th><th>Typical value</th></tr></thead>
+<tbody>
+<tr><td>\(\alpha\)</td><td>Learning rate</td><td>Needs tuning. Often \(10^{-3}\), \(10^{-4}\), etc.</td></tr>
+<tr><td>\(\beta_1\)</td><td>Decay rate for first moment (momentum)</td><td>0.9</td></tr>
+<tr><td>\(\beta_2\)</td><td>Decay rate for second moment (RMSprop)</td><td>0.999</td></tr>
+<tr><td>\(\varepsilon\)</td><td>Small constant to avoid division by zero</td><td>\(10^{-8}\)</td></tr>
+</tbody>
+</table>
+<p>Of these, usually only \(\alpha\) needs tuning. The others are remarkably robust across
+problems.</p>
+</div>
+
+<div class="callout insight">
+<span class="label">💡 Insight — why Adam is so popular</span>
+Adam works well "out of the box" for most problems. It combines the benefits of both
+momentum and RMSprop, requires little hyperparameter tuning, is memory-efficient, and
+handles sparse gradients (e.g. in NLP) especially well. Adam's name comes from
+<em>adaptive moment estimation</em> — it adapts using both the first and second moments
+of the gradients.
+</div>
+
+<!-- ============================================================= -->
+<h2 id="lrdecay">10. Learning Rate Decay</h2>
+
+<h3>10.1 The problem</h3>
+<p>With a fixed learning rate \(\alpha\), the optimizer oscillates around the minimum
+rather than settling into it. If you shrink \(\alpha\) over time, the oscillations damp
+out and you settle closer to the optimum.</p>
+
+<figure>
+<svg viewBox="0 0 620 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Learning rate decay intuition">
+  <ellipse cx="310" cy="100" rx="280" ry="60" fill="none" stroke="#2b6cb0"/>
+  <ellipse cx="310" cy="100" rx="200" ry="42" fill="none" stroke="#2b6cb0"/>
+  <ellipse cx="310" cy="100" rx="120" ry="25" fill="none" stroke="#2b6cb0"/>
+  <ellipse cx="310" cy="100" rx="40" ry="9" fill="none" stroke="#2b6cb0"/>
+  <circle cx="310" cy="100" r="4" fill="#c53030"/>
+  <!-- big oscillations -->
+  <path d="M40,90 L80,130 L120,80 L160,120 L200,90 L240,115 L280,95 L300,105 L310,100"
+        fill="none" stroke="#c53030" stroke-width="2"/>
+  <!-- small oscillations -->
+  <path d="M40,90 Q160,85 260,95 Q290,100 308,101" fill="none" stroke="#2f855a" stroke-width="2.5" stroke-dasharray="4 3"/>
+</svg>
+<figcaption><strong>Figure 7.</strong> With a fixed large learning rate, the optimizer
+oscillates around the minimum (red). With a decayed learning rate, the oscillations shrink
+and the optimizer settles closer to the minimum (green).</figcaption>
+</figure>
+
+<h3>10.2 Common decay schedules</h3>
+
+<div class="callout def">
+<span class="label">🔵 Definition — Learning rate decay</span>
+A <strong>learning rate decay schedule</strong> is a rule for reducing the learning rate
+\(\alpha\) as training proceeds, usually as a function of the epoch number.
+</div>
+
+<p>Some common forms (with \(\alpha_0\) the initial learning rate):</p>
+
+<table class="tbl-fixed">
+<thead><tr><th>Name</th><th>Formula</th><th>Notes</th></tr></thead>
+<tbody>
+<tr>
+<td>Exponential decay</td>
+<td>\(\alpha = 0.95^{\text{epoch-num}} \cdot \alpha_0\)</td>
+<td>The learning rate shrinks by a constant factor each epoch.</td>
+</tr>
+<tr>
+<td>Inverse-time decay</td>
+<td>\(\alpha = \frac{k}{\sqrt{\text{epoch-num}}} \cdot \alpha_0\)</td>
+<td>Also written \(\frac{k}{\sqrt{t}} \cdot \alpha_0\) where \(t\) is the iteration.</td>
+</tr>
+<tr>
+<td>Step decay</td>
+<td>Reduce \(\alpha\) by a factor (e.g. 0.5) every few epochs</td>
+<td>Simple, and used widely in practice.</td>
+</tr>
+<tr>
+<td>Manual decay</td>
+<td>Watch the training and halve \(\alpha\) by hand when progress stalls</td>
+<td>Effective if you have the time.</td>
+</tr>
+</tbody>
+</table>
+
+<div class="callout imp">
+<span class="label">🟡 Important — hyperparameters of decay</span>
+Each schedule introduces its own hyperparameters (e.g. \(k\) in inverse-time decay, or the
+step size in step decay). In practice, a moderate amount of decay and thoughtful tuning of
+these schedules can help, but the gain from decay alone is usually smaller than the gain
+from a good optimizer like Adam.
+</div>
+
+<figure>
+<svg viewBox="0 0 620 180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Step decay curve">
+  <line x1="40" y1="150" x2="600" y2="150" stroke="#1a202c"/>
+  <line x1="40" y1="150" x2="40" y2="20" stroke="#1a202c"/>
+  <text x="320" y="175" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#5b6470">epochs (t)</text>
+  <text x="20" y="90" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#5b6470" transform="rotate(-90 20 90)">α</text>
+  <path d="M50,40 L160,40 L160,70 L270,70 L270,100 L380,100 L380,120 L490,120 L490,135 L590,135"
+        fill="none" stroke="#2b6cb0" stroke-width="2.5"/>
+  <text x="100" y="30" font-size="11" font-family="sans-serif" fill="#5b6470">step decay</text>
+</svg>
+<figcaption><strong>Figure 8.</strong> Step decay: the learning rate stays constant for
+several epochs, then drops by a fixed factor, then stays constant again, and so on. This
+is a simple and widely used schedule.</figcaption>
+</figure>
+
+<!-- ============================================================= -->
+<h2 id="localopt">11. The Problem of Local Optima</h2>
+
+<h3>11.1 Local optima — a common worry</h3>
+<p>In low-dimensional problems, the cost surface can have many <strong>local minima</strong>
+— points where the cost is low locally but not globally. A naive optimizer might get stuck
+in one.</p>
+
+<figure>
+<svg viewBox="0 0 620 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Local minima vs saddle point">
+  <g transform="translate(20,20)">
+    <text x="130" y="15" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#1a202c">Low-dimensional: many local minima</text>
+    <line x1="20" y1="180" x2="260" y2="180" stroke="#1a202c"/>
+    <path d="M30,60 Q70,140 110,80 Q150,20 190,100 Q220,160 250,70"
+          fill="none" stroke="#2b6cb0" stroke-width="2.5"/>
+    <circle cx="110" cy="80" r="4" fill="#c53030"/>
+    <circle cx="190" cy="100" r="4" fill="#c53030"/>
+    <text x="105" y="195" font-size="10" font-family="sans-serif" fill="#c53030">local min</text>
+    <text x="185" y="195" font-size="10" font-family="sans-serif" fill="#c53030">local min</text>
+  </g>
+  <g transform="translate(340,20)">
+    <text x="130" y="15" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#1a202c">High-dimensional: saddle point</text>
+    <line x1="20" y1="180" x2="260" y2="180" stroke="#1a202c"/>
+    <path d="M30,100 Q80,60 130,100 Q180,140 230,100 Q255,80 260,90"
+          fill="none" stroke="#2b855a" stroke-width="2.5"/>
+    <circle cx="130" cy="100" r="4" fill="#c53030"/>
+    <text x="105" y="195" font-size="10" font-family="sans-serif" fill="#c53030">saddle</text>
+  </g>
+</svg>
+<figcaption><strong>Figure 9.</strong> In low dimensions (left), the cost surface can have
+many local minima. In high dimensions (right), the surface is dominated by saddle points —
+places where the gradient is zero but the curvature is positive in some directions and
+negative in others.</figcaption>
+</figure>
+
+<h3>11.2 The modern view</h3>
+<div class="callout insight">
+<span class="label">💡 Insight — Andrew Ng's key point</span>
+In very high-dimensional deep learning problems:
+<ul>
+<li>Bad local minima are actually <strong>unlikely</strong>. With so many dimensions, you
+would have to be unlucky in every direction to be trapped in a genuinely bad local minimum.</li>
+<li>Most "flat" regions are <strong>saddle points</strong> — the gradient is (nearly) zero,
+but you can still escape by moving in some direction.</li>
+<li>The real problem is <strong>plateaus</strong> — long flat regions where the gradient is
+tiny. Learning slows down because the gradient signal is weak.</li>
+</ul>
+</div>
+
+<h3>11.3 Why momentum and Adam help here</h3>
+<p>On a plateau, the raw gradient is tiny, so vanilla gradient descent makes tiny steps.
+But momentum accumulates past gradients, allowing the optimizer to keep moving. Adam's
+adaptive scaling and momentum also help the optimizer continue progressing through flat
+regions. This is one reason why modern optimizers train deep networks much faster than
+plain gradient descent.</p>
+
+<div class="callout warn">
+<span class="label">🔴 Warning — do not over-worry about local optima</span>
+Beginners often worry about local optima in deep learning. In practice this is rarely the
+main concern. Focus on plateaus, saddle points, and good optimization algorithms instead.
+</div>
+
+<!-- ============================================================= -->
+<h2 id="summary">12. Weekly Summary</h2>
+
+<div class="card">
+<h3>What we covered</h3>
+<ul>
+<li><strong>Mini-batch gradient descent</strong> — split the training set into small
+chunks; many updates per epoch; noisy but fast.</li>
+<li><strong>Choosing a mini-batch size</strong> — powers of 2 (64–512) are typical; make
+sure it fits in memory.</li>
+<li><strong>Exponentially weighted averages</strong> — a smoothing technique that keeps
+a running average of a sequence. Effective window ~ \(1/(1-\beta)\).</li>
+<li><strong>Bias correction</strong> — divide by \(1-\beta^t\) to correct the initial
+underestimation of EWA.</li>
+<li><strong>Momentum</strong> — accumulate past gradients to speed up consistent
+directions and damp oscillations.</li>
+<li><strong>RMSprop</strong> — divide each update by the recent RMS of gradients,
+adapting the effective step size per parameter.</li>
+<li><strong>Adam</strong> — combine momentum (first moment) with RMSprop (second moment)
+and bias correction. Default choice for most deep learning.</li>
+<li><strong>Learning rate decay</strong> — gradually reduce \(\alpha\) to settle closer
+to the minimum.</li>
+<li><strong>Local optima</strong> — rarely a problem in high dimensions; saddle points and
+plateaus are more important.</li>
+</ul>
+</div>
+
+<h3>Must-Know Concepts</h3>
+<ul>
+<li>Mini-batch size = \(m\) → batch gradient descent. Mini-batch size = 1 → SGD.</li>
+<li>Effective window of EWA is roughly \(1/(1-\beta)\).</li>
+<li>Bias-corrected EWA: \(v_t^{\text{corrected}} = v_t / (1 - \beta^t)\).</li>
+<li>Momentum update: \(v_{dW} = \beta v_{dW} + (1-\beta)dW\), then \(W \mathrel{-}= \alpha v_{dW}\).</li>
+<li>RMSprop: \(S_{dW} = \beta_2 S_{dW} + (1-\beta_2)(dW)^2\), then \(W \mathrel{-}= \alpha dW/(\sqrt{S_{dW}} + \varepsilon)\).</li>
+<li>Adam combines momentum + RMSprop + bias correction.</li>
+<li>Adam default hyperparameters: \(\beta_1 = 0.9\), \(\beta_2 = 0.999\), \(\varepsilon = 10^{-8}\).</li>
+</ul>
+
+<h3>Important Equations</h3>
+<table class="tbl-fixed">
+<thead><tr><th>Equation</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td>\(v_t = \beta v_{t-1} + (1-\beta)\theta_t\)</td><td>Exponentially weighted average.</td></tr>
+<tr><td>\(v_t^{\text{corrected}} = v_t / (1 - \beta^t)\)</td><td>Bias correction for EWA.</td></tr>
+<tr><td>\(v_{dW} = \beta v_{dW} + (1-\beta)dW\)</td><td>Momentum accumulation.</td></tr>
+<tr><td>\(W := W - \alpha v_{dW}\)</td><td>Parameter update with momentum.</td></tr>
+<tr><td>\(S_{dW} = \beta_2 S_{dW} + (1-\beta_2)(dW)^2\)</td><td>RMSprop accumulator.</td></tr>
+<tr><td>\(W := W - \alpha \frac{dW}{\sqrt{S_{dW}} + \varepsilon}\)</td><td>RMSprop update.</td></tr>
+<tr><td>\(W := W - \alpha \frac{v_{dW}^{\text{corrected}}}{\sqrt{S_{dW}^{\text{corrected}}} + \varepsilon}\)</td><td>Adam update.</td></tr>
+</tbody>
+</table>
+
+<h3>Common Confusions</h3>
+<table class="tbl-fixed">
+<thead><tr><th>Concept A</th><th>Concept B</th><th>Key difference</th></tr></thead>
+<tbody>
+<tr><td>Batch gradient descent</td><td>Mini-batch gradient descent</td><td>Batch: one update per epoch. Mini-batch: one update per mini-batch (many per epoch).</td></tr>
+<tr><td>Mini-batch gradient descent</td><td>Stochastic gradient descent</td><td>Mini-batch: chunk size &gt; 1. SGD: chunk size = 1.</td></tr>
+<tr><td>Momentum</td><td>RMSprop</td><td>Momentum smooths the <em>direction</em> of updates. RMSprop scales each update by recent magnitude.</td></tr>
+<tr><td>Momentum</td><td>Adam</td><td>Adam = momentum + RMSprop + bias correction.</td></tr>
+<tr><td>EWA bias without correction</td><td>EWA bias with correction</td><td>Without correction, the first few values are systematically too small.</td></tr>
+<tr><td>Local minima</td><td>Saddle points</td><td>Local minima trap in every direction. Saddle points are traps in some directions but not others.</td></tr>
+</tbody>
+</table>
+
+<!-- ============================================================= -->
+<h2 id="review">13. Review Questions</h2>
+<div class="qa">
+
+<details>
+<summary>Q1. Why is mini-batch gradient descent often faster than batch gradient descent, even though each step is noisier?</summary>
+<p>Because it makes many more parameter updates per unit of wall-clock time. With
+vectorization, processing 1,000 examples costs roughly the same as processing one, so
+mini-batch gradient descent gets vastly more updates. Even if each update is noisier, the
+aggregate progress is much faster. The noise also has a slight regularizing effect.</p>
+</details>
+
+<details>
+<summary>Q2. What mini-batch size would you pick for a training set with 1,000,000 examples?</summary>
+<p>Typically a power of 2 such as 64, 128, 256, 512, or 1024. The choice depends on the
+model and hardware. Make sure each mini-batch fits in CPU/GPU memory. There is no universal
+best value — treat it as a hyperparameter.</p>
+</details>
+
+<details>
+<summary>Q3. Explain in one sentence what an exponentially weighted average does.</summary>
+<p>It computes a weighted average of past values in which each value is weighted by
+\((1-\beta)\beta^k\) where \(k\) is the number of steps back — recent values count more,
+and the weights decay exponentially into the past.</p>
+</details>
+
+<details>
+<summary>Q4. With \(\beta = 0.98\), what is the approximate effective window of the EWA?</summary>
+<p>Roughly \(1/(1-\beta) = 1/0.02 = 50\) observations.</p>
+</details>
+
+<details>
+<summary>Q5. Why is bias correction needed when computing an EWA?</summary>
+<p>Because we initialize \(v_0 = 0\). For the first few steps, \(v_t\) is systematically
+smaller than \(\theta_t\). Dividing by \(1 - \beta^t\) corrects for this. As \(t\) grows,
+\(\beta^t \to 0\) and the correction has negligible effect.</p>
+</details>
+
+<details>
+<summary>Q6. Write down the momentum update equations.</summary>
+\[
+v_{dW} = \beta v_{dW} + (1-\beta)dW
+\]
+\[
+v_{db} = \beta v_{db} + (1-\beta)db
+\]
+\[
+W := W - \alpha v_{dW}, \qquad b := b - \alpha v_{db}
+\]
+<p>\(\beta\) is typically 0.9. The velocity \(v_{dW}\) accumulates past gradients, so
+consistent directions get amplified and oscillations damp out.</p>
+</details>
+
+<details>
+<summary>Q7. How does momentum help when training through a flat plateau?</summary>
+<p>On a plateau, the raw gradient is very small. But momentum accumulates past gradients
+into a velocity term, so the optimizer keeps moving in the same direction even when the
+current gradient signal is weak. This lets the optimizer traverse flat regions much more
+quickly than vanilla gradient descent.</p>
+</details>
+
+<details>
+<summary>Q8. What is the role of \(\varepsilon\) in RMSprop and Adam?</summary>
+<p>\(\varepsilon\) is a small constant (e.g. \(10^{-8}\)) added to the denominator to
+prevent division by zero or by a very small number. It also ensures numerical stability
+when the accumulator \(S\) happens to be extremely small.</p>
+</details>
+
+<details>
+<summary>Q9. What is the difference between Momentum and RMSprop?</summary>
+<p><strong>Momentum</strong> accumulates gradients into a velocity term. The update is
+\(\alpha v_{dW}\), which is a smoothed version of the gradient scaled by a fixed \(\alpha\).
+<strong>RMSprop</strong> accumulates <em>squared</em> gradients and divides each update
+by the square root of this accumulator: the effective learning rate is \(\alpha/\sqrt{S}\).
+Momentum smooths direction; RMSprop scales the step size per parameter.</p>
+</details>
+
+<details>
+<summary>Q10. What does Adam combine?</summary>
+<p>Adam combines:
+<ul>
+<li><strong>Momentum</strong> — via the first moment estimate \(v\) (running average of
+gradients).</li>
+<li><strong>RMSprop</strong> — via the second moment estimate \(S\) (running average of
+squared gradients).</li>
+<li><strong>Bias correction</strong> — applied to both \(v\) and \(S\).</li>
+</ul>
+</p>
+</details>
+
+<details>
+<summary>Q11. What are Adam's typical default hyperparameters?</summary>
+<p>\(\beta_1 = 0.9\) (first moment decay), \(\beta_2 = 0.999\) (second moment decay),
+\(\varepsilon = 10^{-8}\). The learning rate \(\alpha\) needs to be tuned, but the other
+three work well across many problems.</p>
+</details>
+
+<details>
+<summary>Q12. Why is Adam often a good default choice for deep learning?</summary>
+<p>Because it works well "out of the box" across a wide range of problems, combines
+momentum and adaptive per-parameter scaling, requires little hyperparameter tuning, is
+memory-efficient, and handles sparse gradients well (e.g. in NLP). The main practical
+downside is that it uses more memory than momentum alone.</p>
+</details>
+
+<details>
+<summary>Q13. What is learning rate decay and why is it useful?</summary>
+<p>Learning rate decay means gradually reducing \(\alpha\) as training proceeds. It is
+useful because the optimizer oscillates around the minimum with a constant \(\alpha\);
+decaying \(\alpha\) damps those oscillations and lets the optimizer settle closer to the
+minimum.</p>
+</details>
+
+<details>
+<summary>Q14. Give one example of a learning rate decay schedule.</summary>
+<p>Step decay: reduce \(\alpha\) by a factor of, say, 0.5 every few epochs. Other examples:
+exponential decay \(\alpha = 0.95^{\text{epoch-num}} \alpha_0\), inverse-time decay
+\(\alpha = (k/\sqrt{\text{epoch-num}}) \alpha_0\), or manual decay.</p>
+</details>
+
+<details>
+<summary>Q15. Why are bad local optima usually not a serious concern in deep learning?</summary>
+<p>Because deep learning problems have very high-dimensional parameter spaces. To be stuck
+in a bad local minimum, you would need to be unlucky in <em>every</em> direction. In high
+dimensions, most critical points are saddle points rather than local minima — the gradient
+is zero but you can still escape by moving in certain directions. The real practical
+challenge is plateaus (flat regions with tiny gradients).</p>
+</details>
+
+<details>
+<summary>Q16. How does a saddle point differ from a local minimum?</summary>
+<p>At a local minimum, the function curves upward in every direction — you cannot reduce
+the cost by moving anywhere. At a saddle point, the function curves upward in some
+directions and downward in others — the gradient is zero, but you can still reduce the
+cost by moving in one of the "downward" directions. Saddle points are far more common in
+high dimensions.</p>
+</details>
+
+<details>
+<summary>Q17. What does the "effective window" of an EWA mean, and how does it depend on \(\beta\)?</summary>
+<p>The effective window is the approximate number of past time steps that significantly
+contribute to the average. It equals roughly \(1/(1-\beta)\). For \(\beta = 0.9\), the
+window is about 10 steps. For \(\beta = 0.98\), it is about 50 steps. Larger \(\beta\)
+means a longer, smoother window.</p>
+</details>
+
+<details>
+<summary>Q18. Explain the difference between batch gradient descent, mini-batch gradient descent, and stochastic gradient descent.</summary>
+<p>
+<ul>
+<li><strong>Batch</strong> (\(m_{\text{batch}} = m\)): one update per epoch. Smooth cost
+curve, slow progress.</li>
+<li><strong>Mini-batch</strong> (\(1 < m_{\text{batch}} < m\)): many updates per epoch,
+each on a small chunk. Moderate noise, fast progress in wall-clock time.</li>
+<li><strong>Stochastic</strong> (\(m_{\text{batch}} = 1\)): one update per example. Very
+noisy, loses vectorization benefits.</li>
+</ul>
+</p>
+</details>
+
+<details>
+<summary>Q19. What is the cost curve shape with mini-batch gradient descent, and why?</summary>
+<p>The cost curve oscillates up and down, but trends downward overall. It oscillates
+because each mini-batch is a small sample of the data and its gradient points in a
+slightly different direction. It trends downward because on average the direction is
+correct. A smooth debugging curve can be obtained by computing the cost on a fixed set
+of examples or averaging over mini-batches.</p>
+</details>
+
+<details>
+<summary>Q20. If your training cost is oscillating wildly, what are two possible causes?</summary>
+<p>Possible causes:
+<ul>
+<li><strong>Mini-batch noise:</strong> normal when using small mini-batches — see the
+explanation above. If this is the cause, the curve still trends downward.</li>
+<li><strong>Learning rate too large:</strong> the optimizer may be jumping past the
+minimum. Try reducing \(\alpha\), or use a learning rate decay schedule.</li>
+</ul>
+Other possibilities: bug in the gradient computation, or numerical instability (NaNs).
+</p>
+</details>
+
+</div>
+
+<!-- ============================================================= -->
+<h2 id="selftest">14. Self-Test</h2>
+<p class="small">Click each question to reveal the answer. These questions test conceptual
+understanding rather than memorization.</p>
+
+<div class="qa">
+
+<details>
+<summary>Q1. You are training a model on a dataset with \(m = 10{,}000\) examples. Your
+colleague suggests using a mini-batch size of 5,000. Would you agree? What size would you
+suggest instead, and why?</summary>
+<p><strong>Answer.</strong> A mini-batch size of 5,000 gives only 2 updates per epoch — that
+is essentially batch gradient descent with extra bookkeeping overhead. It defeats the
+purpose of mini-batching. A better starting point would be 64, 128, or 256 (a power of 2).
+These give 40–150+ updates per epoch, much faster convergence in wall-clock time, and still
+allow vectorization on the CPU/GPU.</p>
+<p>Rule of thumb: if the dataset is small (say \(m \leq 2{,}000\)), batch gradient descent
+is fine. For larger datasets, use mini-batches of 64–512, but make sure the batch fits in
+memory.</p>
+</details>
+
+<details>
+<summary>Q2. Explain in your own words why the mini-batch cost curve is noisy, and why
+this is not a problem.</summary>
+<p><strong>Answer.</strong> Each mini-batch is a small random subset of the training set.
+The gradient computed from this subset is an <em>estimate</em> of the true gradient — it
+points in approximately the right direction, but with noise. As you move from one mini-batch
+to the next, this noise makes the cost go up and down slightly.</p>
+<p>This is not a problem because:</p>
+<ul>
+<li>On <em>average</em>, the gradient estimate is correct, so the cost trends downward
+over the course of many iterations.</li>
+<li>The noise can actually help — it lets the optimizer escape small flat regions and
+saddle points that would stall a batch-gradient-descent optimizer.</li>
+<li>You can smooth the curve for debugging by computing the cost on a fixed set of examples
+or averaging over several mini-batches.</li>
+</ul>
+</details>
+
+<details>
+<summary>Q3. With \(\beta = 0.9\) in an exponentially weighted average, roughly how many
+previous values contribute meaningfully to the average? Show your reasoning.</summary>
+<p><strong>Answer.</strong> The effective window is roughly \(1/(1-\beta) = 1/0.1 = 10\).
+Reasoning: the weight given to the value \(k\) steps in the past is \((1-\beta)\beta^k\).
+Setting this to roughly 1/3 of the initial weight (a common threshold), we solve
+\(\beta^k = 1/e\), i.e. \(k = -1/\ln(\beta)\). For \(\beta = 0.9\), \(\ln(0.9) \approx -0.105\),
+so \(k \approx 9.5\), about 10 steps. (More generally, the rule of thumb is \(1/(1-\beta)\)
+steps for \(\beta\) close to 1.)</p>
+</details>
+
+<details>
+<summary>Q4. Bias correction in EWA uses \(v_t^{\text{corrected}} = v_t / (1-\beta^t)\).
+Why does the correction become negligible for large \(t\)? Give a numerical example.</summary>
+<p><strong>Answer.</strong> Because \(\beta^t\) shrinks exponentially toward zero as \(t\)
+grows. When \(\beta^t\) is negligible compared to 1, the denominator \(1-\beta^t\) is
+essentially 1, so the correction is a no-op.</p>
+<p>Example with \(\beta = 0.98\):</p>
+<ul>
+<li>At \(t=1\): \(1 - 0.98 = 0.02\), so \(v_1\) is divided by 0.02 — a large correction
+(50×).</li>
+<li>At \(t=10\): \(1 - 0.98^{10} \approx 1 - 0.817 = 0.183\), still a significant
+correction.</li>
+<li>At \(t=50\): \(1 - 0.98^{50} \approx 0.636\).</li>
+<li>At \(t=200\): \(1 - 0.98^{200} \approx 1\). The correction is negligible.</li>
+</ul>
+<p>So bias correction matters mainly for the first tens of iterations.</p>
+</details>
+
+<details>
+<summary>Q5. Suppose you plot the cost and it decreases monotonically for 100 epochs,
+then starts oscillating with an amplitude that never shrinks. What is likely happening,
+and what would you try?</summary>
+<p><strong>Answer.</strong> This is a classic sign that the learning rate is too large
+for the region of the cost surface you have reached. The optimizer is "overshooting" the
+minimum on every step, so it never settles. Solutions:</p>
+<ul>
+<li>Use a <strong>learning rate decay</strong> schedule, so \(\alpha\) shrinks over time
+and the oscillations damp out.</li>
+<li>Reduce \(\alpha\) manually — perhaps halve it and continue training.</li>
+<li>Use an optimizer with adaptive step sizes (RMSprop or Adam), which can be more robust
+to a suboptimal \(\alpha\).</li>
+<li>Check that the oscillation is not just mini-batch noise. If you use a small mini-batch
+size, some oscillation is expected; but a steady amplitude over many epochs suggests
+an issue with \(\alpha\), not just noise.</li>
+</ul>
+</details>
+
+<details>
+<summary>Q6. Explain the difference between momentum and RMSprop in a way a beginner
+could understand, then explain how Adam combines them.</summary>
+<p><strong>Answer.</strong></p>
+<p><strong>Momentum — analogy:</strong> Imagine pushing a ball down a bumpy slope. Each
+push is a little different, but because the ball has inertia, it keeps moving in the
+general downhill direction. Past gradients accumulate into a "velocity" that smooths
+out the direction of motion.</p>
+<p><strong>RMSprop — analogy:</strong> Imagine each parameter has its own automatic
+throttle. If a parameter's gradients have been large, its throttle is reduced — the
+optimizer takes smaller steps there. If the gradients have been small, the throttle is
+opened — larger steps. This equalizes progress across parameters.</p>
+<p><strong>Adam = Momentum + RMSprop + bias correction.</strong> It computes a running
+average of the gradients (momentum, \(v\)) and a running average of squared gradients
+(RMSprop, \(S\)), corrects both for the initial bias, then uses
+\(\alpha \cdot v^{\text{corrected}} / (\sqrt{S^{\text{corrected}}} + \varepsilon)\) as the
+update. The numerator provides momentum-like smoothing; the denominator provides
+RMSprop-like adaptive scaling.</p>
+</details>
+
+<details>
+<summary>Q7. Is it worth spending time tuning \(\beta_1\) and \(\beta_2\) in Adam, or
+are the defaults fine? Justify your answer.</summary>
+<p><strong>Answer.</strong> In most cases, the defaults \(\beta_1 = 0.9\),
+\(\beta_2 = 0.999\), and \(\varepsilon = 10^{-8}\) are fine and rarely need tuning.
+Adam's design is deliberately robust to these choices, and there are many other
+hyperparameters more worth your time (architecture, learning rate \(\alpha\), mini-batch
+size, regularization).</p>
+<p>There are a few exceptions:</p>
+<ul>
+<li>If you are training on tasks with very sparse gradients or extremely long sequences,
+tuning \(\beta_2\) slightly may help.</li>
+<li>Some problems benefit from using a slightly larger \(\varepsilon\) (e.g. \(10^{-6}\))
+for numerical stability.</li>
+<li>The learning rate \(\alpha\) is the hyperparameter you should almost always tune first.</li>
+</ul>
+<p>General rule: start with defaults, tune \(\alpha\), and only consider tweaking
+\(\beta_1\), \(\beta_2\), \(\varepsilon\) if you have reason to believe the defaults are
+not appropriate.</p>
+</details>
+
+<details>
+<summary>Q8. You are training a very deep network with plain gradient descent. The cost
+decreases for a while, then plateaus at a value well above the minimum, even though
+training has not converged. You check the gradient and it is very small but not zero.
+What is happening, and how would momentum or Adam help?</summary>
+<p><strong>Answer.</strong> The optimizer is likely stuck on a <strong>plateau</strong>
+— a flat region of the cost surface where the gradient is very small. Vanilla gradient
+descent makes tiny steps because the step size is proportional to the gradient, so
+progress effectively stops.</p>
+<p>How momentum helps: it accumulates <em>past</em> gradients into a velocity term. Even
+if the current gradient is small, the accumulated velocity can carry the optimizer
+across the flat region. This effectively "coasts" through plateaus.</p>
+<p>How Adam helps: Adam has the same momentum property (via its first moment \(v\)), and
+also adaptively scales updates by the second moment \(S\). On a plateau, \(S\) is small
+(because the recent gradients are small), so the effective learning rate \(\alpha /
+(\sqrt{S} + \varepsilon)\) becomes larger, which helps push the optimizer forward.</p>
+<p>This is one of the main reasons Adam and other adaptive optimizers train deep networks
+much faster than plain gradient descent.</p>
+</details>
+
+<details>
+<summary>Q9. Why is the following statement misleading: "Deep learning suffers from
+getting stuck in bad local minima, so we need smart optimizers to escape them."</summary>
+<p><strong>Answer.</strong> The statement reflects an older, low-dimensional intuition
+that does not accurately describe modern deep learning. In high-dimensional parameter
+spaces:</p>
+<ul>
+<li><strong>Bad local minima are rare.</strong> For the optimizer to be trapped in a
+bad local minimum, the cost surface must curve upward in <em>every</em> direction at that
+point. In a space with millions of dimensions, this is very unlikely — the vast majority
+of critical points are saddle points.</li>
+<li><strong>Saddle points dominate.</strong> At a saddle point, the gradient is zero, but
+the surface curves <em>downward</em> in at least one direction. Optimizers can escape
+these by moving in that direction. Momentum and Adam help here, but the issue is escaping
+saddles, not local minima.</li>
+<li><strong>Plateaus are the bigger problem.</strong> Long flat regions with tiny gradients
+slow learning much more than local minima do.</li>
+</ul>
+<p>A more accurate statement: "Deep learning can suffer from saddle points and plateaus
+that slow down optimization. Momentum-based and adaptive optimizers help traverse these
+regions efficiently."</p>
+</details>
+
+<details>
+<summary>Q10. Suppose you have two models with identical architectures but different
+optimizers (Momentum vs Adam). You run both for the same number of epochs on the same
+data. Which is likely to converge faster, and why? Are there any caveats?</summary>
+<p><strong>Answer.</strong> <strong>Adam</strong> is likely to converge faster for most
+problems, because it combines momentum with per-parameter adaptive scaling and bias
+correction. On many benchmarks, Adam reaches a given training loss in fewer epochs than
+momentum.</p>
+<p>Caveats:</p>
+<ul>
+<li>The advantage depends on the problem. On some problems, carefully tuned momentum
+can match or beat Adam. A well-tuned SGD with momentum is still competitive on computer
+vision tasks, where it can generalize slightly better than Adam.</li>
+<li>Adam's per-parameter step sizes can sometimes lead to slightly worse
+<em>generalization</em> on certain vision benchmarks, even if training loss is lower.
+There is an active debate about this in the literature.</li>
+<li>Adam uses more memory than plain momentum (it stores two accumulators per parameter:
+\(v\) and \(S\), instead of just \(v\)).</li>
+<li>Both optimizers require a decent learning rate. Adam is more forgiving to a
+suboptimal \(\alpha\), but \(\alpha\) still matters a lot.</li>
+</ul>
+<p>General practical advice: start with Adam, and switch to momentum-tuned SGD if you
+observe worse generalization on validation data or need to squeeze out the last
+percentage points.</p>
+</details>
+
+</div>
+
+<hr class="soft">
+<div class="weeknav">
+  <a href="C2_W1.html" class="nav-btn">← Previous Week</a>
+  <a href="#">Back to Course 2</a>
+  <a href="#">Back to Specialization</a>
+  <a href="C2_W3.html" class="nav-btn">Next Week →</a>
+</div>
+
+<p class="small" style="text-align:center; margin-top:30px;">
+Notes generated from the supplied Course 2 Week 2 slides.
+Additional Context is provided where the slides assume prior knowledge.
+All diagrams are recreated as inline SVG for portability.
+</p>
+
+</div><!-- /wrap -->
+
+<button id="topBtn" title="Back to top">↑</button>
+
+<script>
+// ---------- theme ----------
+(function(){
+  const btn = document.getElementById('themeBtn');
+  const saved = localStorage.getItem('dl-theme');
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const initial = saved || (prefersDark ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', initial);
+  btn.textContent = initial === 'dark' ? '☀️' : '🌙';
+  btn.addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('dl-theme', next);
+    btn.textContent = next === 'dark' ? '☀️' : '🌙';
+  });
+})();
+
+// ---------- back to top ----------
+(function(){
+  const b = document.getElementById('topBtn');
+  window.addEventListener('scroll', () => {
+    b.classList.toggle('show', window.scrollY > 400);
+  });
+  b.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+})();
+
+// ---------- search ----------
+(function(){
+  const box = document.getElementById('searchBox');
+  if(!box) return;
+  let lastHits = [];
+  function clearHits(){
+    lastHits.forEach(m => {
+      const p = m.parentNode;
+      if(!p) return;
+      p.replaceChild(document.createTextNode(m.textContent), m);
+      p.normalize();
+    });
+    lastHits = [];
+  }
+  box.addEventListener('input', () => {
+    clearHits();
+    const q = box.value.trim().toLowerCase();
+    if(q.length < 3) return;
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+      acceptNode: n => {
+        if(!n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        const p = n.parentNode;
+        if(!p) return NodeFilter.FILTER_REJECT;
+        const tag = p.nodeName;
+        if(tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT') return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes = [];
+    let n;
+    while(n = walker.nextNode()) nodes.push(n);
+    let firstHit = null;
+    nodes.forEach(node => {
+      const text = node.nodeValue;
+      const idx = text.toLowerCase().indexOf(q);
+      if(idx === -1) return;
+      const span = document.createElement('mark');
+      span.className = 'hit';
+      span.textContent = text.substr(idx, q.length);
+      const after = node.splitText(idx);
+      after.nodeValue = after.nodeValue.substr(q.length);
+      node.parentNode.insertBefore(span, after);
+      lastHits.push(span);
+      if(!firstHit) firstHit = span;
+    });
+    if(firstHit) firstHit.scrollIntoView({behavior:'smooth', block:'center'});
+  });
+})();
+</script>
+
+</body>
+</html>

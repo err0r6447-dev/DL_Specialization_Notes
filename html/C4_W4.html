@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Course 4 · Week 4 — Face Recognition &amp; Neural Style Transfer</title>
+
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$','$'], ['\\(','\\)']], displayMath: [['$$','$$'], ['\\[','\\]']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+  :root{
+    --bg:#f7f8fb; --bg-alt:#ffffff; --text:#1c2230; --muted:#5b6478; --border:#e3e6ee;
+    --accent:#3a63d8; --accent-soft:#eaefff;
+    --def:#e8f1ff; --def-b:#3a63d8;
+    --int:#e8fbf0; --int-b:#1f9d55;
+    --imp:#fff6e0; --imp-b:#d99a00;
+    --warn:#ffe9e9; --warn-b:#d64545;
+    --exam:#f3e9ff; --exam-b:#7a3ad6;
+    --code-bg:#0f172a; --code-text:#e6edf7;
+    --shadow:0 1px 3px rgba(20,30,60,.06),0 8px 24px rgba(20,30,60,.06);
+  }
+  html[data-theme="dark"]{
+    --bg:#0e1116; --bg-alt:#161b23; --text:#e6ecf5; --muted:#a1abc0; --border:#2a3242;
+    --accent:#7d9cff; --accent-soft:#1b2440;
+    --def:#132347; --def-b:#7d9cff;
+    --int:#0f2b1d; --int-b:#4bd18a;
+    --imp:#2c2410; --imp-b:#f0b73f;
+    --warn:#2e1414; --warn-b:#ff7b7b;
+    --exam:#20143a; --exam-b:#b48cff;
+    --code-bg:#05080f; --code-text:#d7e3f4;
+    --shadow:0 1px 3px rgba(0,0,0,.5),0 8px 24px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    line-height:1.65;-webkit-font-smoothing:antialiased;font-size:16.5px;}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{font-family:"JetBrains Mono",Menlo,Consolas,monospace;font-size:.9em;
+    background:rgba(127,127,127,.14);padding:2px 5px;border-radius:4px}
+  pre{background:var(--code-bg);color:var(--code-text);padding:16px 18px;border-radius:10px;
+    overflow-x:auto;font-size:13.5px;line-height:1.55;box-shadow:var(--shadow)}
+  pre code{background:transparent;color:inherit;padding:0;font-size:inherit}
+
+  .topbar{position:sticky;top:0;z-index:50;background:var(--bg-alt);
+    border-bottom:1px solid var(--border);padding:10px 16px;
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;box-shadow:var(--shadow)}
+  .topbar .brand{font-weight:700;font-size:15px;letter-spacing:.2px}
+  .topbar .brand small{display:block;color:var(--muted);font-weight:400;font-size:11.5px}
+  .topbar .spacer{flex:1}
+  .topbar button,.topbar a.btn{
+    background:var(--accent-soft);color:var(--accent);border:1px solid transparent;
+    padding:7px 11px;border-radius:8px;font-size:13.5px;cursor:pointer;font-weight:600}
+  .topbar button:hover,.topbar a.btn:hover{filter:brightness(.97);text-decoration:none}
+  .search-wrap{position:relative}
+  .search-wrap input{padding:8px 12px 8px 30px;border-radius:8px;border:1px solid var(--border);
+    background:var(--bg);color:var(--text);font-size:13.5px;min-width:190px;outline:none}
+  .search-wrap::before{content:"🔍";position:absolute;left:9px;top:50%;transform:translateY(-50%);
+    font-size:12px;opacity:.7}
+
+  .layout{display:grid;grid-template-columns:290px minmax(0,1fr);gap:24px;
+    max-width:1400px;margin:0 auto;padding:24px 18px 80px}
+  @media(max-width:960px){.layout{grid-template-columns:1fr;padding:16px 12px 60px}}
+
+  aside.toc{position:sticky;top:74px;align-self:start;max-height:calc(100vh - 90px);
+    overflow-y:auto;background:var(--bg-alt);border:1px solid var(--border);
+    border-radius:12px;padding:14px 14px 18px;box-shadow:var(--shadow);font-size:14px}
+  aside.toc h3{margin:0 0 8px;font-size:13px;text-transform:uppercase;
+    letter-spacing:.6px;color:var(--muted)}
+  aside.toc ol{margin:0;padding-left:18px}
+  aside.toc ol li{margin:5px 0}
+  aside.toc a{color:var(--text)}
+  aside.toc a:hover{color:var(--accent)}
+  @media(max-width:960px){aside.toc{position:static;max-height:none}}
+
+  main{min-width:0}
+  h1{font-size:clamp(22px,3.4vw,30px);margin:0 0 6px}
+  h2{font-size:clamp(19px,2.6vw,24px);margin:44px 0 12px;padding-bottom:6px;
+    border-bottom:2px solid var(--border)}
+  h3{font-size:clamp(17px,2.1vw,20px);margin:28px 0 8px}
+  h4{font-size:16px;margin:20px 0 6px}
+  p{margin:9px 0}
+  ul,ol{padding-left:22px}
+  li{margin:5px 0}
+  .lead{color:var(--muted);font-size:15.5px}
+
+  .box{border-left:5px solid var(--accent);background:var(--bg-alt);
+    padding:14px 16px;border-radius:10px;margin:16px 0;box-shadow:var(--shadow)}
+  .box .label{display:inline-block;font-size:11.5px;font-weight:800;
+    letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px}
+  .box.def{border-color:var(--def-b);background:var(--def)}
+  .box.def .label{color:var(--def-b)}
+  .box.int{border-color:var(--int-b);background:var(--int)}
+  .box.int .label{color:var(--int-b)}
+  .box.imp{border-color:var(--imp-b);background:var(--imp)}
+  .box.imp .label{color:var(--imp-b)}
+  .box.warn{border-color:var(--warn-b);background:var(--warn)}
+  .box.warn .label{color:var(--warn-b)}
+  .box.exam{border-color:var(--exam-b);background:var(--exam)}
+  .box.exam .label{color:var(--exam-b)}
+  .box.extra{border-color:var(--muted);background:var(--bg-alt)}
+  .box.extra .label{color:var(--muted)}
+
+  .eq{background:var(--bg-alt);border:1px solid var(--border);border-radius:10px;
+    padding:10px 16px;margin:14px 0;overflow-x:auto;box-shadow:var(--shadow)}
+  .eq .eq-label{font-size:12px;color:var(--muted);margin-bottom:4px}
+
+  .table-wrap{overflow-x:auto;margin:14px 0}
+  table{border-collapse:collapse;width:100%;min-width:480px;font-size:14.5px;
+    background:var(--bg-alt);border-radius:10px;overflow:hidden;box-shadow:var(--shadow)}
+  th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+  th{background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:13.5px}
+  tr:last-child td{border-bottom:none}
+
+  .diagram{background:var(--bg-alt);border:1px solid var(--border);border-radius:12px;
+    padding:16px;margin:18px 0;box-shadow:var(--shadow);text-align:center;overflow-x:auto}
+  .diagram svg{max-width:100%;height:auto}
+  .diagram .caption{font-size:13px;color:var(--muted);margin-top:10px;text-align:left}
+
+  details{background:var(--bg-alt);border:1px solid var(--border);border-radius:10px;
+    padding:10px 14px;margin:10px 0;box-shadow:var(--shadow)}
+  details summary{cursor:pointer;font-weight:600;color:var(--accent);outline:none}
+  details[open] summary{margin-bottom:8px}
+  details .answer{color:var(--text);font-size:15px}
+
+  .weeknav{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;
+    margin:44px 0 10px;padding:16px;background:var(--bg-alt);border:1px solid var(--border);
+    border-radius:12px;box-shadow:var(--shadow)}
+  .weeknav a{flex:1 1 auto;text-align:center;padding:10px 14px;border-radius:8px;
+    background:var(--accent-soft);color:var(--accent);font-weight:600;font-size:14px}
+  .weeknav a:hover{text-decoration:none;filter:brightness(.97)}
+
+  #backTop{position:fixed;right:16px;bottom:16px;z-index:60;background:var(--accent);
+    color:#fff;border:none;width:44px;height:44px;border-radius:50%;font-size:18px;
+    cursor:pointer;box-shadow:0 6px 18px rgba(58,99,216,.4);display:none}
+  #backTop.show{display:block}
+  mark.hit{background:#ffe066;color:#000;border-radius:3px;padding:0 2px}
+
+  footer{max-width:1400px;margin:0 auto;padding:10px 18px 60px;
+    color:var(--muted);font-size:13px;text-align:center}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Course 4 · Week 4 <small>Face Recognition &amp; Neural Style Transfer</small></div>
+  <div class="spacer"></div>
+  <div class="search-wrap"><input id="searchInput" type="text" placeholder="Search in notes…" /></div>
+  <button id="themeBtn" title="Toggle light/dark">🌗 Theme</button>
+</div>
+
+<div class="layout">
+
+  <aside class="toc">
+    <h3>Table of Contents</h3>
+    <ol>
+      <li><a href="#overview">Week Overview</a></li>
+      <li><a href="#face-intro">Face Recognition — Introduction</a></li>
+      <li><a href="#one-shot">One-Shot Learning</a></li>
+      <li><a href="#siamese">Siamese Network</a></li>
+      <li><a href="#triplet">Triplet Loss</a></li>
+      <li><a href="#triplet-choose">Choosing Triplets (Hard Mining)</a></li>
+      <li><a href="#binary">Face Verification as Binary Classification</a></li>
+      <li><a href="#style-intro">Neural Style Transfer — Introduction</a></li>
+      <li><a href="#visualizing">What Deep ConvNets Learn</a></li>
+      <li><a href="#nst-cost">Neural Style Transfer Cost Function</a></li>
+      <li><a href="#content-cost">Content Cost Function</a></li>
+      <li><a href="#style-cost">Style Cost Function (Gram Matrix)</a></li>
+      <li><a href="#nst-full">Putting It Together</a></li>
+      <li><a href="#1d">1D Convolutions</a></li>
+      <li><a href="#3d">3D Convolutions</a></li>
+      <li><a href="#summary">Weekly Summary</a></li>
+      <li><a href="#equations">Important Equations</a></li>
+      <li><a href="#confusions">Common Confusions</a></li>
+      <li><a href="#review">Review Questions</a></li>
+      <li><a href="#selftest">Self‑Test</a></li>
+    </ol>
+  </aside>
+
+  <main>
+
+  <h1 id="overview">Week 4 — Face Recognition &amp; Neural Style Transfer</h1>
+  <p class="lead">Course 4 (Convolutional Neural Networks) · Deep Learning Specialization · Andrew Ng</p>
+
+  <div class="box def">
+    <span class="label">🔵 What This Week Is About</span>
+    <p>This week has two main applications. First, <strong>face recognition</strong> — including face verification
+    vs recognition, the one-shot learning problem, Siamese networks, and triplet loss. Second, <strong>neural style
+    transfer</strong> — generating a new image that has the <em>content</em> of one image and the <em>style</em> of
+    another, using a pretrained ConvNet's features. We close with <strong>1D and 3D generalizations</strong> of
+    convolutions (audio, medical volumes, video).</p>
+  </div>
+
+  <div class="box int">
+    <span class="label">🟢 The Big Idea Connecting Everything</span>
+    <p>Both applications reuse a <strong>pretrained CNN as a fixed feature extractor</strong>. Face recognition uses
+    the CNN's <em>final embedding</em> to compare two faces. Style transfer uses the CNN's <em>intermediate
+    activations</em> to measure content similarity and its <em>channel correlations</em> to measure style similarity.
+    In both cases we leverage knowledge learned on large datasets (ImageNet) without re-training the backbone.</p>
+  </div>
+
+  <!-- ==================== FACE INTRO ==================== -->
+  <h2 id="face-intro">1. Face Recognition — Introduction</h2>
+
+  <h3>1.1 Two different problems</h3>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th></th><th>Face Verification</th><th>Face Recognition</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Input</strong></td>
+          <td>An image + a claimed identity (name / ID)</td>
+          <td>An image + a database of \(K\) known people</td>
+        </tr>
+        <tr>
+          <td><strong>Output</strong></td>
+          <td>Is this image the claimed person? (yes/no)</td>
+          <td>Who is this? (ID, or "not recognized")</td>
+        </tr>
+        <tr>
+          <td><strong>Also called</strong></td>
+          <td>1:1 problem</td>
+          <td>1:K problem</td>
+        </tr>
+        <tr>
+          <td><strong>Typical accuracy needed</strong></td>
+          <td>Very high (99%+ for access control)</td>
+          <td>Extremely high (99.9%+) — errors are costly</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box int">
+    <span class="label">🟢 Intuition — Door Lock vs Police Lineup</span>
+    <ul>
+      <li><strong>Verification</strong> is like a door that unlocks if the face matches the person who claims to live
+      there. It answers a yes/no question.</li>
+      <li><strong>Recognition</strong> is like a police officer looking at a face and asking "which of these 1000
+      suspects is it?" It searches a database.</li>
+    </ul>
+  </div>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — Why Recognition Is Harder</span>
+    <p>Verification is a binary decision on one pair of images. Recognition requires comparing the input to
+    <em>K</em> stored identities and picking the best match. Its accuracy depends on the verification accuracy plus
+    the ability to reject non-matching inputs ("none of the above").</p>
+  </div>
+
+  <!-- ==================== ONE-SHOT ==================== -->
+  <h2 id="one-shot">2. The One-Shot Learning Problem</h2>
+
+  <h3>2.1 The problem</h3>
+
+  <p>In a typical face recognition system, you might have only <strong>one</strong> photo of each employee to enroll
+  them. You cannot train a standard softmax classifier — you'd need many images per class, and adding a new employee
+  would require retraining.</p>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — One-Shot Learning</span>
+    <p><strong>One-shot learning</strong> means learning to recognise a new class (a new person) from a
+    <em>single</em> example. Face recognition is the canonical one-shot problem because you often have only one
+    reference photo per person.</p>
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 260" role="img" aria-label="One-shot learning with 4 employees">
+      <text x="120" y="30" text-anchor="middle" font-weight="700" font-size="14">Database (4 employees, 1 photo each)</text>
+
+      <!-- 4 photos -->
+      <g>
+        <rect x="30" y="60" width="60" height="70" fill="#e0e5f0" stroke="#333"/>
+        <text x="60" y="100" text-anchor="middle" font-size="26">🧑</text>
+
+        <rect x="120" y="60" width="60" height="70" fill="#e0e5f0" stroke="#333"/>
+        <text x="150" y="100" text-anchor="middle" font-size="26">👩</text>
+
+        <rect x="210" y="60" width="60" height="70" fill="#e0e5f0" stroke="#333"/>
+        <text x="240" y="100" text-anchor="middle" font-size="26">🧔</text>
+
+        <rect x="300" y="60" width="60" height="70" fill="#e0e5f0" stroke="#333"/>
+        <text x="330" y="100" text-anchor="middle" font-size="26">👨‍🦰</text>
+      </g>
+
+      <!-- new input -->
+      <text x="520" y="30" text-anchor="middle" font-weight="700" font-size="14">New input image</text>
+      <rect x="470" y="60" width="100" height="100" fill="#ffe9e9" stroke="#d64545" stroke-width="2"/>
+      <text x="520" y="120" text-anchor="middle" font-size="40">🧑</text>
+
+      <!-- arrow -->
+      <text x="610" y="120" font-size="24">→</text>
+
+      <!-- question -->
+      <rect x="660" y="70" width="220" height="80" fill="#e8f1ff" stroke="#3a63d8" rx="10"/>
+      <text x="770" y="105" text-anchor="middle" font-size="14">Is this person</text>
+      <text x="770" y="130" text-anchor="middle" font-size="14">Employee #1? (yes/no)</text>
+    </svg>
+    <div class="caption">Figure 2.1 — One-shot learning: the system must decide whether a new face matches one of the
+    enrolled people, having seen only a single reference image each. This is why standard softmax classification
+    doesn't directly apply.</div>
+  </div>
+
+  <h3>2.2 The fix — learn a similarity function</h3>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — Similarity Function</span>
+    <p>A <strong>similarity function</strong> \(d(\text{img}_1, \text{img}_2)\) outputs a number measuring how
+    different two images are. If \(d\) is <em>small</em>, the images are of the same person; if \(d\) is
+    <em>large</em>, they are different people.</p>
+  </div>
+
+  <div class="eq">
+    $$
+    d(\text{img}_1, \text{img}_2) \le \tau \;\Rightarrow\; \text{"same person"}, \qquad
+    d(\text{img}_1, \text{img}_2) > \tau \;\Rightarrow\; \text{"different person"}.
+    $$
+  </div>
+
+  <p>Where \(\tau\) is a <strong>threshold</strong> chosen to trade off false accepts vs false rejects.</p>
+
+  <div class="box int">
+    <span class="label">🟢 The Key Insight</span>
+    <p>Instead of training the network to recognise a fixed set of people, we train it to answer the generic
+    question: <em>"are these two images of the same person?"</em> Then we can apply it to anyone, even people the
+    network never saw during training — because the network learned a <em>similarity metric</em>, not fixed
+    identities.</p>
+  </div>
+
+  <!-- ==================== SIAMESE ==================== -->
+  <h2 id="siamese">3. Siamese Network</h2>
+
+  <h3>3.1 Architecture</h3>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — Siamese Network</span>
+    <p>A <strong>Siamese network</strong> is a neural network architecture where the <em>same</em> network (with
+    shared weights) is applied to two different inputs, producing two encodings. The distance between those
+    encodings tells us whether the inputs are similar.</p>
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 320" role="img" aria-label="Siamese network architecture">
+      <!-- top branch -->
+      <rect x="30" y="40" width="70" height="80" fill="#e0e5f0" stroke="#333"/>
+      <text x="65" y="90" text-anchor="middle" font-size="30">🧑</text>
+      <text x="65" y="140" text-anchor="middle" font-size="11" fill="#3a63d8">x⁽¹⁾</text>
+
+      <text x="110" y="85" font-size="14">→</text>
+      <rect x="130" y="55" width="180" height="50" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="220" y="85" text-anchor="middle" font-size="12" fill="#3a63d8">Same ConvNet (shared weights)</text>
+
+      <text x="320" y="85" font-size="14">→</text>
+      <rect x="345" y="55" width="60" height="50" fill="#f3e9ff" stroke="#7a3ad6"/>
+      <text x="375" y="85" text-anchor="middle" font-size="11" fill="#7a3ad6">f(x⁽¹⁾)</text>
+      <text x="375" y="120" text-anchor="middle" font-size="10" fill="#5b6478">128-dim</text>
+
+      <!-- bottom branch -->
+      <rect x="30" y="200" width="70" height="80" fill="#e0e5f0" stroke="#333"/>
+      <text x="65" y="250" text-anchor="middle" font-size="30">👩</text>
+      <text x="65" y="300" text-anchor="middle" font-size="11" fill="#3a63d8">x⁽²⁾</text>
+
+      <text x="110" y="245" font-size="14">→</text>
+      <rect x="130" y="215" width="180" height="50" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="220" y="245" text-anchor="middle" font-size="12" fill="#3a63d8">Same ConvNet (shared weights)</text>
+
+      <text x="320" y="245" font-size="14">→</text>
+      <rect x="345" y="215" width="60" height="50" fill="#f3e9ff" stroke="#7a3ad6"/>
+      <text x="375" y="245" text-anchor="middle" font-size="11" fill="#7a3ad6">f(x⁽²⁾)</text>
+      <text x="375" y="280" text-anchor="middle" font-size="10" fill="#5b6478">128-dim</text>
+
+      <!-- comparison -->
+      <text x="440" y="160" font-size="14">→</text>
+      <rect x="470" y="130" width="160" height="60" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="550" y="155" text-anchor="middle" font-size="12" fill="#1f9d55">Compare encodings</text>
+      <text x="550" y="175" text-anchor="middle" font-size="11" fill="#1f9d55">d(x⁽¹⁾, x⁽²⁾)</text>
+
+      <text x="650" y="160" font-size="14">→</text>
+      <text x="690" y="155" font-size="14">same / different</text>
+      <text x="690" y="180" font-size="11" fill="#5b6478">if d ≤ τ / d &gt; τ</text>
+
+      <!-- shared weights annotation -->
+      <path d="M 310 55 Q 420 5 310 215" stroke="#7a3ad6" stroke-width="1.5" fill="none" stroke-dasharray="4 2"/>
+      <text x="430" y="20" font-size="12" fill="#7a3ad6">weights tied</text>
+    </svg>
+    <div class="caption">Figure 3.1 — Siamese network. Two input images go through the <em>same</em> ConvNet
+    (identical weights) to produce two 128-dimensional encodings. The distance between the encodings determines
+    whether the faces match.</div>
+  </div>
+
+  <h3>3.2 The encoding \(f(x)\)</h3>
+
+  <p>The output of the final layer, \(f(x)\), is a vector of usually 128 numbers. This is the network's
+  <strong>embedding</strong> of the face — a compact numerical representation capturing identity-relevant features.</p>
+
+  <div class="eq">
+    $$
+    d(x^{(1)}, x^{(2)}) = \left\| f(x^{(1)}) - f(x^{(2)}) \right\|_2^2
+    $$
+  </div>
+
+  <p>Where \(\|\cdot\|_2^2\) is the squared Euclidean (L2) distance between the two encodings.</p>
+
+  <h3>3.3 The learning goal</h3>
+
+  <p>We want to <strong>learn the parameters of the ConvNet</strong> so that:</p>
+  <ul>
+    <li>If \(x^{(1)}\) and \(x^{(2)}\) are the <em>same</em> person → \(\|f(x^{(1)}) - f(x^{(2)})\|^2\) is <strong>small</strong>.</li>
+    <li>If \(x^{(1)}\) and \(x^{(2)}\) are <em>different</em> people → \(\|f(x^{(1)}) - f(x^{(2)})\|^2\) is <strong>large</strong>.</li>
+  </ul>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — The 128-D Embedding Choice</span>
+    <p>128 is a common choice (from the FaceNet paper). Fewer dimensions may not capture enough identity
+    information; more dimensions increase computation. 128 is a sweet spot. The exact number is a hyperparameter.</p>
+  </div>
+
+  <!-- ==================== TRIPLET LOSS ==================== -->
+  <h2 id="triplet">4. Triplet Loss</h2>
+
+  <p>How do we actually train a Siamese network? The dominant approach is <strong>triplet loss</strong>.</p>
+
+  <h3>4.1 The three images</h3>
+
+  <p>Each training example consists of <strong>three</strong> images:</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 260" role="img" aria-label="Triplet: anchor, positive, negative">
+      <!-- anchor -->
+      <text x="150" y="30" text-anchor="middle" font-weight="700" font-size="14" fill="#3a63d8">Anchor (A)</text>
+      <rect x="90" y="50" width="120" height="140" fill="#e0e5f0" stroke="#3a63d8" stroke-width="2"/>
+      <text x="150" y="130" text-anchor="middle" font-size="60">👩</text>
+
+      <!-- positive -->
+      <text x="430" y="30" text-anchor="middle" font-weight="700" font-size="14" fill="#1f9d55">Positive (P)</text>
+      <rect x="370" y="50" width="120" height="140" fill="#e0e5f0" stroke="#1f9d55" stroke-width="2"/>
+      <text x="430" y="130" text-anchor="middle" font-size="60">👩</text>
+
+      <!-- negative -->
+      <text x="740" y="30" text-anchor="middle" font-weight="700" font-size="14" fill="#d64545">Negative (N)</text>
+      <rect x="680" y="50" width="120" height="140" fill="#e0e5f0" stroke="#d64545" stroke-width="2"/>
+      <text x="740" y="130" text-anchor="middle" font-size="60">🧑</text>
+
+      <!-- comparison -->
+      <text x="290" y="130" font-size="20" fill="#1f9d55">≈</text>
+      <text x="600" y="130" font-size="20" fill="#d64545">≠</text>
+
+      <text x="290" y="220" text-anchor="middle" font-size="12" fill="#1f9d55">same person</text>
+      <text x="600" y="220" text-anchor="middle" font-size="12" fill="#d64545">different person</text>
+    </svg>
+    <div class="caption">Figure 4.1 — A triplet: an anchor (A), a positive image of the same person (P), and a
+    negative image of a different person (N). We want \(f(A)\) close to \(f(P)\) and far from \(f(N)\).</div>
+  </div>
+
+  <h3>4.2 The loss</h3>
+
+  <p>We want:</p>
+
+  <div class="eq">
+    $$
+    \left\| f(A) - f(P) \right\|^2 + \alpha \;\le\; \left\| f(A) - f(N) \right\|^2
+    $$
+  </div>
+
+  <p>Equivalently:</p>
+
+  <div class="eq">
+    $$
+    \left\| f(A) - f(P) \right\|^2 - \left\| f(A) - f(N) \right\|^2 + \alpha \;\le\; 0
+    $$
+  </div>
+
+  <p>Where \(\alpha\) is the <strong>margin</strong> (a hyperparameter, e.g., 0.2). It forces the network to
+  separate the positive pair from the negative pair by at least \(\alpha\).</p>
+
+  <h3>4.3 The triplet loss formula</h3>
+
+  <div class="eq">
+    <div class="eq-label">Triplet loss for a single triplet</div>
+    $$
+    \mathcal{L}(A, P, N) = \max\!\left( \left\| f(A) - f(P) \right\|^2 - \left\| f(A) - f(N) \right\|^2 + \alpha, \; 0 \right)
+    $$
+  </div>
+
+  <div class="eq">
+    <div class="eq-label">Total cost over the training set</div>
+    $$
+    J = \sum_{i=1}^{m} \mathcal{L}\!\left(A^{(i)}, P^{(i)}, N^{(i)}\right)
+    $$
+  </div>
+
+  <div class="box int">
+    <span class="label">🟢 Intuition — Why the \(\max(\cdot, 0)\)?</span>
+    <p>If the inequality is already satisfied (positive pair much closer than negative pair), the expression inside
+    \(\max\) is negative. We don't want to <em>reward</em> the network beyond that — so we clamp to 0. Only when
+    the network is "violating" the margin does the loss contribute a positive gradient.</p>
+  </div>
+
+  <div class="box exam">
+    <span class="label">🟣 Worked Example</span>
+    <p>Suppose for a triplet:</p>
+    <ul>
+      <li>\(\|f(A) - f(P)\|^2 = 0.2\) &nbsp; (positive pair close — good)</li>
+      <li>\(\|f(A) - f(N)\|^2 = 0.5\) &nbsp; (negative pair further — also good)</li>
+      <li>\(\alpha = 0.2\)</li>
+    </ul>
+    <p>Then \(0.2 - 0.5 + 0.2 = -0.1 < 0\), so \(\mathcal{L} = \max(-0.1, 0) = 0\). No gradient — the triplet is
+    satisfied.</p>
+    <p>If instead \(\|f(A) - f(N)\|^2 = 0.3\), then \(0.2 - 0.3 + 0.2 = 0.1 > 0\), so \(\mathcal{L} = 0.1\). The
+    loss penalises the network for not separating the positive and negative pairs enough.</p>
+  </div>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — Training Set Requirements</span>
+    <p>Training a triplet-loss network requires many images per person — usually around <strong>1000 images per
+    person</strong> across ~1000 people (≈1M images total). The model never learns identities directly — only a
+    distance metric. That's why it generalises to new faces at test time.</p>
+  </div>
+
+  <!-- ==================== TRIPLET SELECTION ==================== -->
+  <h2 id="triplet-choose">5. Choosing Triplets — Hard Mining</h2>
+
+  <h3>5.1 Why random triplets fail</h3>
+
+  <div class="box int">
+    <span class="label">🟢 The Problem</span>
+    <p>If you pick \(A\), \(P\), \(N\) uniformly at random, the constraint
+    \(\|f(A) - f(P)\|^2 + \alpha \le \|f(A) - f(N)\|^2\) is satisfied <em>very easily</em> — most random negative
+    pairs are already far apart. The loss is almost always 0, so the network learns nothing.</p>
+  </div>
+
+  <h3>5.2 Hard triplet mining</h3>
+
+  <p>We want to focus training on <strong>hard</strong> triplets — where the anchor-positive distance is
+  <em>close to or larger than</em> the anchor-negative distance. Concretely:</p>
+
+  <div class="eq">
+    $$
+    \left\| f(A) - f(P) \right\|^2 \;\approx\; \left\| f(A) - f(N) \right\|^2
+    $$
+  </div>
+
+  <p>These are the triplets where the constraint is barely satisfied or violated, and where the network needs to
+  do more work.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 260" role="img" aria-label="Easy vs hard triplets">
+      <!-- Easy triplet -->
+      <text x="200" y="30" text-anchor="middle" font-weight="700" font-size="14">Easy triplet (random)</text>
+      <circle cx="200" cy="140" r="60" fill="none" stroke="#333"/>
+      <text x="200" y="100" text-anchor="middle" font-size="20">A</text>
+      <circle cx="220" cy="145" r="12" fill="#1f9d55"/>
+      <text x="245" y="160" font-size="12" fill="#1f9d55">P (close)</text>
+      <circle cx="320" cy="140" r="12" fill="#d64545"/>
+      <text x="345" y="155" font-size="12" fill="#d64545">N (very far)</text>
+      <text x="200" y="230" text-anchor="middle" font-size="12" fill="#5b6478">loss = 0, no learning</text>
+
+      <!-- Hard triplet -->
+      <text x="650" y="30" text-anchor="middle" font-weight="700" font-size="14">Hard triplet</text>
+      <circle cx="650" cy="140" r="60" fill="none" stroke="#333"/>
+      <text x="650" y="100" text-anchor="middle" font-size="20">A</text>
+      <circle cx="680" cy="140" r="12" fill="#1f9d55"/>
+      <text x="705" y="155" font-size="12" fill="#1f9d55">P (also far)</text>
+      <circle cx="720" cy="150" r="12" fill="#d64545"/>
+      <text x="745" y="165" font-size="12" fill="#d64545">N (barely further)</text>
+      <text x="650" y="230" text-anchor="middle" font-size="12" fill="#5b6478">loss &gt; 0, good gradient</text>
+    </svg>
+    <div class="caption">Figure 5.1 — Easy triplets (random) yield zero loss. Hard triplets — where the positive
+    pair is almost as far apart as the negative pair — provide useful gradients and push the network to learn
+    better embeddings.</div>
+  </div>
+
+  <div class="box warn">
+    <span class="label">🔴 Warning — Don't Go Too Hard</span>
+    <p>Extremely hard triplets can be noisy or even mislabelled, leading to unstable training. A common practice
+    is <strong>semi-hard mining</strong> — pick triplets where \(d(A,N)\) is slightly larger than \(d(A,P)\) but
+    still "within reach." The exact strategy is a detail; the core idea is to skip easy triplets.</p>
+  </div>
+
+  <!-- ==================== BINARY CLASSIFICATION ==================== -->
+  <h2 id="binary">6. Face Verification as Binary Classification</h2>
+
+  <p>Triplet loss is one way to train a face encoder. Another common approach is to formulate the entire problem
+  as <strong>binary classification</strong> — output 1 if two images are the same person, 0 otherwise.</p>
+
+  <h3>6.1 Architecture</h3>
+
+  <p>Run the two input images through a shared Siamese encoder to get \(f(x^{(i)})\) and \(f(x^{(j)})\). Compute
+  the element-wise absolute difference or squared difference, then pass through a small classification head:</p>
+
+  <div class="eq">
+    $$
+    \hat{y} = \sigma\!\left( \sum_k w_k \cdot \left| f_k(x^{(i)}) - f_k(x^{(j)}) \right| + b \right)
+    $$
+  </div>
+
+  <p>Where:</p>
+  <ul>
+    <li>\(f_k(\cdot)\) — the \(k\)-th component of the encoding vector.</li>
+    <li>\(w_k\) — learned weights of the classifier head.</li>
+    <li>\(b\) — bias.</li>
+    <li>\(\sigma\) — sigmoid, outputting probability that the pair is the same person.</li>
+  </ul>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 240" role="img" aria-label="Binary classification for face verification">
+      <!-- top image -->
+      <rect x="30" y="30" width="60" height="70" fill="#e0e5f0" stroke="#333"/>
+      <text x="60" y="75" text-anchor="middle" font-size="24">👩</text>
+
+      <text x="100" y="70" font-size="12">→</text>
+      <rect x="120" y="40" width="100" height="50" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="170" y="70" text-anchor="middle" font-size="11" fill="#3a63d8">ConvNet</text>
+
+      <text x="230" y="70" font-size="12">→</text>
+      <rect x="250" y="40" width="50" height="50" fill="#f3e9ff" stroke="#7a3ad6"/>
+      <text x="275" y="70" text-anchor="middle" font-size="10" fill="#7a3ad6">f(x⁽¹⁾)</text>
+
+      <!-- bottom image -->
+      <rect x="30" y="140" width="60" height="70" fill="#e0e5f0" stroke="#333"/>
+      <text x="60" y="185" text-anchor="middle" font-size="24">👩</text>
+
+      <text x="100" y="180" font-size="12">→</text>
+      <rect x="120" y="150" width="100" height="50" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="170" y="180" text-anchor="middle" font-size="11" fill="#3a63d8">Same ConvNet</text>
+
+      <text x="230" y="180" font-size="12">→</text>
+      <rect x="250" y="150" width="50" height="50" fill="#f3e9ff" stroke="#7a3ad6"/>
+      <text x="275" y="180" text-anchor="middle" font-size="10" fill="#7a3ad6">f(x⁽²⁾)</text>
+
+      <!-- diff -->
+      <text x="330" y="130" font-size="12">→</text>
+      <rect x="355" y="100" width="80" height="50" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="395" y="125" text-anchor="middle" font-size="11" fill="#1f9d55">|f₁ - f₂|</text>
+      <text x="395" y="140" text-anchor="middle" font-size="11" fill="#1f9d55">vector</text>
+
+      <!-- head -->
+      <text x="450" y="130" font-size="12">→</text>
+      <rect x="475" y="105" width="140" height="40" fill="#f3e9ff" stroke="#7a3ad6"/>
+      <text x="545" y="130" text-anchor="middle" font-size="12" fill="#7a3ad6">FC + sigmoid</text>
+
+      <text x="630" y="130" font-size="12">→</text>
+      <text x="670" y="130" font-size="14">ŷ ∈ [0,1]</text>
+      <text x="670" y="155" font-size="11" fill="#5b6478">1 = same, 0 = different</text>
+    </svg>
+    <div class="caption">Figure 6.1 — Binary classification approach. Compute the encoding difference, then feed it
+    through a small classifier to output "same" or "different."</div>
+  </div>
+
+  <div class="box exam">
+    <span class="label">🟣 Worked Example — χ² Similarity</span>
+    <p>A specific and well-known variant (DeepFace, Taigman et al. 2014) uses the <strong>χ² (chi-square)
+    similarity</strong>:</p>
+    <div class="eq">
+      $$
+      \hat{y} = \sigma\!\left( \sum_k w_k \cdot \frac{(f_k(x^{(i)}) - f_k(x^{(j)}))^2}{f_k(x^{(i)}) + f_k(x^{(j)})} + b \right)
+      $$
+    </div>
+    <p>This weights differences by the sum of activations, giving a slightly more robust distance metric than
+    plain squared difference.</p>
+  </div>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — Two Equivalent Formulations</span>
+    <p>Both triplet loss and binary classification train a Siamese network. In practice:</p>
+    <ul>
+      <li><strong>Triplet loss</strong> — trains an embedding where Euclidean distance directly reflects
+      similarity. Used by FaceNet.</li>
+      <li><strong>Binary classification</strong> — trains a classifier on top of the embedding. Can be slightly
+      more stable to train and doesn't require triplet mining.</li>
+    </ul>
+    <p>Many modern systems use one or combine both.</p>
+  </div>
+
+  <!-- ==================== STYLE INTRO ==================== -->
+  <h2 id="style-intro">7. Neural Style Transfer — Introduction</h2>
+
+  <p>Gatys et al., 2015, "A neural algorithm of artistic style." Given a <em>content</em> image (e.g., a photo
+  of a building) and a <em>style</em> image (e.g., Van Gogh's Starry Night), produce a new image that has the
+  content of the first and the style of the second.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 300" role="img" aria-label="Neural style transfer">
+      <!-- content -->
+      <text x="150" y="30" text-anchor="middle" font-weight="700" font-size="14">Content (C)</text>
+      <rect x="40" y="50" width="220" height="150" fill="#c9d9f5" stroke="#333"/>
+      <rect x="130" y="70" width="40" height="130" fill="#a89070"/>
+      <rect x="60" y="180" width="180" height="20" fill="#d0a080"/>
+      <text x="150" y="225" text-anchor="middle" font-size="12" fill="#5b6478">a photo of Stanford's tower</text>
+
+      <!-- style -->
+      <text x="450" y="30" text-anchor="middle" font-weight="700" font-size="14">Style (S)</text>
+      <rect x="340" y="50" width="220" height="150" fill="#3a4a8a" stroke="#333"/>
+      <circle cx="400" cy="90" r="20" fill="#f5e070"/>
+      <path d="M 380 130 Q 420 110 450 140 Q 500 120 520 160" stroke="#7a90d0" stroke-width="3" fill="none"/>
+      <path d="M 360 170 Q 400 150 440 180 Q 480 160 520 190" stroke="#7a90d0" stroke-width="3" fill="none"/>
+      <text x="450" y="225" text-anchor="middle" font-size="12" fill="#5b6478">Van Gogh's Starry Night</text>
+
+      <!-- generated -->
+      <text x="750" y="30" text-anchor="middle" font-weight="700" font-size="14">Generated (G)</text>
+      <rect x="640" y="50" width="220" height="150" fill="#3a4a8a" stroke="#333"/>
+      <rect x="720" y="70" width="40" height="130" fill="#6a5a9a"/>
+      <path d="M 650 100 Q 680 80 710 110 Q 760 90 790 120" stroke="#b0b8e0" stroke-width="3" fill="none"/>
+      <path d="M 650 150 Q 680 130 710 160 Q 760 140 810 170" stroke="#b0b8e0" stroke-width="3" fill="none"/>
+      <text x="750" y="225" text-anchor="middle" font-size="12" fill="#5b6478">content of C, style of S</text>
+
+      <!-- arrows -->
+      <text x="285" y="130" font-size="20">+</text>
+      <text x="585" y="130" font-size="20">=</text>
+    </svg>
+    <div class="caption">Figure 7.1 — Neural style transfer. Combine content from one image with style from another
+    to generate a new artistic image.</div>
+  </div>
+
+  <div class="box int">
+    <span class="label">🟢 Intuition — Chef Analogy</span>
+    <p>Imagine a chef (the algorithm) preparing a dish. The <em>content image</em> is the ingredients (a chicken,
+    vegetables). The <em>style image</em> is the cuisine (Thai, Italian, French). The output is a dish made of
+    those ingredients, prepared in that cuisine's style.</p>
+  </div>
+
+  <!-- ==================== VISUALIZING ==================== -->
+  <h2 id="visualizing">8. What Deep ConvNets Learn</h2>
+
+  <p>Before we can define "content" and "style," we need to understand what different layers of a CNN capture.
+  The standard way to visualise this is <strong>activation maximisation</strong>: for each unit in a layer, find
+  the image patches that produce the strongest activation.</p>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — Activation Maximisation</span>
+    <p>For a chosen unit (neuron) in a layer, search over many images (or optimise an image) to find the input
+    that maximally activates that unit. The patch shown reveals what that unit "detects."</p>
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 340" role="img" aria-label="Hierarchy of features learned by CNN layers">
+      <!-- layer 1 -->
+      <text x="150" y="30" text-anchor="middle" font-weight="700" font-size="14">Layer 1</text>
+      <rect x="50" y="50" width="200" height="200" fill="#f0f0f5" stroke="#333"/>
+      <!-- 3x3 grid of simple edges -->
+      <g stroke="#999">
+        <line x1="50" y1="117" x2="250" y2="117"/>
+        <line x1="50" y1="183" x2="250" y2="183"/>
+        <line x1="117" y1="50" x2="117" y2="250"/>
+        <line x1="183" y1="50" x2="183" y2="250"/>
+      </g>
+      <line x1="60" y1="60" x2="110" y2="110" stroke="#d64545" stroke-width="3"/>
+      <line x1="125" y1="60" x2="175" y2="110" stroke="#333" stroke-width="3"/>
+      <line x1="195" y1="60" x2="245" y2="110" stroke="#333" stroke-width="3"/>
+      <line x1="60" y1="130" x2="110" y2="180" stroke="#1f9d55" stroke-width="3"/>
+      <line x1="125" y1="130" x2="175" y2="180" stroke="#333" stroke-width="3"/>
+      <line x1="195" y1="130" x2="245" y2="180" stroke="#333" stroke-width="3"/>
+      <line x1="60" y1="200" x2="110" y2="250" stroke="#3a63d8" stroke-width="3"/>
+      <line x1="125" y1="200" x2="175" y2="250" stroke="#d99a00" stroke-width="3"/>
+      <line x1="195" y1="200" x2="245" y2="250" stroke="#7a3ad6" stroke-width="3"/>
+      <text x="150" y="270" text-anchor="middle" font-size="12" fill="#5b6478">edges &amp; colours</text>
+
+      <!-- layer 2 -->
+      <text x="450" y="30" text-anchor="middle" font-weight="700" font-size="14">Layer 2</text>
+      <rect x="350" y="50" width="200" height="200" fill="#f0f0f5" stroke="#333"/>
+      <g stroke="#999">
+        <line x1="350" y1="117" x2="550" y2="117"/>
+        <line x1="350" y1="183" x2="550" y2="183"/>
+        <line x1="417" y1="50" x2="417" y2="250"/>
+        <line x1="483" y1="50" x2="483" y2="250"/>
+      </g>
+      <!-- textures -->
+      <g fill="none" stroke="#d64545" stroke-width="2">
+        <path d="M 360 70 Q 375 90 360 110"/>
+        <path d="M 380 70 Q 395 90 380 110"/>
+        <path d="M 400 70 Q 415 90 400 110"/>
+      </g>
+      <g fill="none" stroke="#1f9d55" stroke-width="2">
+        <circle cx="460" cy="95" r="15"/>
+        <circle cx="500" cy="95" r="15"/>
+      </g>
+      <g fill="none" stroke="#3a63d8" stroke-width="2">
+        <path d="M 360 150 L 400 200"/>
+        <path d="M 380 150 L 420 200"/>
+        <path d="M 400 150 L 440 200"/>
+      </g>
+      <g fill="none" stroke="#d99a00" stroke-width="2">
+        <path d="M 460 150 Q 480 170 460 190 Q 480 210 460 230"/>
+        <path d="M 500 150 Q 520 170 500 190 Q 520 210 500 230"/>
+      </g>
+      <text x="450" y="270" text-anchor="middle" font-size="12" fill="#5b6478">textures &amp; patterns</text>
+
+      <!-- layer 3+ -->
+      <text x="750" y="30" text-anchor="middle" font-weight="700" font-size="14">Layers 3+</text>
+      <rect x="650" y="50" width="200" height="200" fill="#f0f0f5" stroke="#333"/>
+      <g stroke="#999">
+        <line x1="650" y1="117" x2="850" y2="117"/>
+        <line x1="650" y1="183" x2="850" y2="183"/>
+        <line x1="717" y1="50" x2="717" y2="250"/>
+        <line x1="783" y1="50" x2="783" y2="250"/>
+      </g>
+      <text x="683" y="90" text-anchor="middle" font-size="24">🐶</text>
+      <text x="750" y="90" text-anchor="middle" font-size="24">🐱</text>
+      <text x="817" y="90" text-anchor="middle" font-size="24">🚗</text>
+      <text x="683" y="155" text-anchor="middle" font-size="24">🐴</text>
+      <text x="750" y="155" text-anchor="middle" font-size="24">🐦</text>
+      <text x="817" y="155" text-anchor="middle" font-size="24">🌺</text>
+      <text x="683" y="220" text-anchor="middle" font-size="24">🍔</text>
+      <text x="750" y="220" text-anchor="middle" font-size="24">🏠</text>
+      <text x="817" y="220" text-anchor="middle" font-size="24">👤</text>
+      <text x="750" y="270" text-anchor="middle" font-size="12" fill="#5b6478">objects &amp; parts</text>
+    </svg>
+    <div class="caption">Figure 8.1 — Hierarchy of features. Layer 1 detects simple edges and colour blobs. Layer 2
+    detects textures and simple patterns. Deeper layers detect higher-level objects (dogs, cars, people). This
+    hierarchy emerges automatically from training.</div>
+  </div>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — Why This Matters for Style Transfer</span>
+    <p>Style transfer exploits this hierarchy. Deeper layers capture <em>semantic content</em> (what objects are
+    present), so matching them preserves the content. Shallower layers capture <em>texture and colour</em>, and
+    their channel correlations encode the <em>style</em>.</p>
+  </div>
+
+  <!-- ==================== NST COST ==================== -->
+  <h2 id="nst-cost">9. Neural Style Transfer Cost Function</h2>
+
+  <p>Style transfer is an <strong>optimisation problem</strong>: we fix a pretrained ConvNet and use gradient
+  descent to <em>directly optimise the pixels</em> of the generated image \(G\).</p>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — Style Transfer Cost</span>
+    <p>The cost function for style transfer combines a <strong>content cost</strong> \(J_{\text{content}}(C, G)\)
+    (how similar \(G\)'s content is to \(C\)) with a <strong>style cost</strong> \(J_{\text{style}}(S, G)\)
+    (how similar \(G\)'s style is to \(S\)):</p>
+    <div class="eq">
+      $$
+      J(G) = \alpha \, J_{\text{content}}(C, G) + \beta \, J_{\text{style}}(S, G)
+      $$
+    </div>
+  </div>
+
+  <ul>
+    <li>\(\alpha\) — weight on the content cost.</li>
+    <li>\(\beta\) — weight on the style cost.</li>
+    <li>The ratio \(\alpha / \beta\) controls how much style vs content is preserved in the output.</li>
+  </ul>
+
+  <h3>9.1 The algorithm</h3>
+
+  <ol>
+    <li><strong>Initialise \(G\) randomly</strong> (e.g., a \(100 \times 100 \times 3\) image of random noise).</li>
+    <li><strong>Compute the cost \(J(G)\)</strong> using the pretrained ConvNet.</li>
+    <li><strong>Update \(G\)</strong> by gradient descent on the <em>pixels</em> (not on the network weights):</li>
+  </ol>
+
+  <div class="eq">
+    $$
+    G_{i,j,c} \leftarrow G_{i,j,c} - \eta \frac{\partial J(G)}{\partial G_{i,j,c}}
+    $$
+  </div>
+
+  <p>Where \(\eta\) is the learning rate. Note: the <strong>network weights are frozen</strong> — only the image
+  pixels are updated.</p>
+
+  <div class="box int">
+    <span class="label">🟢 Intuition — Sculpting the Image</span>
+    <p>Imagine starting with a random pixel-noise picture. At each step, you ask: "which pixels should I tweak
+    so that the picture looks a bit more like my content image in that content image's style?" Repeat thousands of
+    times, and you gradually sculpt the noise into the final artwork.</p>
+  </div>
+
+  <div class="box warn">
+    <span class="label">🔴 Warning — Slow but Powerful</span>
+    <p>Optimising pixels directly is much slower than training a normal network. Modern implementations train a
+    <strong>generator network</strong> (a separate CNN) that produces the stylised image in one forward pass
+    (Johnson et al., "Perceptual Losses"). But the original formulation — optimise the pixels — is what we learn
+    here.</p>
+  </div>
+
+  <!-- ==================== CONTENT COST ==================== -->
+  <h2 id="content-cost">10. Content Cost Function</h2>
+
+  <h3>10.1 How to compute it</h3>
+
+  <ol>
+    <li>Pick a <strong>hidden layer</strong> \(l\) of the pretrained network. Typically a <em>middle</em> layer
+    (not too shallow, not too deep).</li>
+    <li>Run the content image \(C\) through the network and record activations \(a^{[l](C)}\).</li>
+    <li>Run the generated image \(G\) through the same network and record activations \(a^{[l](G)}\).</li>
+    <li>Measure how different they are.</li>
+  </ol>
+
+  <div class="eq">
+    <div class="eq-label">Content cost</div>
+    $$
+    J_{\text{content}}(C, G) = \frac{1}{2} \left\| a^{[l](C)} - a^{[l](G)} \right\|^2
+    $$
+  </div>
+
+  <ul>
+    <li>\(a^{[l](C)}\) — activation of layer \(l\) on the content image \(C\). Shape: \(n_H^{[l]} \times n_W^{[l]} \times n_C^{[l]}\).</li>
+    <li>\(a^{[l](G)}\) — activation of the same layer on the generated image \(G\).</li>
+    <li>\(\|\cdot\|^2\) — squared L2 norm (sum of squared differences across all elements).</li>
+    <li>The \(1/2\) is a mathematical convenience (cancels with the derivative's factor of 2).</li>
+  </ul>
+
+  <div class="box int">
+    <span class="label">🟢 Intuition — Same Content, Same Activations</span>
+    <p>If two images have the same "content" (e.g., both show the Stanford tower), a middle layer of the network
+    will produce similar activations for them. So minimising the difference between \(a^{[l](C)}\) and
+    \(a^{[l](G)}\) forces \(G\) to have the same content as \(C\) <em>as the network sees it</em>.</p>
+  </div>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — Which Layer \(l\)?</span>
+    <ul>
+      <li>Too <strong>shallow</strong> (layer 1) — activations capture low-level details; the content cost
+      will force \(G\) to match C pixel-for-pixel, not conceptually.</li>
+      <li>Too <strong>deep</strong> (final layers) — activations are dominated by class-related information;
+      the cost becomes too permissive about spatial layout.</li>
+      <li>Middle layers — a good balance. In practice, layer <code>conv4_2</code> in VGG‑19 is a common choice.</li>
+    </ul>
+  </div>
+
+  <!-- ==================== STYLE COST ==================== -->
+  <h2 id="style-cost">11. Style Cost Function (Gram Matrix)</h2>
+
+  <h3>11.1 What is "style"?</h3>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — Style (in this context)</span>
+    <p>The <strong>style</strong> of an image is captured by the <em>correlations between activations across
+    channels</em> in a layer of the ConvNet. If two channels tend to activate together (e.g., "vertical strokes"
+    and "blue colour" always co-occur in Starry Night), that correlation is part of its style.</p>
+  </div>
+
+  <div class="box int">
+    <span class="label">🟢 Intuition — Texture Co-occurrence</span>
+    <p>Van Gogh's paintings have a distinctive texture where certain brush strokes and colours <em>always</em>
+    appear together. Channel correlations capture this: "when channel 12 (a swirl detector) is active, channel 27
+    (a yellow detector) is <em>also</em> active." Matching these correlations transfers that texture.</p>
+  </div>
+
+  <h3>11.2 The style matrix (Gram matrix)</h3>
+
+  <p>For a given layer \(l\), the <strong>style matrix</strong> (also called the <strong>Gram matrix</strong>)
+  \(G^{[l]}\) is an \(n_C^{[l]} \times n_C^{[l]}\) matrix whose \((k, k')\) entry is the correlation between
+  channel \(k\) and channel \(k'\):</p>
+
+  <div class="eq">
+    $$
+    G_{kk'}^{[l]} = \sum_{i=1}^{n_H^{[l]}} \sum_{j=1}^{n_W^{[l]}} a_{ijk}^{[l]} \, a_{ijk'}^{[l]}
+    $$
+  </div>
+
+  <ul>
+    <li>\(a_{ijk}^{[l]}\) — activation of layer \(l\) at spatial position \((i, j)\) in channel \(k\).</li>
+    <li>\(i, j\) — spatial indices (height, width).</li>
+    <li>\(k, k'\) — channel indices, ranging over \(1, \ldots, n_C^{[l]}\).</li>
+    <li>\(G_{kk'}^{[l]}\) — the unnormalised correlation between channels \(k\) and \(k'\).</li>
+  </ul>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — The Gram Matrix Captures Style</span>
+    <p>Notice: the Gram matrix sums over all spatial positions. So it measures <em>which channels tend to
+    co-activate</em>, regardless of <em>where</em>. That is what makes it a "style" descriptor — it encodes
+    texture and pattern information while being invariant to spatial arrangement.</p>
+  </div>
+
+  <h3>11.3 The style cost</h3>
+
+  <p>Given style image \(S\) and generated image \(G\), compute the Gram matrices \(G^{[l](S)}\) and
+  \(G^{[l](G)}\), then:</p>
+
+  <div class="eq">
+    <div class="eq-label">Style cost at layer \(l\)</div>
+    $$
+    J_{\text{style}}^{[l]}(S, G) = \frac{1}{(2 \, n_H^{[l]} \, n_W^{[l]} \, n_C^{[l]})^2}
+    \sum_{k} \sum_{k'} \left( G_{kk'}^{[l](S)} - G_{kk'}^{[l](G)} \right)^2
+    $$
+  </div>
+
+  <p>The denominator normalises the cost by the layer's size so that different layers contribute comparable
+  magnitudes.</p>
+
+  <h3>11.4 Combining multiple layers</h3>
+
+  <p>Style is best captured by looking at <em>several</em> layers at once. Combine the per-layer costs with
+  weights \(\lambda^{[l]}\):</p>
+
+  <div class="eq">
+    $$
+    J_{\text{style}}(S, G) = \sum_{l} \lambda^{[l]} \, J_{\text{style}}^{[l]}(S, G)
+    $$
+  </div>
+
+  <ul>
+    <li>\(\lambda^{[l]}\) — weight for layer \(l\)'s style contribution. Often chosen so each layer contributes
+    proportionally.</li>
+  </ul>
+
+  <div class="box exam">
+    <span class="label">🟣 Worked Example — Gram Matrix at a Small Scale</span>
+    <p>Suppose at some layer \(n_H = 2\), \(n_W = 2\), \(n_C = 3\). Then the activations are a \(2 \times 2 \times 3\)
+    tensor. The Gram matrix \(G^{[l]}\) is \(3 \times 3\). Its \((1,2)\) entry:</p>
+    <div class="eq">
+      $$
+      G_{12}^{[l]} = \sum_{i=1}^{2} \sum_{j=1}^{2} a_{ij1} \, a_{ij2}
+      $$
+    </div>
+    <p>That is, multiply the value at channel 1's pixel by channel 2's pixel at each of the 4 spatial positions,
+    then sum. The result is high if channels 1 and 2 tend to be active together.</p>
+  </div>
+
+  <div class="box warn">
+    <span class="label">🔴 Warning — Gram Matrix Is Not the Only Style Descriptor</span>
+    <p>The Gram matrix is a first-order approximation of style. Modern methods use more sophisticated statistics
+    (e.g., mean + variance via instance normalisation, or learned style embeddings). But the Gram-matrix approach
+    is the classic, and it's what the specialization teaches.</p>
+  </div>
+
+  <!-- ==================== NST FULL ==================== -->
+  <h2 id="nst-full">12. Putting It Together</h2>
+
+  <div class="eq">
+    <div class="eq-label">Full neural style transfer cost</div>
+    $$
+    J(G) = \alpha \underbrace{\frac{1}{2} \left\| a^{[l](C)} - a^{[l](G)} \right\|^2}_{J_{\text{content}}}
+    + \beta \underbrace{\sum_{l'} \lambda^{[l']} \, J_{\text{style}}^{[l']}(S, G)}_{J_{\text{style}}}
+    $$
+  </div>
+
+  <h3>12.1 The full algorithm</h3>
+
+  <ol>
+    <li>Load a pretrained ConvNet (e.g., VGG‑19) with <strong>frozen weights</strong>.</li>
+    <li>Choose a content layer \(l_{\text{content}}\) (typically middle) and a set of style layers
+    \(\{l_{\text{style}}\}\) (typically several layers across depths).</li>
+    <li>Precompute \(a^{[l_{\text{content}}](C)}\) and \(G^{[l_{\text{style}}](S)}\) once — they don't change
+    during optimisation.</li>
+    <li>Initialise \(G\) randomly.</li>
+    <li>Repeat many times:
+      <ol type="a">
+        <li>Forward pass \(G\) through the network.</li>
+        <li>Compute \(J(G) = \alpha J_{\text{content}} + \beta J_{\text{style}}\).</li>
+        <li>Backpropagate to find \(\partial J / \partial G\) (the gradient w.r.t. the pixels of \(G\)).</li>
+        <li>Update: \(G \leftarrow G - \eta \cdot \partial J / \partial G\).</li>
+      </ol>
+    </li>
+    <li>Return the final \(G\).</li>
+  </ol>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — The Role of \(\alpha\) and \(\beta\)</span>
+    <ul>
+      <li>Larger \(\alpha\) (relative to \(\beta\)) → the output looks more like the content image (less stylistic).</li>
+      <li>Larger \(\beta\) → the output looks more like the style (content is more obscured).</li>
+      <li>Typical ratios place more weight on style (\(\beta > \alpha\)) so that the artistic texture dominates.</li>
+    </ul>
+  </div>
+
+  <!-- ==================== 1D ==================== -->
+  <h2 id="1d">13. 1D Convolutions</h2>
+
+  <p>The convolution operation generalises to <strong>1D</strong> data, which is common in signal processing.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 260" role="img" aria-label="2D conv vs 1D conv">
+      <!-- 2D -->
+      <text x="220" y="30" text-anchor="middle" font-weight="700" font-size="14">2D Convolution (image)</text>
+      <rect x="40" y="60" width="140" height="140" fill="#dcdffc" stroke="#333" stroke-dasharray="2 2"/>
+      <g stroke="#999" stroke-width=".5">
+        <!-- grid -->
+        <line x1="60" y1="60" x2="60" y2="200"/><line x1="80" y1="60" x2="80" y2="200"/>
+        <line x1="100" y1="60" x2="100" y2="200"/><line x1="120" y1="60" x2="120" y2="200"/>
+        <line x1="140" y1="60" x2="140" y2="200"/><line x1="160" y1="60" x2="160" y2="200"/>
+        <line x1="40" y1="80" x2="180" y2="80"/><line x1="40" y1="100" x2="180" y2="100"/>
+        <line x1="40" y1="120" x2="180" y2="120"/><line x1="40" y1="140" x2="180" y2="140"/>
+        <line x1="40" y1="160" x2="180" y2="160"/><line x1="40" y1="180" x2="180" y2="180"/>
+      </g>
+      <rect x="60" y="80" width="60" height="60" fill="#3a63d8" fill-opacity=".3" stroke="#3a63d8" stroke-width="2"/>
+      <text x="110" y="225" text-anchor="middle" font-size="11">14×14 input, 5×5 filter</text>
+
+      <text x="200" y="135" font-size="16">*</text>
+
+      <!-- 1D -->
+      <text x="650" y="30" text-anchor="middle" font-weight="700" font-size="14">1D Convolution (audio / signal)</text>
+      <g>
+        <rect x="440" y="110" width="360" height="40" fill="#dcdffc" stroke="#333"/>
+        <line x1="470" y1="110" x2="470" y2="150" stroke="#999"/>
+        <line x1="500" y1="110" x2="500" y2="150" stroke="#999"/>
+        <line x1="530" y1="110" x2="530" y2="150" stroke="#999"/>
+        <line x1="560" y1="110" x2="560" y2="150" stroke="#999"/>
+        <line x1="590" y1="110" x2="590" y2="150" stroke="#999"/>
+        <line x1="620" y1="110" x2="620" y2="150" stroke="#999"/>
+        <line x1="650" y1="110" x2="650" y2="150" stroke="#999"/>
+        <line x1="680" y1="110" x2="680" y2="150" stroke="#999"/>
+        <line x1="710" y1="110" x2="710" y2="150" stroke="#999"/>
+        <line x1="740" y1="110" x2="740" y2="150" stroke="#999"/>
+        <line x1="770" y1="110" x2="770" y2="150" stroke="#999"/>
+      </g>
+      <!-- filter -->
+      <rect x="500" y="110" width="150" height="40" fill="#3a63d8" fill-opacity=".3" stroke="#3a63d8" stroke-width="2"/>
+      <text x="620" y="180" text-anchor="middle" font-size="11">14 samples, 5-sample filter</text>
+    </svg>
+    <div class="caption">Figure 13.1 — 2D convolutions slide a 2D filter over an image. 1D convolutions slide a 1D
+    filter over a 1D signal (audio waveform, ECG, sensor data).</div>
+  </div>
+
+  <div class="eq">
+    <div class="eq-label">1D convolution</div>
+    $$
+    y_i = \sum_{k=0}^{f-1} x_{i+k} \cdot w_k + b
+    $$
+  </div>
+
+  <ul>
+    <li>\(x\) — 1D input signal (e.g., audio samples).</li>
+    <li>\(w\) — 1D filter of length \(f\).</li>
+    <li>\(y_i\) — output at position \(i\).</li>
+  </ul>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — Applications of 1D Convolutions</span>
+    <ul>
+      <li><strong>Audio / speech recognition</strong> — raw waveform or spectrogram along time.</li>
+      <li><strong>ECG / EEG analysis</strong> — medical time-series signals.</li>
+      <li><strong>Natural language processing</strong> — 1D conv over word embeddings (before transformers
+      dominated).</li>
+      <li><strong>Sensor data</strong> — accelerometer, gyroscope streams.</li>
+    </ul>
+  </div>
+
+  <!-- ==================== 3D ==================== -->
+  <h2 id="3d">14. 3D Convolutions</h2>
+
+  <p>Some data has three spatial dimensions (volumes). The convolution operation extends naturally.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 260" role="img" aria-label="3D convolution">
+      <!-- 3D input volume -->
+      <g>
+        <rect x="40" y="80" width="100" height="100" fill="#dcdffc" stroke="#333"/>
+        <rect x="60" y="60" width="100" height="100" fill="#c4d0f5" stroke="#333"/>
+        <rect x="80" y="40" width="100" height="100" fill="#a8b8f0" stroke="#333"/>
+      </g>
+      <text x="110" y="210" text-anchor="middle" font-size="12">3D volume (e.g., CT scan)</text>
+      <text x="110" y="225" text-anchor="middle" font-size="11" fill="#3a63d8">14 × 14 × 14 × 1</text>
+
+      <text x="240" y="130" font-size="20">*</text>
+
+      <!-- 3D filter -->
+      <g>
+        <rect x="280" y="100" width="40" height="40" fill="#ffe14d" stroke="#333"/>
+        <rect x="290" y="90" width="40" height="40" fill="#ffd93b" stroke="#333"/>
+        <rect x="300" y="80" width="40" height="40" fill="#ffc400" stroke="#333"/>
+      </g>
+      <text x="300" y="175" text-anchor="middle" font-size="11">3D filter</text>
+      <text x="300" y="190" text-anchor="middle" font-size="10" fill="#d99a00">5 × 5 × 5 × 1</text>
+
+      <text x="380" y="130" font-size="20">=</text>
+
+      <!-- 3D output -->
+      <g>
+        <rect x="420" y="100" width="80" height="80" fill="#e8fbf0" stroke="#1f9d55"/>
+        <rect x="435" y="85" width="80" height="80" fill="#c8f0da" stroke="#1f9d55"/>
+        <rect x="450" y="70" width="80" height="80" fill="#a8e8c0" stroke="#1f9d55"/>
+      </g>
+      <text x="470" y="200" text-anchor="middle" font-size="11" fill="#1f9d55">10 × 10 × 10 × 16</text>
+      <text x="470" y="215" text-anchor="middle" font-size="10" fill="#5b6478">(16 filters)</text>
+
+      <!-- annotation -->
+      <text x="700" y="80" font-size="13">Use cases:</text>
+      <text x="700" y="105" font-size="12">• Medical imaging (CT, MRI)</text>
+      <text x="700" y="130" font-size="12">• 3D object recognition</text>
+      <text x="700" y="155" font-size="12">• Video (2D + time)</text>
+      <text x="700" y="180" font-size="12">• Point clouds / voxels</text>
+    </svg>
+    <div class="caption">Figure 14.1 — 3D convolution. A 3D filter slides across a 3D input volume, producing a 3D
+    output. Used in medical imaging (CT/MRI scans), video understanding, and 3D shape analysis.</div>
+  </div>
+
+  <div class="eq">
+    <div class="eq-label">3D convolution output size</div>
+    $$
+    n_H^{[l]} = \left\lfloor \frac{n_H^{[l-1]} + 2p - f}{s} \right\rfloor + 1
+    $$
+    $$
+    n_W^{[l]} = \left\lfloor \frac{n_W^{[l-1]} + 2p - f}{s} \right\rfloor + 1, \qquad
+    n_D^{[l]} = \left\lfloor \frac{n_D^{[l-1]} + 2p - f}{s} \right\rfloor + 1
+    $$
+  </div>
+
+  <ul>
+    <li>\(n_H, n_W, n_D\) — height, width, and depth of the volume.</li>
+    <li>Output has the same number of channels as the number of 3D filters used.</li>
+  </ul>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — The Same Design Principles Apply</span>
+    <p>All of the ideas from 2D CNNs — padding, stride, pooling, batch norm, residual connections — carry over
+    to 1D and 3D versions. The convolution operation is dimension-agnostic.</p>
+  </div>
+
+  <div class="box warn">
+    <span class="label">🔴 Warning — 3D Convs Are Expensive</span>
+    <p>3D convolutions have a parameter count that scales with \(f^3\) (cubed) instead of \(f^2\). This makes
+    them much more memory- and compute-intensive. Many medical imaging models use 2D slices or factorised
+    (2D + 1D) convolutions instead.</p>
+  </div>
+
+  <!-- ==================== SUMMARY ==================== -->
+  <h2 id="summary">15. Weekly Summary</h2>
+
+  <ul>
+    <li><strong>Face verification</strong> — 1:1 decision. Input image + claimed ID → yes/no.</li>
+    <li><strong>Face recognition</strong> — 1:K decision. Input image + database → identity or "not recognized".</li>
+    <li><strong>One-shot learning</strong> — learning a new identity from a single example. Solved by learning a
+    similarity function rather than a classifier.</li>
+    <li><strong>Similarity function \(d(\text{img}_1, \text{img}_2)\)</strong> — small if same person, large
+    otherwise.</li>
+    <li><strong>Siamese network</strong> — same ConvNet applied to two images; compare their \(128\)-dim
+    encodings.</li>
+    <li><strong>Triplet loss</strong> — given (Anchor, Positive, Negative), learn so that \(d(A,P) + \alpha \le
+    d(A,N)\).</li>
+    <li><strong>Hard triplet mining</strong> — train only on triplets where the margin is nearly violated.</li>
+    <li><strong>Binary classification</strong> — alternative: feed \(|f(x^{(i)}) - f(x^{(j)})|\) into a small
+    classifier to output "same/different."</li>
+    <li><strong>Neural style transfer</strong> — optimise image pixels to combine content of one image with style
+    of another.</li>
+    <li><strong>Content cost</strong> — match activations at a mid-level layer: \(J_{\text{content}} = \frac{1}{2}
+    \|a^{[l](C)} - a^{[l](G)}\|^2\).</li>
+    <li><strong>Style cost</strong> — match Gram matrices (channel correlations) at several layers.</li>
+    <li><strong>Total cost</strong> \(J(G) = \alpha J_{\text{content}} + \beta J_{\text{style}}\).</li>
+    <li><strong>1D and 3D convolutions</strong> — same ideas generalise to signals, medical volumes, video.</li>
+  </ul>
+
+  <!-- ==================== EQUATIONS ==================== -->
+  <h2 id="equations">16. Important Equations</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Equation</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>\(d(x^{(1)}, x^{(2)}) = \|f(x^{(1)}) - f(x^{(2)})\|_2^2\)</td>
+          <td>Distance between two face encodings. Small = same person.</td>
+        </tr>
+        <tr>
+          <td>\(\|f(A) - f(P)\|^2 + \alpha \le \|f(A) - f(N)\|^2\)</td>
+          <td>Triplet condition. Positive pair closer than negative pair by margin \(\alpha\).</td>
+        </tr>
+        <tr>
+          <td>\(\mathcal{L}(A,P,N) = \max\!\big(\|f(A)-f(P)\|^2 - \|f(A)-f(N)\|^2 + \alpha, 0\big)\)</td>
+          <td>Triplet loss for a single triplet. Zero if already satisfied.</td>
+        </tr>
+        <tr>
+          <td>\(J = \sum_{i=1}^m \mathcal{L}(A^{(i)}, P^{(i)}, N^{(i)})\)</td>
+          <td>Total triplet cost over the training set.</td>
+        </tr>
+        <tr>
+          <td>\(\hat{y} = \sigma\!\Big(\sum_k w_k |f_k(x^{(i)}) - f_k(x^{(j)})| + b\Big)\)</td>
+          <td>Binary classification output for face verification.</td>
+        </tr>
+        <tr>
+          <td>\(J(G) = \alpha J_{\text{content}}(C, G) + \beta J_{\text{style}}(S, G)\)</td>
+          <td>Neural style transfer cost. Balances content vs style.</td>
+        </tr>
+        <tr>
+          <td>\(J_{\text{content}} = \frac{1}{2} \|a^{[l](C)} - a^{[l](G)}\|^2\)</td>
+          <td>Content cost. Match activations at chosen layer.</td>
+        </tr>
+        <tr>
+          <td>\(G_{kk'}^{[l]} = \sum_i \sum_j a_{ijk}^{[l]} a_{ijk'}^{[l]}\)</td>
+          <td>Gram matrix entry — correlation between channels \(k, k'\).</td>
+        </tr>
+        <tr>
+          <td>\(J_{\text{style}}^{[l]} = \frac{1}{(2 n_H n_W n_C)^2} \sum_k \sum_{k'} (G_{kk'}^{[l](S)} - G_{kk'}^{[l](G)})^2\)</td>
+          <td>Style cost at one layer.</td>
+        </tr>
+        <tr>
+          <td>\(J_{\text{style}}(S, G) = \sum_l \lambda^{[l]} J_{\text{style}}^{[l]}(S, G)\)</td>
+          <td>Style cost summed over multiple layers.</td>
+        </tr>
+        <tr>
+          <td>\(y_i = \sum_k x_{i+k} w_k + b\)</td>
+          <td>1D convolution.</td>
+        </tr>
+        <tr>
+          <td>\(n_H^{[l]} = \lfloor (n_H^{[l-1]} + 2p - f)/s \rfloor + 1\)</td>
+          <td>Output dimension for 1D/2D/3D conv.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== CONFUSIONS ==================== -->
+  <h2 id="confusions">17. Common Confusions</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Often confused</th><th>Correct distinction</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Face verification vs face recognition</td>
+          <td>Verification = 1:1 yes/no. Recognition = 1:K, pick from database.</td>
+        </tr>
+        <tr>
+          <td>One-shot learning vs traditional classification</td>
+          <td>Traditional classification needs many examples per class and retrains for new classes.
+          One-shot learns a similarity function usable on unseen classes.</td>
+        </tr>
+        <tr>
+          <td>Siamese network vs standard CNN</td>
+          <td>Siamese uses the <em>same</em> weights on two inputs. Standard CNN has one input.</td>
+        </tr>
+        <tr>
+          <td>Triplet loss vs binary classification</td>
+          <td>Triplet loss directly trains the embedding distance. Binary classification trains a head on top
+          of the embedding to output same/different. Both work.</td>
+        </tr>
+        <tr>
+          <td>Margin \(\alpha\) vs learning rate</td>
+          <td>\(\alpha\) is a fixed hyperparameter (triplet loss margin). Learning rate controls gradient
+          step size. Totally different.</td>
+        </tr>
+        <tr>
+          <td>Content cost vs style cost</td>
+          <td>Content cost matches <em>activations</em> at a mid-layer. Style cost matches <em>Gram matrices</em>
+          (channel correlations) across multiple layers.</td>
+        </tr>
+        <tr>
+          <td>Gram matrix vs activation</td>
+          <td>Activations are the raw \(n_H \times n_W \times n_C\) tensor. Gram matrix is \(n_C \times n_C\),
+          summarising spatial correlations between channels.</td>
+        </tr>
+        <tr>
+          <td>Freezing network vs optimising pixels</td>
+          <td>Style transfer keeps network weights frozen and optimises the <em>pixels of the generated image</em>.
+          Different from normal training.</td>
+        </tr>
+        <tr>
+          <td>2D vs 3D convolution</td>
+          <td>Same principle, extra dimension. 3D convolutions are for volumes (CT scans, video, etc.). Parameter
+          count scales as \(f^3\), not \(f^2\).</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== REVIEW ==================== -->
+  <h2 id="review">18. Review Questions</h2>
+
+  <details>
+    <summary>Q1. What is the difference between face verification and face recognition?</summary>
+    <div class="answer">
+      Face verification: given an image + claimed identity, output yes/no (1:1). Face recognition: given an image
+      + a database of K people, output the matching identity or "not recognized" (1:K). Recognition is essentially
+      verification applied K times.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q2. Why can't we just train a softmax classifier for face recognition?</summary>
+    <div class="answer">
+      Two reasons: (1) you often have only one photo per person (one-shot learning), so no class has enough
+      training data; (2) adding a new person requires retraining the softmax layer. Instead, learn a similarity
+      function that generalises to unseen identities.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q3. What is a Siamese network?</summary>
+    <div class="answer">
+      A network architecture where the same ConvNet (shared weights) processes two input images, producing two
+      encoding vectors \(f(x^{(1)}), f(x^{(2)})\). The distance between these encodings determines similarity.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q4. Write the triplet loss equation and explain each term.</summary>
+    <div class="answer">
+      $$\mathcal{L}(A,P,N) = \max\!\left(\|f(A) - f(P)\|^2 - \|f(A) - f(N)\|^2 + \alpha, \; 0\right)$$
+      \(A, P, N\) = anchor, positive, negative images. \(f(\cdot)\) = ConvNet encoding.
+      \(\alpha\) = margin. The loss is 0 if the positive pair is closer by at least \(\alpha\), otherwise the
+      difference.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q5. What is the margin \(\alpha\) and why is it needed?</summary>
+    <div class="answer">
+      The margin forces the network to keep a <em>buffer</em> between same-person distances and different-person
+      distances. Without it, the network could trivially satisfy the constraint by making all distances nearly
+      equal. \(\alpha\) ensures positive pairs are closer by at least that gap.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q6. What is hard triplet mining and why is it needed?</summary>
+    <div class="answer">
+      Random triplets usually satisfy the constraint trivially — the loss is zero and the network doesn't learn.
+      Hard mining selects triplets where \(d(A,P) \approx d(A,N)\), i.e., where the network is close to violating
+      the margin. These produce useful gradients.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q7. Describe the binary classification approach to face verification.</summary>
+    <div class="answer">
+      Take the element-wise absolute (or squared) difference between two encodings \(|f(x^{(i)}) - f(x^{(j)})|\),
+      pass it through a small classifier (FC + sigmoid), and output the probability that they are the same
+      person. Train with cross-entropy loss.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q8. What is neural style transfer?</summary>
+    <div class="answer">
+      It generates a new image \(G\) that has the <em>content</em> of image \(C\) and the <em>style</em> of image
+      \(S\). It works by optimising the pixels of \(G\) to minimise a combined cost
+      \(J(G) = \alpha J_{\text{content}} + \beta J_{\text{style}}\) using a pretrained CNN's features.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q9. What does activation maximisation reveal about a CNN?</summary>
+    <div class="answer">
+      It shows what each unit "detects." Layer 1 units respond to edges and colours; layer 2 units to textures;
+      deeper layers to object parts and full objects. It confirms the hierarchical feature learning of CNNs.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q10. Write the content cost formula and explain the choice of layer.</summary>
+    <div class="answer">
+      $$J_{\text{content}}(C, G) = \frac{1}{2} \|a^{[l](C)} - a^{[l](G)}\|^2$$
+      We pick a middle layer \(l\). Shallow layers make content match too pixel-level; deep layers make it too
+      permissive about layout. A middle layer captures "what's in the image" without being overly strict.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q11. What is a Gram matrix and why does it capture style?</summary>
+    <div class="answer">
+      The Gram matrix \(G_{kk'}^{[l]} = \sum_{i,j} a_{ijk}^{[l]} a_{ijk'}^{[l]}\) measures correlation between
+      channels \(k\) and \(k'\) across all spatial positions. Because it sums over spatial positions, it captures
+      <em>which channels co-activate</em>, regardless of <em>where</em>. Style is exactly this "texture
+      co-occurrence" — which patterns go together.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q12. What is the full style transfer cost function?</summary>
+    <div class="answer">
+      $$J(G) = \alpha J_{\text{content}}(C, G) + \beta J_{\text{style}}(S, G)$$
+      where \(J_{\text{style}}(S, G) = \sum_l \lambda^{[l]} J_{\text{style}}^{[l]}(S, G)\) sums the per-layer
+      style costs.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q13. How is \(G\) initialised in style transfer, and what do we optimise?</summary>
+    <div class="answer">
+      \(G\) is initialised randomly (e.g., random noise of the desired size). We optimise the <em>pixels</em> of
+      \(G\) via gradient descent. The pretrained network's weights are frozen — only the image is updated.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q14. What roles do \(\alpha\) and \(\beta\) play in style transfer?</summary>
+    <div class="answer">
+      They trade off content preservation vs style strength. Larger \(\alpha\) → output looks more like the
+      content. Larger \(\beta\) → output looks more like the style. Typical practice uses \(\beta > \alpha\) so
+      the artistic texture dominates.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q15. What is a 1D convolution and where is it used?</summary>
+    <div class="answer">
+      A 1D convolution slides a 1D filter over a 1D signal. Used for audio waveforms, ECG/EEG signals, natural
+      language sequences, and sensor time-series. The mechanics are identical to 2D convolutions, just in one
+      dimension.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q16. What is a 3D convolution and where is it used?</summary>
+    <div class="answer">
+      A 3D convolution slides a 3D filter over a 3D volume. Used for medical imaging (CT, MRI), 3D object
+      recognition, and video (where time is the third dimension). Parameter count scales as \(f^3\), making it
+      more expensive than 2D.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q17. Suppose an implementation of style transfer gives ugly results where the content is barely
+    visible. What would you adjust?</summary>
+    <div class="answer">
+      Increase \(\alpha\) (content weight) relative to \(\beta\). This strengthens the content-preservation
+      constraint, making the output more like the original photo, at the cost of less stylistic texture.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q18. Why is hard triplet mining unstable if taken too far?</summary>
+    <div class="answer">
+      Extremely hard triplets are often near-mislabelled or pathological — e.g., two different photos of the
+      same person look very different due to pose or lighting, or two different people look similar. Training on
+      only these leads to noisy gradients. Semi-hard mining is the usual compromise.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q19. Can face recognition generalise to new employees not seen during training? Why?</summary>
+    <div class="answer">
+      Yes — because the network learns a similarity function, not identities. When you enroll a new employee,
+      you simply compute their encoding \(f(x)\) and store it. At test time, compare the new input's encoding
+      to the stored one. No retraining needed.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q20. Explain in one paragraph the connection between face recognition and style transfer in this
+    week.</summary>
+    <div class="answer">
+      Both reuse a pretrained CNN as a fixed feature extractor. Face recognition uses the network's final
+      <em>embedding</em> — a 128-d vector encoding identity — to compare two faces. Style transfer uses the
+      network's <em>intermediate activations</em> to measure content similarity, and the <em>Gram matrix</em>
+      (channel correlations) to measure style similarity. In both cases, knowledge learned on a large dataset
+      (ImageNet) is transferred to a new task without retraining the backbone.
+    </div>
+  </details>
+
+  <!-- ==================== SELF-TEST ==================== -->
+  <h2 id="selftest">19. Self‑Test</h2>
+
+  <h3>Easy</h3>
+
+  <details>
+    <summary>1. Is face verification a 1:1 or 1:K problem?</summary>
+    <div class="answer">1:1 — one image vs one claimed identity, output yes/no.</div>
+  </details>
+
+  <details>
+    <summary>2. What is the output of the Siamese encoder typically called?</summary>
+    <div class="answer">An encoding or embedding \(f(x)\) (typically 128-dimensional).</div>
+  </details>
+
+  <details>
+    <summary>3. What does the Gram matrix measure?</summary>
+    <div class="answer">Correlation between different channels' activations, summed over all spatial positions.</div>
+  </details>
+
+  <details>
+    <summary>4. In style transfer, which set of parameters gets updated?</summary>
+    <div class="answer">The pixels of the generated image \(G\). The network weights are frozen.</div>
+  </details>
+
+  <details>
+    <summary>5. What is a 1D convolution used for?</summary>
+    <div class="answer">Processing 1D signals — audio, ECG, EEG, time-series, etc.</div>
+  </details>
+
+  <h3>Medium</h3>
+
+  <details>
+    <summary>6. Why is one-shot learning challenging, and what is the workaround?</summary>
+    <div class="answer">
+      Standard classifiers need many examples per class and must be retrained when new classes appear. The
+      workaround is to learn a <em>similarity function</em> \(d(x^{(1)}, x^{(2)})\) that compares two images,
+      enabling generalisation to unseen identities without retraining.
+    </div>
+  </details>
+
+  <details>
+    <summary>7. Why do we pick a middle layer for the content cost?</summary>
+    <div class="answer">
+      Shallow layers force the generated image to match pixel-level details of the content (too strict). Deep
+      layers are dominated by class information (too permissive). Middle layers balance these — they capture
+      "what's in the image" without imposing pixel-level similarity.
+    </div>
+  </details>
+
+  <details>
+    <summary>8. If \(\alpha = 1\) and \(\beta = 100\) in style transfer, what will the output look like?</summary>
+    <div class="answer">
+      Very stylistic — the style cost dominates, so the texture of the style image is strong. The content will
+      still be recognisable but strongly stylised.
+    </div>
+  </details>
+
+  <details>
+    <summary>9. Can you apply neural style transfer to audio signals? Why or why not?</summary>
+    <div class="answer">
+      In principle, yes. The key ingredients — a pretrained network that extracts features, a content cost based
+      on activations, and a style cost based on channel correlations — carry over to 1D signals. In practice,
+      audio style transfer is a real research area (e.g., timbre transfer).
+    </div>
+  </details>
+
+  <details>
+    <summary>10. Why is binary classification for face verification sometimes preferred over triplet loss?</summary>
+    <div class="answer">
+      Binary classification avoids the triplet mining step and can be more stable to train. Triplet loss requires
+      carefully curated hard triplets to be effective.
+    </div>
+  </details>
+
+  <details>
+    <summary>11. What does the \((2 n_H n_W n_C)^2\) denominator in the style cost do?</summary>
+    <div class="answer">
+      It normalises the cost so that different layers contribute comparable magnitudes. Without normalisation,
+      layers with more activations would dominate the total cost.
+    </div>
+  </details>
+
+  <h3>Hard</h3>
+
+  <details>
+    <summary>12. Derive why the triplet loss can produce a zero gradient when random triplets are used.</summary>
+    <div class="answer">
+      For random triplets, images A and N are usually very different (large \(d(A,N)\)), while A and P are similar
+      (small \(d(A,P)\)). So \(d(A,P) - d(A,N) + \alpha < 0\). Since \(\max(\cdot, 0) = 0\), the gradient is zero.
+      The network gets no signal to improve.
+    </div>
+  </details>
+
+  <details>
+    <summary>13. If you have 1000 employees, how many pairs would a binary classifier need to compare at test
+    time? How does this scale?</summary>
+    <div class="answer">
+      Each new input is compared against each enrolled employee: 1000 comparisons. This scales linearly in the
+      number of enrolled people. Modern systems use efficient nearest-neighbour search (e.g., vector databases)
+      to make this fast.
+    </div>
+  </details>
+
+  <details>
+    <summary>14. Why does the triplet loss not directly learn identities? What is the advantage?</summary>
+    <div class="answer">
+      The triplet loss only constrains <em>relative distances</em> between images, never asking "which person is
+      this?". The advantage: the learned embedding space generalises to unseen people — you can recognise anyone
+      by comparing to a stored encoding, without retraining.
+    </div>
+  </details>
+
+  <details>
+    <summary>15. In style transfer, why does optimising pixels produce a good image while random noise produces
+    garbage?</summary>
+    <div class="answer">
+      The optimisation is driven by gradients of \(J(G)\) w.r.t. each pixel. Random noise has no content or style
+      structure. The gradient tells each pixel how to change to make the network's activations (and Gram matrices)
+      more similar to the target. Over thousands of iterations, the noise is gradually shaped into an image that
+      satisfies both content and style objectives.
+    </div>
+  </details>
+
+  <details>
+    <summary>16. The Gram matrix is invariant to spatial rearrangements. Is that good or bad for style
+    transfer?</summary>
+    <div class="answer">
+      Mostly good — style is about texture and colour patterns, not where things are. Spatial invariance means
+      the style can be applied globally. But it's why style transfer doesn't respect spatial structure
+      perfectly; a swirl at the top of the style image might end up at the bottom of the generated image. Modern
+      methods add spatial controls.
+    </div>
+  </details>
+
+  <details>
+    <summary>17. If a face verification system has 99.9% accuracy per pair, is it good enough for a 1:1000
+    recognition system?</summary>
+    <div class="answer">
+      Not necessarily. With K=1000 comparisons, even a tiny per-pair error can produce meaningful mistakes at the
+      system level. The probabilities compound. This is why recognition systems require much higher per-pair
+      accuracy than simple verification.
+    </div>
+  </details>
+
+  <details>
+    <summary>18. Why do we precompute \(a^{[l](C)}\) and \(G^{[l](S)}\) before optimising \(G\)?</summary>
+    <div class="answer">
+      They don't change during optimisation (the content and style images are fixed). Precomputing them once saves
+      a forward pass on those images at every iteration — the only forward pass needed per iteration is on the
+      current \(G\).
+    </div>
+  </details>
+
+  <details>
+    <summary>19. A 3D convolution with a \(5\times 5\times 5\) filter has how many parameters per filter (single
+    channel)? Compare to a \(5\times 5\) 2D filter.</summary>
+    <div class="answer">
+      3D: \(5 \cdot 5 \cdot 5 = 125\) parameters (plus 1 bias). 2D: \(5 \cdot 5 = 25\) parameters.
+      So 3D is 5× more expensive per filter. For \(n_C\) input channels, the 3D filter has \(5 \cdot 5 \cdot 5
+      \cdot n_C\) parameters.
+    </div>
+  </details>
+
+  <details>
+    <summary>20. If you want to deploy a face verification system for 10,000 employees on mobile, what are the
+    key design decisions?</summary>
+    <div class="answer">
+      (1) Use a mobile-friendly backbone (e.g., MobileNet) as the Siamese encoder. (2) Store one 128-d encoding
+      per employee (~1.3MB total) in a fast vector-indexed database. (3) For each new input, compute its encoding
+      once and do nearest-neighbour search. (4) Choose the similarity threshold based on the desired
+      false-accept/false-reject trade-off. (5) Consider on-device vs server-side: on-device is privacy-preserving
+      but lower accuracy; server-side is more powerful but requires sending the input image over the network.
+    </div>
+  </details>
+
+  <!-- ==================== WEEK NAV ==================== -->
+  <div class="weeknav">
+    <a href="C4_W3.html" class="nav-btn">← Previous Week</a>
+    <a href="#" title="Course 4 index">↑ Course 4 Index</a>
+    <a href="#" title="Specialization index">⌂ Specialization</a>
+    <a href="C5_W1.html" class="nav-btn">Next Week →</a>
+  </div>
+
+  </main>
+</div>
+
+<footer>
+  Notes compiled from the Deep Learning Specialization · Course 4 Week 4 · DeepLearning.AI · Andrew Ng.
+  Additional context and recreated diagrams are labelled where they appear.
+</footer>
+
+<button id="backTop" title="Back to top">↑</button>
+
+<script>
+(function(){
+  var root = document.documentElement;
+  var stored = null;
+  try { stored = localStorage.getItem('dls-theme'); } catch(e){}
+  if (stored) root.setAttribute('data-theme', stored);
+  var btn = document.getElementById('themeBtn');
+  btn.addEventListener('click', function(){
+    var cur = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', cur);
+    try { localStorage.setItem('dls-theme', cur); } catch(e){}
+  });
+})();
+
+(function(){
+  var btn = document.getElementById('backTop');
+  window.addEventListener('scroll', function(){
+    if (window.scrollY > 500) btn.classList.add('show'); else btn.classList.remove('show');
+  });
+  btn.addEventListener('click', function(){ window.scrollTo({top:0,behavior:'smooth'}); });
+})();
+
+(function(){
+  var input = document.getElementById('searchInput');
+  if (!input) return;
+  var timer = null;
+  input.addEventListener('input', function(){
+    clearTimeout(timer);
+    timer = setTimeout(function(){
+      var q = input.value.trim();
+      document.querySelectorAll('mark.hit').forEach(function(m){
+        var t = document.createTextNode(m.textContent);
+        m.parentNode.replaceChild(t, m);
+      });
+      if (!q || q.length < 2) return;
+      var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+        acceptNode: function(node){
+          if (!node.parentNode) return NodeFilter.FILTER_REJECT;
+          var tag = node.parentNode.tagName;
+          if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'MARK') return NodeFilter.FILTER_REJECT;
+          if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      });
+      var re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi');
+      var hits = 0, first = null;
+      var nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      nodes.forEach(function(node){
+        if (hits >= 200) return;
+        var v = node.nodeValue;
+        if (!re.test(v)) return;
+        re.lastIndex = 0;
+        var frag = document.createDocumentFragment();
+        var last = 0, m;
+        while ((m = re.exec(v)) !== null){
+          frag.appendChild(document.createTextNode(v.slice(last, m.index)));
+          var mk = document.createElement('mark');
+          mk.className = 'hit';
+          mk.textContent = m[0];
+          frag.appendChild(mk);
+          last = m.index + m[0].length;
+          hits++;
+          if (hits >= 200) break;
+        }
+        frag.appendChild(document.createTextNode(v.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+        if (!first) first = frag;
+      });
+      if (first && first.querySelector) {
+        var el = first.querySelector('mark.hit');
+        if (el) el.scrollIntoView({behavior:'smooth', block:'center'});
+      }
+    }, 220);
+  });
+})();
+</script>
+
+</body>
+</html>

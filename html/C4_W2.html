@@ -1,0 +1,2157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Course 4 · Week 2 — Case Studies (Classic CNN Architectures)</title>
+
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$','$'], ['\\(','\\)']], displayMath: [['$$','$$'], ['\\[','\\]']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+  :root{
+    --bg:#f7f8fb; --bg-alt:#ffffff; --text:#1c2230; --muted:#5b6478; --border:#e3e6ee;
+    --accent:#3a63d8; --accent-soft:#eaefff;
+    --def:#e8f1ff; --def-b:#3a63d8;
+    --int:#e8fbf0; --int-b:#1f9d55;
+    --imp:#fff6e0; --imp-b:#d99a00;
+    --warn:#ffe9e9; --warn-b:#d64545;
+    --exam:#f3e9ff; --exam-b:#7a3ad6;
+    --code-bg:#0f172a; --code-text:#e6edf7;
+    --shadow:0 1px 3px rgba(20,30,60,.06),0 8px 24px rgba(20,30,60,.06);
+  }
+  html[data-theme="dark"]{
+    --bg:#0e1116; --bg-alt:#161b23; --text:#e6ecf5; --muted:#a1abc0; --border:#2a3242;
+    --accent:#7d9cff; --accent-soft:#1b2440;
+    --def:#132347; --def-b:#7d9cff;
+    --int:#0f2b1d; --int-b:#4bd18a;
+    --imp:#2c2410; --imp-b:#f0b73f;
+    --warn:#2e1414; --warn-b:#ff7b7b;
+    --exam:#20143a; --exam-b:#b48cff;
+    --code-bg:#05080f; --code-text:#d7e3f4;
+    --shadow:0 1px 3px rgba(0,0,0,.5),0 8px 24px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    line-height:1.65;-webkit-font-smoothing:antialiased;font-size:16.5px;}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{font-family:"JetBrains Mono",Menlo,Consolas,monospace;font-size:.9em;
+    background:rgba(127,127,127,.14);padding:2px 5px;border-radius:4px}
+  pre{background:var(--code-bg);color:var(--code-text);padding:16px 18px;border-radius:10px;
+    overflow-x:auto;font-size:13.5px;line-height:1.55;box-shadow:var(--shadow)}
+  pre code{background:transparent;color:inherit;padding:0;font-size:inherit}
+
+  .topbar{position:sticky;top:0;z-index:50;background:var(--bg-alt);
+    border-bottom:1px solid var(--border);padding:10px 16px;
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;box-shadow:var(--shadow)}
+  .topbar .brand{font-weight:700;font-size:15px;letter-spacing:.2px}
+  .topbar .brand small{display:block;color:var(--muted);font-weight:400;font-size:11.5px}
+  .topbar .spacer{flex:1}
+  .topbar button,.topbar a.btn{
+    background:var(--accent-soft);color:var(--accent);border:1px solid transparent;
+    padding:7px 11px;border-radius:8px;font-size:13.5px;cursor:pointer;font-weight:600}
+  .topbar button:hover,.topbar a.btn:hover{filter:brightness(.97);text-decoration:none}
+  .search-wrap{position:relative}
+  .search-wrap input{padding:8px 12px 8px 30px;border-radius:8px;border:1px solid var(--border);
+    background:var(--bg);color:var(--text);font-size:13.5px;min-width:190px;outline:none}
+  .search-wrap::before{content:"🔍";position:absolute;left:9px;top:50%;transform:translateY(-50%);
+    font-size:12px;opacity:.7}
+
+  .layout{display:grid;grid-template-columns:290px minmax(0,1fr);gap:24px;
+    max-width:1400px;margin:0 auto;padding:24px 18px 80px}
+  @media(max-width:960px){.layout{grid-template-columns:1fr;padding:16px 12px 60px}}
+
+  aside.toc{position:sticky;top:74px;align-self:start;max-height:calc(100vh - 90px);
+    overflow-y:auto;background:var(--bg-alt);border:1px solid var(--border);
+    border-radius:12px;padding:14px 14px 18px;box-shadow:var(--shadow);font-size:14px}
+  aside.toc h3{margin:0 0 8px;font-size:13px;text-transform:uppercase;
+    letter-spacing:.6px;color:var(--muted)}
+  aside.toc ol{margin:0;padding-left:18px}
+  aside.toc ol li{margin:5px 0}
+  aside.toc a{color:var(--text)}
+  aside.toc a:hover{color:var(--accent)}
+  @media(max-width:960px){aside.toc{position:static;max-height:none}}
+
+  main{min-width:0}
+  h1{font-size:clamp(22px,3.4vw,30px);margin:0 0 6px}
+  h2{font-size:clamp(19px,2.6vw,24px);margin:44px 0 12px;padding-bottom:6px;
+    border-bottom:2px solid var(--border)}
+  h3{font-size:clamp(17px,2.1vw,20px);margin:28px 0 8px}
+  h4{font-size:16px;margin:20px 0 6px}
+  p{margin:9px 0}
+  ul,ol{padding-left:22px}
+  li{margin:5px 0}
+  .lead{color:var(--muted);font-size:15.5px}
+
+  .box{border-left:5px solid var(--accent);background:var(--bg-alt);
+    padding:14px 16px;border-radius:10px;margin:16px 0;box-shadow:var(--shadow)}
+  .box .label{display:inline-block;font-size:11.5px;font-weight:800;
+    letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px}
+  .box.def{border-color:var(--def-b);background:var(--def)}
+  .box.def .label{color:var(--def-b)}
+  .box.int{border-color:var(--int-b);background:var(--int)}
+  .box.int .label{color:var(--int-b)}
+  .box.imp{border-color:var(--imp-b);background:var(--imp)}
+  .box.imp .label{color:var(--imp-b)}
+  .box.warn{border-color:var(--warn-b);background:var(--warn)}
+  .box.warn .label{color:var(--warn-b)}
+  .box.exam{border-color:var(--exam-b);background:var(--exam)}
+  .box.exam .label{color:var(--exam-b)}
+  .box.extra{border-color:var(--muted);background:var(--bg-alt)}
+  .box.extra .label{color:var(--muted)}
+
+  .eq{background:var(--bg-alt);border:1px solid var(--border);border-radius:10px;
+    padding:10px 16px;margin:14px 0;overflow-x:auto;box-shadow:var(--shadow)}
+  .eq .eq-label{font-size:12px;color:var(--muted);margin-bottom:4px}
+
+  .table-wrap{overflow-x:auto;margin:14px 0}
+  table{border-collapse:collapse;width:100%;min-width:480px;font-size:14.5px;
+    background:var(--bg-alt);border-radius:10px;overflow:hidden;box-shadow:var(--shadow)}
+  th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+  th{background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:13.5px}
+  tr:last-child td{border-bottom:none}
+
+  .diagram{background:var(--bg-alt);border:1px solid var(--border);border-radius:12px;
+    padding:16px;margin:18px 0;box-shadow:var(--shadow);text-align:center;overflow-x:auto}
+  .diagram svg{max-width:100%;height:auto}
+  .diagram .caption{font-size:13px;color:var(--muted);margin-top:10px;text-align:left}
+
+  details{background:var(--bg-alt);border:1px solid var(--border);border-radius:10px;
+    padding:10px 14px;margin:10px 0;box-shadow:var(--shadow)}
+  details summary{cursor:pointer;font-weight:600;color:var(--accent);outline:none}
+  details[open] summary{margin-bottom:8px}
+  details .answer{color:var(--text);font-size:15px}
+
+  .weeknav{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;
+    margin:44px 0 10px;padding:16px;background:var(--bg-alt);border:1px solid var(--border);
+    border-radius:12px;box-shadow:var(--shadow)}
+  .weeknav a{flex:1 1 auto;text-align:center;padding:10px 14px;border-radius:8px;
+    background:var(--accent-soft);color:var(--accent);font-weight:600;font-size:14px}
+  .weeknav a:hover{text-decoration:none;filter:brightness(.97)}
+
+  #backTop{position:fixed;right:16px;bottom:16px;z-index:60;background:var(--accent);
+    color:#fff;border:none;width:44px;height:44px;border-radius:50%;font-size:18px;
+    cursor:pointer;box-shadow:0 6px 18px rgba(58,99,216,.4);display:none}
+  #backTop.show{display:block}
+  mark.hit{background:#ffe066;color:#000;border-radius:3px;padding:0 2px}
+
+  footer{max-width:1400px;margin:0 auto;padding:10px 18px 60px;
+    color:var(--muted);font-size:13px;text-align:center}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Course 4 · Week 2 <small>Case Studies — Classic CNN Architectures</small></div>
+  <div class="spacer"></div>
+  <div class="search-wrap"><input id="searchInput" type="text" placeholder="Search in notes…" /></div>
+  <button id="themeBtn" title="Toggle light/dark">🌗 Theme</button>
+</div>
+
+<div class="layout">
+
+  <aside class="toc">
+    <h3>Table of Contents</h3>
+    <ol>
+      <li><a href="#overview">Week Overview</a></li>
+      <li><a href="#why-cases">Why Study Case Studies?</a></li>
+      <li><a href="#lenet">LeNet‑5</a></li>
+      <li><a href="#alexnet">AlexNet</a></li>
+      <li><a href="#vgg">VGG‑16 / VGG‑19</a></li>
+      <li><a href="#resnet">ResNet — Residual Networks</a></li>
+      <li><a href="#resnet-why">Why ResNets Work</a></li>
+      <li><a href="#onebyone">1×1 Convolutions</a></li>
+      <li><a href="#inception-mot">Inception Network — Motivation</a></li>
+      <li><a href="#inception">The Inception Module</a></li>
+      <li><a href="#mobilenet">MobileNet</a></li>
+      <li><a href="#mobilenet-v2">MobileNet v2</a></li>
+      <li><a href="#efficientnet">EfficientNet</a></li>
+      <li><a href="#transfer">Transfer Learning</a></li>
+      <li><a href="#augment">Data Augmentation</a></li>
+      <li><a href="#state-cv">State of Computer Vision</a></li>
+      <li><a href="#summary">Weekly Summary</a></li>
+      <li><a href="#equations">Important Equations</a></li>
+      <li><a href="#confusions">Common Confusions</a></li>
+      <li><a href="#review">Review Questions</a></li>
+      <li><a href="#selftest">Self‑Test</a></li>
+    </ol>
+  </aside>
+
+  <main>
+
+  <h1 id="overview">Week 2 — Case Studies: Classic CNN Architectures</h1>
+  <p class="lead">Course 4 (Convolutional Neural Networks) · Deep Learning Specialization · Andrew Ng</p>
+
+  <div class="box def">
+    <span class="label">🔵 What This Week Is About</span>
+    <p>This week studies the CNNs that shaped the field. We trace the evolution from <strong>LeNet‑5</strong> (1998, 60K params)
+    through <strong>AlexNet</strong> (2012, 60M params) and <strong>VGG</strong> (2014) to <strong>ResNet</strong> (2015, with
+    skip connections) and the <strong>Inception</strong> network (parallel branches). We then study efficiency-driven
+    architectures — <strong>MobileNet</strong> and <strong>EfficientNet</strong> — and finish with practical advice:
+    <strong>transfer learning</strong>, <strong>data augmentation</strong>, and benchmark tricks.</p>
+  </div>
+
+  <div class="box int">
+    <span class="label">🟢 Big-Picture Narrative</span>
+    <p>Each architecture introduced one new idea that stuck:</p>
+    <ul>
+      <li>LeNet‑5 → CNNs work for real tasks (digit recognition).</li>
+      <li>AlexNet → Deep + ReLU + GPU + big data = step change.</li>
+      <li>VGG → Simplicity: stacks of 3×3 convs.</li>
+      <li>ResNet → Skip connections let you go very deep (152 layers).</li>
+      <li>Inception → Multi-scale parallel filters + 1×1 bottleneck.</li>
+      <li>MobileNet → Depthwise separable convs for mobile.</li>
+      <li>EfficientNet → Jointly scale depth/width/resolution.</li>
+    </ul>
+  </div>
+
+  <!-- ==================== WHY CASE STUDIES ==================== -->
+  <h2 id="why-cases">1. Why Look at Case Studies?</h2>
+
+  <p>By now you know the basic building blocks: convolution, pooling, padding, stride, ReLU, softmax. But how do you
+  <em>combine</em> them into something that actually works? The best way is to study networks that <em>have</em> worked —
+  their designs are the outcome of enormous trial and error, and the intuitions they encode transfer directly to new tasks.</p>
+
+  <div class="box int">
+    <span class="label">🟢 Analogy — Learning from Masterpieces</span>
+    <p>Just as an aspiring architect studies famous buildings before designing their own, an ML engineer studies famous
+    networks. You learn common motifs (stacked 3×3 convs, residual blocks, bottleneck layers) that you can reuse.</p>
+  </div>
+
+  <p>Concretely, case studies teach you:</p>
+  <ul>
+    <li><strong>Reusable patterns</strong> — 3×3 stacking, residual blocks, 1×1 bottlenecks.</li>
+    <li><strong>Design trade-offs</strong> — depth vs. width, accuracy vs. compute.</li>
+    <li><strong>Practical numbers</strong> — what parameter counts, memory, and compute look like.</li>
+    <li><strong>Transfer learning</strong> — pretrained backbones you can fine-tune on your own task.</li>
+  </ul>
+
+  <!-- ==================== LENET-5 ==================== -->
+  <h2 id="lenet">2. LeNet‑5 (1998)</h2>
+
+  <p>LeCun et al., 1998, "Gradient-based learning applied to document recognition." Designed for digit/zip-code recognition.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 200" role="img" aria-label="LeNet-5 architecture">
+      <rect x="10" y="60" width="60" height="60" fill="#dcdffc" stroke="#3a63d8"/>
+      <text x="40" y="150" text-anchor="middle" font-size="11" fill="#3a63d8">32×32×1</text>
+      <text x="40" y="175" text-anchor="middle" font-size="10" fill="#5b6478">input (gray)</text>
+
+      <text x="85" y="95" font-size="13">→</text>
+      <rect x="100" y="55" width="65" height="65" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="132" y="145" text-anchor="middle" font-size="10" fill="#3a63d8">CONV (5×5,s=1)</text>
+      <text x="132" y="160" text-anchor="middle" font-size="10" fill="#3a63d8">28×28×6</text>
+
+      <text x="180" y="95" font-size="13">→</text>
+      <rect x="195" y="55" width="65" height="65" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="227" y="145" text-anchor="middle" font-size="10" fill="#1f9d55">avg pool (2×2,s=2)</text>
+      <text x="227" y="160" text-anchor="middle" font-size="10" fill="#1f9d55">14×14×6</text>
+
+      <text x="275" y="95" font-size="13">→</text>
+      <rect x="290" y="55" width="65" height="65" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="322" y="145" text-anchor="middle" font-size="10" fill="#3a63d8">CONV (5×5,s=1)</text>
+      <text x="322" y="160" text-anchor="middle" font-size="10" fill="#3a63d8">10×10×16</text>
+
+      <text x="370" y="95" font-size="13">→</text>
+      <rect x="385" y="55" width="65" height="65" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="417" y="145" text-anchor="middle" font-size="10" fill="#1f9d55">avg pool (2×2,s=2)</text>
+      <text x="417" y="160" text-anchor="middle" font-size="10" fill="#1f9d55">5×5×16</text>
+
+      <text x="465" y="95" font-size="13">→</text>
+      <rect x="480" y="55" width="15" height="65" fill="#f3e9ff" stroke="#7a3ad6"/>
+      <text x="487" y="145" text-anchor="middle" font-size="10" fill="#7a3ad6">FC (120)</text>
+
+      <text x="510" y="95" font-size="13">→</text>
+      <rect x="525" y="55" width="15" height="65" fill="#f3e9ff" stroke="#7a3ad6"/>
+      <text x="532" y="145" text-anchor="middle" font-size="10" fill="#7a3ad6">FC (84)</text>
+
+      <text x="555" y="95" font-size="13">→</text>
+      <rect x="570" y="55" width="15" height="65" fill="#ffe9e9" stroke="#d64545"/>
+      <text x="577" y="145" text-anchor="middle" font-size="10" fill="#d64545">Softmax (10)</text>
+
+      <text x="605" y="95" font-size="13">→</text>
+      <text x="640" y="95" font-size="16">ŷ</text>
+
+      <text x="450" y="30" text-anchor="middle" font-weight="700" font-size="14" fill="#3a63d8">LeNet-5 (~60K parameters)</text>
+    </svg>
+    <div class="caption">Figure 2.1 — LeNet‑5 architecture. Input 32×32×1 → CONV → POOL → CONV → POOL → FC → FC → softmax.
+    Notice the pattern: \(n_H, n_W\) decrease, \(n_C\) increases.</div>
+  </div>
+
+  <h3>Key facts</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Aspect</th><th>LeNet‑5</th></tr></thead>
+      <tbody>
+        <tr><td>Input</td><td>32×32×1 (grayscale)</td></tr>
+        <tr><td>Layer pattern</td><td>CONV → POOL → CONV → POOL → FC → FC → softmax</td></tr>
+        <tr><td>Activation</td><td>Sigmoid / tanh (ReLU had not yet become standard)</td></tr>
+        <tr><td>Pooling</td><td>Average pooling</td></tr>
+        <tr><td>Parameters</td><td>≈ 60,000</td></tr>
+        <tr><td>Year</td><td>1998</td></tr>
+        <tr><td>Task</td><td>Handwritten digit / document recognition</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — The Shape Shrink/Grow Pattern</span>
+    <p>As you go deeper into a CNN:</p>
+    <ul>
+      <li>\(n_H\) and \(n_W\) (spatial size) <strong>decrease</strong> — pooling and/or stride shrink the grid.</li>
+      <li>\(n_C\) (channel depth) <strong>increases</strong> — later layers detect more abstract features.</li>
+    </ul>
+    <p>This pattern appears in <em>every</em> modern CNN. LeNet‑5 was the first to establish it.</p>
+  </div>
+
+  <div class="box warn">
+    <span class="label">🔴 Warning — Two Modernisations</span>
+    <p>Modern implementations of LeNet typically use <strong>max pooling</strong> (not average) and <strong>ReLU</strong>
+    (not sigmoid/tanh) in the hidden layers. These two changes alone give a noticeable accuracy boost — a lesson first
+    popularised by AlexNet.</p>
+  </div>
+
+  <!-- ==================== ALEXNET ==================== -->
+  <h2 id="alexnet">3. AlexNet (2012)</h2>
+
+  <p>Krizhevsky et al., 2012, "ImageNet classification with deep convolutional neural networks." Won the ImageNet competition
+  by a huge margin and kicked off the modern deep-learning era.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 960 240" role="img" aria-label="AlexNet architecture">
+      <text x="480" y="20" text-anchor="middle" font-weight="700" font-size="14" fill="#3a63d8">AlexNet (~60M parameters)</text>
+
+      <!-- top row -->
+      <rect x="10" y="80" width="55" height="55" fill="#ff9c9c" stroke="#333"/>
+      <text x="37" y="160" text-anchor="middle" font-size="10" fill="#3a63d8">227×227×3</text>
+      <text x="37" y="175" text-anchor="middle" font-size="9" fill="#5b6478">input</text>
+
+      <text x="75" y="110" font-size="12">→</text>
+      <rect x="90" y="75" width="55" height="65" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="117" y="160" text-anchor="middle" font-size="9" fill="#3a63d8">CONV 11×11</text>
+      <text x="117" y="172" text-anchor="middle" font-size="9" fill="#3a63d8">s=4</text>
+      <text x="117" y="184" text-anchor="middle" font-size="9" fill="#3a63d8">55×55×96</text>
+
+      <text x="155" y="110" font-size="12">→</text>
+      <rect x="170" y="75" width="55" height="65" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="197" y="160" text-anchor="middle" font-size="9" fill="#1f9d55">MAXPOOL 3×3</text>
+      <text x="197" y="172" text-anchor="middle" font-size="9" fill="#1f9d55">s=2</text>
+      <text x="197" y="184" text-anchor="middle" font-size="9" fill="#1f9d55">27×27×96</text>
+
+      <text x="235" y="110" font-size="12">→</text>
+      <rect x="250" y="75" width="55" height="65" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="277" y="160" text-anchor="middle" font-size="9" fill="#3a63d8">CONV 5×5</text>
+      <text x="277" y="172" text-anchor="middle" font-size="9" fill="#3a63d8">same</text>
+      <text x="277" y="184" text-anchor="middle" font-size="9" fill="#3a63d8">27×27×256</text>
+
+      <text x="315" y="110" font-size="12">→</text>
+      <rect x="330" y="75" width="55" height="65" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="357" y="160" text-anchor="middle" font-size="9" fill="#1f9d55">MAXPOOL 3×3</text>
+      <text x="357" y="172" text-anchor="middle" font-size="9" fill="#1f9d55">s=2</text>
+      <text x="357" y="184" text-anchor="middle" font-size="9" fill="#1f9d55">13×13×256</text>
+
+      <!-- bottom row -->
+      <text x="395" y="110" font-size="12">→</text>
+      <rect x="410" y="75" width="45" height="65" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="432" y="160" text-anchor="middle" font-size="9" fill="#3a63d8">CONV 3×3</text>
+      <text x="432" y="172" text-anchor="middle" font-size="9" fill="#3a63d8">same</text>
+      <text x="432" y="184" text-anchor="middle" font-size="9" fill="#3a63d8">13×13×384</text>
+
+      <text x="465" y="110" font-size="12">→</text>
+      <rect x="480" y="75" width="45" height="65" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="502" y="160" text-anchor="middle" font-size="9" fill="#3a63d8">CONV 3×3</text>
+      <text x="502" y="172" text-anchor="middle" font-size="9" fill="#3a63d8">same</text>
+      <text x="502" y="184" text-anchor="middle" font-size="9" fill="#3a63d8">13×13×384</text>
+
+      <text x="535" y="110" font-size="12">→</text>
+      <rect x="550" y="75" width="45" height="65" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="572" y="160" text-anchor="middle" font-size="9" fill="#3a63d8">CONV 3×3</text>
+      <text x="572" y="172" text-anchor="middle" font-size="9" fill="#3a63d8">same</text>
+      <text x="572" y="184" text-anchor="middle" font-size="9" fill="#3a63d8">13×13×256</text>
+
+      <text x="605" y="110" font-size="12">→</text>
+      <rect x="620" y="75" width="45" height="65" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="642" y="160" text-anchor="middle" font-size="9" fill="#1f9d55">MAXPOOL</text>
+      <text x="642" y="172" text-anchor="middle" font-size="9" fill="#1f9d55">s=2</text>
+      <text x="642" y="184" text-anchor="middle" font-size="9" fill="#1f9d55">6×6×256</text>
+
+      <text x="675" y="110" font-size="12">→</text>
+      <rect x="690" y="75" width="12" height="65" fill="#f3e9ff" stroke="#7a3ad6"/>
+      <text x="696" y="160" text-anchor="middle" font-size="9" fill="#7a3ad6">FC</text>
+      <text x="696" y="172" text-anchor="middle" font-size="9" fill="#7a3ad6">9216</text>
+
+      <text x="715" y="110" font-size="12">→</text>
+      <rect x="730" y="75" width="12" height="65" fill="#f3e9ff" stroke="#7a3ad6"/>
+      <text x="736" y="160" text-anchor="middle" font-size="9" fill="#7a3ad6">FC</text>
+      <text x="736" y="172" text-anchor="middle" font-size="9" fill="#7a3ad6">4096</text>
+
+      <text x="755" y="110" font-size="12">→</text>
+      <rect x="770" y="75" width="12" height="65" fill="#f3e9ff" stroke="#7a3ad6"/>
+      <text x="776" y="160" text-anchor="middle" font-size="9" fill="#7a3ad6">FC</text>
+      <text x="776" y="172" text-anchor="middle" font-size="9" fill="#7a3ad6">4096</text>
+
+      <text x="795" y="110" font-size="12">→</text>
+      <rect x="810" y="75" width="12" height="65" fill="#ffe9e9" stroke="#d64545"/>
+      <text x="816" y="160" text-anchor="middle" font-size="9" fill="#d64545">Softmax</text>
+      <text x="816" y="172" text-anchor="middle" font-size="9" fill="#d64545">1000</text>
+    </svg>
+    <div class="caption">Figure 3.1 — AlexNet. Similar to LeNet but much larger: 227×227 input, 8 learnable layers, 60M
+    parameters, ReLU activations, and max pooling.</div>
+  </div>
+
+  <h3>What made AlexNet special</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Innovation</th><th>Why it mattered</th></tr></thead>
+      <tbody>
+        <tr><td><strong>ReLU</strong> activations</td><td>Trained much faster than sigmoid/tanh. Became the default.</td></tr>
+        <tr><td><strong>Multiple GPUs</strong></td><td>Model split across two GPUs (hardware constraint of the time).</td></tr>
+        <tr><td><strong>Local Response Normalization (LRN)</strong></td><td>Normalised activation across channels. Later found mostly unnecessary, but was used here.</td></tr>
+        <tr><td><strong>Larger scale</strong></td><td>60M parameters, 227×227 input, ImageNet-scale data.</td></tr>
+        <tr><td><strong>Data augmentation</strong></td><td>Mirroring, random crops, PCA colour augmentation.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box int">
+    <span class="label">🟢 Intuition — Bigger + Faster + More Data</span>
+    <p>AlexNet didn't invent the CNN (LeNet‑5 did). What it did was combine <em>depth</em> + <em>fast activations (ReLU)</em>
+    + <em>GPU compute</em> + <em>ImageNet-scale data</em> — and the result was a massive jump in accuracy. It proved that
+    deep learning scales.</p>
+  </div>
+
+  <div class="box warn">
+    <span class="label">🔴 Warning — LRN Didn't Survive</span>
+    <p>Local Response Normalization appears in AlexNet but almost every modern network replaced it with
+    <strong>batch normalization</strong> (from Course 2). Don't waste time implementing LRN — know it exists, move on.</p>
+  </div>
+
+  <h3>LeNet vs AlexNet — side by side</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th></th><th>LeNet‑5</th><th>AlexNet</th></tr></thead>
+      <tbody>
+        <tr><td>Year</td><td>1998</td><td>2012</td></tr>
+        <tr><td>Input</td><td>32×32×1</td><td>227×227×3</td></tr>
+        <tr><td>Parameters</td><td>≈60K</td><td>≈60M (1000×)</td></tr>
+        <tr><td>Activation</td><td>Sigmoid / tanh</td><td>ReLU</td></tr>
+        <tr><td>Pooling</td><td>Average</td><td>Max</td></tr>
+        <tr><td>Normalization</td><td>None</td><td>Local Response Norm</td></tr>
+        <tr><td>Hardware</td><td>CPU</td><td>2 GPUs</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== VGG ==================== -->
+  <h2 id="vgg">4. VGG‑16 / VGG‑19 (2014)</h2>
+
+  <div class="box extra">
+    <span class="label">📎 Additional Context</span>
+    <p>The provided slide for VGG (page 6) is corrupted in the PDF extract. The notes below cover the standard VGG design
+    as it appears in the Deep Learning Specialization lectures, so you have complete coverage of the outlined "classic networks."</p>
+  </div>
+
+  <p>Simonyan &amp; Zisserman, 2014. VGG's key insight is <strong>radical simplicity</strong>: instead of using a variety
+  of filter sizes (11×11, 5×5, 3×3) like AlexNet, use <em>only</em> 3×3 convolutions stacked in depth.</p>
+
+  <div class="box int">
+    <span class="label">🟢 Intuition — Why Stack Small Filters?</span>
+    <p>Two 3×3 convs have a receptive field of 5×5. Three 3×3 convs have a receptive field of 7×7. So a stack of small
+    filters can see the same region as one large filter — but uses fewer parameters and adds more non-linearity
+    (a ReLU after each conv).</p>
+  </div>
+
+  <h3>VGG‑16 architecture highlights</h3>
+  <ul>
+    <li>Input: 224×224×3.</li>
+    <li>All convs are 3×3, stride 1, "same" padding.</li>
+    <li>All max pools are 2×2, stride 2.</li>
+    <li>Pattern: <code>[CONV 3×3 ×2] → POOL → [CONV ×2] → POOL → [CONV ×3] → POOL → [CONV ×3] → POOL → [CONV ×3] → POOL → FC → FC → softmax</code>.</li>
+    <li>≈138M parameters — mostly in the FC layers.</li>
+    <li>VGG‑19 = same idea, 3 extra conv layers.</li>
+  </ul>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — VGG's Legacy</span>
+    <p>VGG's uniform design (always 3×3) made CNNs <em>easy to reason about and easy to reimplement</em>. Its architecture is
+    still widely used as a <strong>pretrained backbone</strong> for transfer learning, especially in style transfer and
+    perceptual-loss applications.</p>
+  </div>
+
+  <div class="box warn">
+    <span class="label">🔴 Warning — VGG Is Expensive</span>
+    <p>138M parameters and huge compute. Training VGG from scratch is slow; it's usually used pretrained. For new work,
+    ResNet/EfficientNet are typically better defaults.</p>
+  </div>
+
+  <!-- ==================== RESNET ==================== -->
+  <h2 id="resnet">5. ResNet — Residual Networks (2015)</h2>
+
+  <p>He et al., 2015, "Deep residual networks for image recognition." Won ImageNet 2015 and enabled networks
+  with <strong>152 layers</strong> (vs. ~20 for VGG).</p>
+
+  <h3>5.1 The problem ResNet solves</h3>
+
+  <p>Intuitively, a deeper network should be <em>at least as good</em> as a shallower one — you could always pad extra layers
+  with identity mappings. But in practice, plain deep networks get <em>worse</em> training error as depth increases past a
+  point. This is called the <strong>degradation problem</strong>.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 720 240" role="img" aria-label="Plain network vs ResNet training error curves">
+      <!-- Plain -->
+      <g>
+        <text x="180" y="25" text-anchor="middle" font-weight="700" font-size="14">Plain</text>
+        <line x1="40" y1="200" x2="330" y2="200" stroke="#333" stroke-width="1.5"/>
+        <line x1="40" y1="200" x2="40" y2="50" stroke="#333" stroke-width="1.5"/>
+        <text x="15" y="130" font-size="12" transform="rotate(-90 15 130)">training error</text>
+        <text x="185" y="225" font-size="12" text-anchor="middle"># layers</text>
+        <!-- theory curve (green) -->
+        <path d="M 60 70 Q 120 160 200 180 Q 260 190 320 192" stroke="#1f9d55" stroke-width="2.5" fill="none"/>
+        <!-- reality curve (blue) -->
+        <path d="M 60 70 Q 120 160 200 180 Q 240 175 280 155 Q 310 140 320 130" stroke="#3a63d8" stroke-width="2.5" fill="none"/>
+        <text x="260" y="110" font-size="11" fill="#3a63d8">"reality"</text>
+        <text x="260" y="200" font-size="11" fill="#1f9d55">theory</text>
+      </g>
+
+      <!-- ResNet -->
+      <g transform="translate(360,0)">
+        <text x="180" y="25" text-anchor="middle" font-weight="700" font-size="14">ResNet</text>
+        <line x1="40" y1="200" x2="330" y2="200" stroke="#333" stroke-width="1.5"/>
+        <line x1="40" y1="200" x2="40" y2="50" stroke="#333" stroke-width="1.5"/>
+        <text x="15" y="130" font-size="12" transform="rotate(-90 15 130)">training error</text>
+        <text x="185" y="225" font-size="12" text-anchor="middle"># layers</text>
+        <path d="M 60 70 Q 120 150 200 185 Q 260 195 320 197" stroke="#3a63d8" stroke-width="2.5" fill="none"/>
+      </g>
+    </svg>
+    <div class="caption">Figure 5.1 — <strong>Left:</strong> In a plain network, training error eventually <em>increases</em>
+    with depth (blue), contradicting theory (green). <strong>Right:</strong> ResNet keeps training error decreasing,
+    enabling very deep networks.</div>
+  </div>
+
+  <h3>5.2 The residual block</h3>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — Residual Block</span>
+    <p>A <strong>residual block</strong> is a small sub-network where the input \(a^{[l]}\) is added directly to the output of
+    a few layers ahead, via a <strong>skip connection</strong> (also called a <em>shortcut</em>).</p>
+    <div class="eq">
+      $$ a^{[l+2]} = g\!\left(z^{[l+2]} + a^{[l]}\right). $$
+    </div>
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 720 220" role="img" aria-label="A residual block with skip connection">
+      <!-- main path -->
+      <text x="30" y="120" font-size="15" fill="#3a63d8">a^[l]</text>
+      <line x1="80" y1="115" x2="130" y2="115" stroke="#3a63d8" stroke-width="2"/>
+      <circle cx="130" cy="115" r="5" fill="#3a63d8"/>
+      <line x1="135" y1="115" x2="200" y2="115" stroke="#3a63d8" stroke-width="2"/>
+
+      <!-- first hidden -->
+      <rect x="200" y="80" width="60" height="70" fill="#e8f1ff" stroke="#3a63d8" stroke-width="1.5"/>
+      <text x="230" y="120" text-anchor="middle" font-size="13" fill="#3a63d8">Linear</text>
+      <text x="230" y="135" text-anchor="middle" font-size="10" fill="#3a63d8">→ ReLU</text>
+
+      <line x1="260" y1="115" x2="330" y2="115" stroke="#3a63d8" stroke-width="2"/>
+      <text x="295" y="105" font-size="12" fill="#3a63d8">a^[l+1]</text>
+
+      <!-- second hidden -->
+      <rect x="330" y="80" width="60" height="70" fill="#e8f1ff" stroke="#3a63d8" stroke-width="1.5"/>
+      <text x="360" y="120" text-anchor="middle" font-size="13" fill="#3a63d8">Linear</text>
+      <text x="360" y="135" text-anchor="middle" font-size="10" fill="#3a63d8">→ z^[l+2]</text>
+
+      <line x1="390" y1="115" x2="440" y2="115" stroke="#3a63d8" stroke-width="2"/>
+      <circle cx="440" cy="115" r="10" fill="#f3e9ff" stroke="#7a3ad6" stroke-width="2"/>
+      <text x="440" y="120" text-anchor="middle" font-size="14" fill="#7a3ad6">+</text>
+
+      <line x1="450" y1="115" x2="500" y2="115" stroke="#3a63d8" stroke-width="2"/>
+      <rect x="500" y="80" width="60" height="70" fill="#e8fbf0" stroke="#1f9d55" stroke-width="1.5"/>
+      <text x="530" y="120" text-anchor="middle" font-size="13" fill="#1f9d55">ReLU</text>
+
+      <line x1="560" y1="115" x2="620" y2="115" stroke="#3a63d8" stroke-width="2"/>
+      <text x="625" y="120" font-size="15" fill="#3a63d8">a^[l+2]</text>
+
+      <!-- skip connection arc -->
+      <path d="M 130 115 Q 130 30 300 30 Q 440 30 440 105" stroke="#7a3ad6" stroke-width="2.5" fill="none"/>
+      <text x="285" y="22" text-anchor="middle" font-size="13" fill="#7a3ad6">"skip" / "shortcut" connection</text>
+    </svg>
+    <div class="caption">Figure 5.2 — A residual block. The input \(a^{[l]}\) travels along the main path through two weight
+    layers, and <em>also</em> along a shortcut directly to the addition node. The output is \(a^{[l+2]} = g(z^{[l+2]} + a^{[l]})\).</div>
+  </div>
+
+  <h3>5.3 The math of a residual block</h3>
+
+  <div class="eq">
+    <div class="eq-label">Plain path (two layers)</div>
+    $$
+    z^{[l+1]} = W^{[l+1]} a^{[l]} + b^{[l+1]} \qquad a^{[l+1]} = g\!\left(z^{[l+1]}\right)
+    $$
+    $$
+    z^{[l+2]} = W^{[l+2]} a^{[l+1]} + b^{[l+2]}
+    $$
+  </div>
+
+  <div class="eq">
+    <div class="eq-label">Residual path (main path + skip)</div>
+    $$
+    a^{[l+2]} = g\!\left(z^{[l+2]} + a^{[l]}\right).
+    $$
+  </div>
+
+  <ul>
+    <li>\(a^{[l]}\) — activation from an earlier layer (the "input" to the block).</li>
+    <li>\(z^{[l+2]}\) — the pre-activation output of the last weight layer in the block.</li>
+    <li>\(a^{[l]} + z^{[l+2]}\) — the skip connection <em>adds</em> the input to the layer output before the final activation.</li>
+    <li>\(g(\cdot)\) — activation function, typically ReLU.</li>
+  </ul>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — Same Dimensions Required</span>
+    <p>For the addition \(z^{[l+2]} + a^{[l]}\) to be valid, both must have the same shape. If the block includes a stride-2
+    conv (which changes \(n_H, n_W\)) or changes the channel count, you must project \(a^{[l]}\) with a matrix \(W_s\) to
+    match:</p>
+    <div class="eq">
+      $$ a^{[l+2]} = g\!\left(z^{[l+2]} + W_s\,a^{[l]}\right) $$
+    </div>
+    <p>\(W_s\) is typically a 1×1 convolution with stride matching the main path. In many ResNet blocks, however, all convs
+    use "same" padding and the same channel count, so \(W_s\) is unnecessary (the identity shortcut works directly).</p>
+  </div>
+
+  <!-- ==================== WHY RESNETS WORK ==================== -->
+  <h2 id="resnet-why">6. Why Do ResNets Work?</h2>
+
+  <p>Two complementary explanations from Andrew Ng's lecture:</p>
+
+  <h3>6.1 The "identity is easy" argument</h3>
+
+  <div class="box int">
+    <span class="label">🟢 Intuition</span>
+    <p>Consider a big network built by stacking residual blocks. If a block's extra layers aren't helping, the block can
+    easily learn to "do nothing" — just set the weights and biases near zero so that \(z^{[l+2]} \approx 0\), and then
+    \(a^{[l+2]} = g(a^{[l]}) = a^{[l]}\) (for ReLU, since activations are non-negative). The block effectively becomes an
+    identity mapping.</p>
+  </div>
+
+  <div class="eq">
+    $$ a^{[l+2]} = g\!\left(z^{[l+2]} + a^{[l]}\right) $$
+    $$
+    \text{If } W^{[l+2]} \approx 0,\; b^{[l+2]} \approx 0 \;\Rightarrow\; z^{[l+2]} \approx 0 \;\Rightarrow\; a^{[l+2]} \approx g(a^{[l]}) = a^{[l]} \text{ (since } a^{[l]} \ge 0\text{)}.
+    $$
+  </div>
+
+  <p>This means: <strong>adding more layers to a ResNet can only help (or at worst keep performance the same)</strong>,
+  because the network can always fall back to the identity. That is why very deep ResNets don't suffer the degradation problem
+  that plain networks do.</p>
+
+  <h3>6.2 The "gradient highway" argument</h3>
+
+  <div class="box int">
+    <span class="label">🟢 Intuition</span>
+    <p>During backpropagation, gradients must flow from the loss back to early layers. In a plain deep network, the gradient
+    gets multiplied by many weight matrices, causing it to <em>vanish</em> (shrink to zero) or <em>explode</em>. The skip
+    connection provides a direct, unmultiplied path for the gradient to flow — like a "highway" through the network.</p>
+  </div>
+
+  <h3>6.3 The 34-layer comparison</h3>
+
+  <p>He et al. compared a <strong>34-layer plain network</strong> to a <strong>34-layer ResNet</strong> on the same data.
+  The plain network had <em>higher</em> training error, while the ResNet had lower error and trained faster — even though
+  they have the same number of layers.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 240" role="img" aria-label="34-layer plain vs 34-layer ResNet">
+      <!-- Plain network -->
+      <text x="30" y="25" font-weight="700" font-size="14">34-layer plain</text>
+      <line x1="20" y1="60" x2="20" y2="200" stroke="#3a63d8" stroke-width="2"/>
+      <text x="15" y="140" font-size="10" transform="rotate(-90 15 140)" fill="#3a63d8">image</text>
+
+      <!-- conv blocks -->
+      <g fill="#dcdffc" stroke="#3a63d8">
+        <rect x="50" y="80" width="30" height="80"/>
+        <rect x="90" y="80" width="20" height="80"/>
+        <rect x="120" y="80" width="20" height="80"/>
+        <rect x="150" y="80" width="20" height="80"/>
+        <rect x="180" y="80" width="20" height="80"/>
+        <rect x="210" y="80" width="20" height="80"/>
+        <rect x="240" y="80" width="20" height="80"/>
+        <rect x="270" y="80" width="20" height="80"/>
+        <rect x="300" y="80" width="20" height="80"/>
+        <rect x="330" y="80" width="20" height="80"/>
+        <rect x="360" y="80" width="20" height="80"/>
+        <rect x="390" y="80" width="20" height="80"/>
+        <rect x="420" y="80" width="20" height="80"/>
+        <rect x="450" y="80" width="20" height="80"/>
+        <rect x="480" y="80" width="20" height="80"/>
+        <rect x="510" y="80" width="20" height="80"/>
+        <rect x="540" y="80" width="20" height="80"/>
+        <rect x="570" y="80" width="20" height="80"/>
+        <rect x="600" y="80" width="20" height="80"/>
+        <rect x="630" y="80" width="20" height="80"/>
+      </g>
+      <text x="340" y="185" text-anchor="middle" font-size="11" fill="#5b6478">no skip connections</text>
+
+      <!-- ResNet -->
+      <text x="30" y="230" font-weight="700" font-size="14">34-layer ResNet</text>
+      <line x1="20" y1="255" x2="20" y2="395" stroke="#3a63d8" stroke-width="2"/>
+      <text x="15" y="335" font-size="10" transform="rotate(-90 15 335)" fill="#3a63d8">image</text>
+
+      <g fill="#dcdffc" stroke="#3a63d8">
+        <rect x="50" y="275" width="30" height="80"/>
+        <rect x="90" y="275" width="20" height="80"/>
+        <rect x="120" y="275" width="20" height="80"/>
+        <rect x="150" y="275" width="20" height="80"/>
+        <rect x="180" y="275" width="20" height="80"/>
+        <rect x="210" y="275" width="20" height="80"/>
+        <rect x="240" y="275" width="20" height="80"/>
+        <rect x="270" y="275" width="20" height="80"/>
+        <rect x="300" y="275" width="20" height="80"/>
+        <rect x="330" y="275" width="20" height="80"/>
+      </g>
+      <!-- skip arrows -->
+      <g stroke="#7a3ad6" stroke-width="2" fill="none">
+        <path d="M 110 275 Q 130 240 155 275"/>
+        <path d="M 155 275 Q 175 240 200 275"/>
+        <path d="M 200 275 Q 220 240 245 275"/>
+        <path d="M 245 275 Q 265 240 290 275"/>
+        <path d="M 290 275 Q 310 240 335 275"/>
+      </g>
+      <text x="220" y="385" text-anchor="middle" font-size="11" fill="#7a3ad6">with skip connections</text>
+    </svg>
+    <div class="caption">Figure 6.1 — Same depth (34 layers), but the ResNet adds skip connections every two layers. The
+    skip connections create direct paths for gradients and enable identity mappings.</div>
+  </div>
+
+  <!-- ==================== 1x1 CONVOLUTIONS ==================== -->
+  <h2 id="onebyone">7. 1×1 Convolutions (Network in Network)</h2>
+
+  <p>Lin et al., 2013, "Network in network." Introduced the surprisingly powerful idea of using 1×1 filters.</p>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — 1×1 Convolution</span>
+    <p>A convolution whose filter has spatial size \(1 \times 1\) but spans <em>all input channels</em>. It does not look
+    at any neighbours — instead it combines information <em>across channels</em> at each spatial position.</p>
+  </div>
+
+  <div class="box int">
+    <span class="label">🟢 Intuition — What Does It Actually Do?</span>
+    <p>At each pixel \((i,j)\) you take the vector of \(n_C\) channel values and compute a weighted sum (with bias + ReLU).
+    It's essentially a tiny fully-connected layer applied at every spatial position independently. But because it's
+    implemented as a conv, it fits seamlessly into a CNN.</p>
+  </div>
+
+  <h3>7.1 Numerical example</h3>
+
+  <p>Input: a \(6 \times 6 \times 32\) volume. Apply a 1×1 conv with <strong>2 filters</strong>. Each filter is
+  \(1\times 1\times 32\). At each of the 36 spatial positions, we compute:</p>
+
+  <div class="eq">
+    $$
+    y = \sum_{c=1}^{32} x_c \cdot w_c + b.
+    $$
+  </div>
+
+  <p>Where \(x_c\) is the input at channel \(c\) (for that pixel) and \(w_c\) is the filter weight for channel \(c\).
+  One scalar per (filter, pixel). With 2 filters, we get an output of shape \(6\times 6\times 2\) — we just
+  <strong>reduced the channel count from 32 to 2</strong>.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 720 220" role="img" aria-label="1x1 convolution reduces channel count">
+      <!-- input volume -->
+      <g>
+        <rect x="20" y="60" width="100" height="100" fill="#e8f1ff" stroke="#3a63d8"/>
+        <rect x="35" y="48" width="100" height="100" fill="#d6e4ff" stroke="#3a63d8"/>
+        <rect x="50" y="36" width="100" height="100" fill="#c3d7ff" stroke="#3a63d8"/>
+      </g>
+      <text x="100" y="185" text-anchor="middle" font-size="12" fill="#3a63d8">6 × 6 × 32</text>
+
+      <text x="200" y="115" font-size="20">→</text>
+
+      <!-- 1x1 filter -->
+      <rect x="250" y="80" width="40" height="60" fill="#ffe14d" stroke="#333"/>
+      <text x="270" y="170" text-anchor="middle" font-size="12">1 × 1 × 32</text>
+      <text x="270" y="185" text-anchor="middle" font-size="11" fill="#5b6478">(2 filters)</text>
+
+      <text x="320" y="115" font-size="20">→</text>
+
+      <!-- output volume -->
+      <g>
+        <rect x="380" y="70" width="100" height="100" fill="#d3d9ff" stroke="#3a63d8" stroke-width="2"/>
+        <rect x="395" y="58" width="100" height="100" fill="#e6eaff" stroke="#3a63d8" stroke-width="2"/>
+      </g>
+      <text x="440" y="195" text-anchor="middle" font-size="12" fill="#3a63d8">6 × 6 × 2</text>
+
+      <!-- annotation -->
+      <text x="560" y="90" font-size="13" fill="#5b6478">channel count</text>
+      <text x="560" y="110" font-size="13" fill="#d64545">32 → 2 (reduced)</text>
+      <text x="560" y="140" font-size="13" fill="#5b6478">spatial dims</text>
+      <text x="560" y="160" font-size="13" fill="#1f9d55">6 × 6 → 6 × 6 (same)</text>
+    </svg>
+    <div class="caption">Figure 7.1 — A 1×1 convolution shrinks (or grows) the number of channels while leaving the spatial
+    dimensions unchanged. Here 32 channels are reduced to 2.</div>
+  </div>
+
+  <h3>7.2 Where 1×1 convs are used</h3>
+  <ul>
+    <li><strong>Channel reduction (bottleneck):</strong> shrink a large channel dimension before an expensive conv to save
+    compute. This is the key trick inside Inception and ResNet.</li>
+    <li><strong>Channel expansion:</strong> use more filters than input channels to grow depth.</li>
+    <li><strong>Adding non-linearity:</strong> a 1×1 conv followed by ReLU adds non-linearity across channels without
+    changing spatial size.</li>
+  </ul>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — Why Not Just Use a Fully Connected Layer?</span>
+    <p>A 1×1 conv is essentially a per-pixel FC layer. But as a conv, it:</p>
+    <ul>
+      <li>Handles arbitrary spatial sizes without retraining.</li>
+      <li>Adds few parameters (only \(n_C^{in} \times n_C^{out} + n_C^{out}\)).</li>
+      <li>Fits naturally into the convolution pipeline.</li>
+    </ul>
+  </div>
+
+  <!-- ==================== INCEPTION MOTIVATION ==================== -->
+  <h2 id="inception-mot">8. Inception Network — Motivation</h2>
+
+  <p>Szegedy et al., 2014, "Going deeper with convolutions." The Inception module asks: <em>why pick a single filter size
+  when you can try several at once?</em></p>
+
+  <h3>8.1 The multi-branch idea</h3>
+
+  <p>Given an input \(28\times28\times192\), run <strong>four parallel paths</strong>:</p>
+  <ul>
+    <li>1×1 conv, 64 filters → output \(28\times28\times64\)</li>
+    <li>3×3 conv, 128 filters ("same") → \(28\times28\times128\)</li>
+    <li>5×5 conv, 32 filters ("same") → \(28\times28\times32\)</li>
+    <li>3×3 max pool ("same") → \(28\times28\times192\)</li>
+  </ul>
+  <p>Then <strong>concatenate</strong> along the channel dimension:</p>
+
+  <div class="eq">
+    $$ 64 + 128 + 32 + 192 = 256 \;\Rightarrow\; \text{output: } 28\times28\times256. $$
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 760 280" role="img" aria-label="Inception module with four parallel branches">
+      <!-- input -->
+      <rect x="20" y="115" width="90" height="50" fill="#dcdffc" stroke="#3a63d8"/>
+      <text x="65" y="145" text-anchor="middle" font-size="11" fill="#3a63d8">28×28×192</text>
+
+      <!-- branch lines -->
+      <g stroke="#3a63d8" fill="none" stroke-width="1.5">
+        <path d="M 110 140 Q 150 40 190 40"/>
+        <path d="M 110 140 Q 150 100 190 100"/>
+        <path d="M 110 140 Q 150 190 190 190"/>
+        <path d="M 110 140 Q 150 240 190 240"/>
+      </g>
+
+      <!-- branch 1: 1x1 -->
+      <rect x="190" y="20" width="80" height="40" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="230" y="45" text-anchor="middle" font-size="11">1×1 CONV</text>
+      <text x="230" y="55" text-anchor="middle" font-size="10" fill="#3a63d8">64 filters</text>
+
+      <!-- branch 2: 3x3 -->
+      <rect x="190" y="80" width="80" height="40" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="230" y="105" text-anchor="middle" font-size="11">3×3 CONV</text>
+      <text x="230" y="115" text-anchor="middle" font-size="10" fill="#3a63d8">128 filters</text>
+
+      <!-- branch 3: 5x5 -->
+      <rect x="190" y="170" width="80" height="40" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="230" y="195" text-anchor="middle" font-size="11">5×5 CONV</text>
+      <text x="230" y="205" text-anchor="middle" font-size="10" fill="#3a63d8">32 filters</text>
+
+      <!-- branch 4: maxpool -->
+      <rect x="190" y="220" width="80" height="40" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="230" y="245" text-anchor="middle" font-size="11" fill="#1f9d55">MAX POOL</text>
+
+      <!-- arrows to concat -->
+      <g stroke="#3a63d8" fill="none" stroke-width="1.5">
+        <path d="M 270 40 L 440 130"/>
+        <path d="M 270 100 L 440 130"/>
+        <path d="M 270 190 L 440 140"/>
+        <path d="M 270 240 L 440 150"/>
+      </g>
+
+      <!-- concat -->
+      <rect x="440" y="100" width="100" height="70" fill="#e8fbf0" stroke="#1f9d55" stroke-width="2"/>
+      <text x="490" y="130" text-anchor="middle" font-size="12" fill="#1f9d55">Channel</text>
+      <text x="490" y="148" text-anchor="middle" font-size="12" fill="#1f9d55">Concat</text>
+
+      <text x="580" y="140" font-size="14">→</text>
+
+      <!-- output -->
+      <rect x="620" y="105" width="100" height="60" fill="#d3d9ff" stroke="#3a63d8"/>
+      <text x="670" y="130" text-anchor="middle" font-size="11" fill="#3a63d8">28×28×256</text>
+      <text x="670" y="150" text-anchor="middle" font-size="10" fill="#3a63d8">(64+128+32+32)</text>
+    </svg>
+    <div class="caption">Figure 8.1 — The Inception module: parallel branches with different filter sizes,
+    all outputs concatenated along the channel dimension. This lets the network learn multi-scale features simultaneously.</div>
+  </div>
+
+  <h3>8.2 The computational cost problem</h3>
+
+  <p>A direct 5×5 "same" conv with 32 filters on a \(28\times28\times192\) input has the cost:</p>
+
+  <div class="eq">
+    $$
+    \underbrace{28 \cdot 28 \cdot 32}_{\text{output positions}} \times \underbrace{5 \cdot 5 \cdot 192}_{\text{filter size}} \approx 120 \text{ million multiplications}.
+    $$
+  </div>
+
+  <p>That's prohibitively expensive. The fix: use a <strong>1×1 bottleneck</strong> first to shrink the channel count.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 220" role="img" aria-label="Bottleneck trick: 1x1 conv reduces channels before expensive 5x5">
+      <!-- direct path -->
+      <text x="30" y="35" font-weight="700" font-size="13">Direct (expensive)</text>
+      <rect x="30" y="55" width="80" height="60" fill="#dcdffc" stroke="#3a63d8"/>
+      <text x="70" y="80" text-anchor="middle" font-size="10" fill="#3a63d8">28×28×192</text>
+      <text x="70" y="95" text-anchor="middle" font-size="9" fill="#5b6478">input</text>
+
+      <text x="130" y="85" font-size="14">→</text>
+      <rect x="150" y="55" width="80" height="60" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="190" y="80" text-anchor="middle" font-size="10">5×5, 32</text>
+      <text x="190" y="95" text-anchor="middle" font-size="9" fill="#5b6478">"same"</text>
+
+      <text x="245" y="85" font-size="14">→</text>
+      <rect x="265" y="55" width="80" height="60" fill="#ffe9e9" stroke="#d64545"/>
+      <text x="305" y="80" text-anchor="middle" font-size="10" fill="#d64545">28×28×32</text>
+
+      <text x="380" y="90" font-size="13" fill="#d64545">Cost = 120M ops</text>
+
+      <!-- bottleneck path -->
+      <text x="30" y="165" font-weight="700" font-size="13">With 1×1 bottleneck (cheap)</text>
+
+      <rect x="150" y="180" width="80" height="35" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="190" y="200" text-anchor="middle" font-size="10" fill="#1f9d55">1×1, 16</text>
+      <text x="190" y="212" text-anchor="middle" font-size="9" fill="#1f9d55">reduce →</text>
+
+      <text x="240" y="200" font-size="14">→</text>
+      <rect x="260" y="180" width="80" height="35" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="300" y="200" text-anchor="middle" font-size="10">5×5, 32</text>
+
+      <text x="355" y="200" font-size="14">→</text>
+      <rect x="375" y="180" width="80" height="35" fill="#ffe9e9" stroke="#d64545"/>
+      <text x="415" y="200" text-anchor="middle" font-size="10" fill="#d64545">28×28×32</text>
+
+      <text x="490" y="200" font-size="13" fill="#1f9d55">Cost = 2.4M + 10M = 12.4M</text>
+    </svg>
+    <div class="caption">Figure 8.2 — The bottleneck trick: a 1×1 conv reduces the channel dimension from 192 to 16
+    <em>before</em> the expensive 5×5 conv. Total cost drops from ~120M to ~12.4M operations (a 10× reduction), with almost
+    no loss in representational power.</div>
+  </div>
+
+  <div class="box exam">
+    <span class="label">🟣 Verify the bottleneck cost</span>
+    <p><strong>Step 1 — 1×1 conv, 16 filters on \(28\times28\times192\):</strong></p>
+    <div class="eq">
+      $$ (28\cdot 28)\cdot 16 \cdot (1\cdot 1\cdot 192) = 784 \cdot 16 \cdot 192 \approx 2.4\text{M}. $$
+    </div>
+    <p><strong>Step 2 — 5×5 conv, 32 filters on \(28\times28\times16\):</strong></p>
+    <div class="eq">
+      $$ (28\cdot 28)\cdot 32 \cdot (5\cdot 5\cdot 16) = 784 \cdot 32 \cdot 400 \approx 10.0\text{M}. $$
+    </div>
+    <p><strong>Total:</strong> ≈ 12.4M — about one-tenth the direct cost. ✓</p>
+  </div>
+
+  <!-- ==================== INCEPTION MODULE ==================== -->
+  <h2 id="inception">9. The Inception Module (Full Version)</h2>
+
+  <p>The full Inception module combines the multi-branch idea with the bottleneck trick. Every branch that uses a large
+  filter is preceded by a 1×1 conv that shrinks channels.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 360" role="img" aria-label="Full Inception module with bottleneck branches">
+      <!-- input -->
+      <rect x="20" y="160" width="100" height="50" fill="#dcdffc" stroke="#3a63d8"/>
+      <text x="70" y="185" text-anchor="middle" font-size="11" fill="#3a63d8">Previous</text>
+      <text x="70" y="200" text-anchor="middle" font-size="11" fill="#3a63d8">Activation</text>
+      <text x="70" y="230" text-anchor="middle" font-size="10" fill="#3a63d8">28×28×192</text>
+
+      <!-- branch lines -->
+      <g stroke="#3a63d8" fill="none" stroke-width="1.5">
+        <path d="M 120 185 Q 160 60 200 60"/>
+        <path d="M 120 185 Q 160 130 200 130"/>
+        <path d="M 120 185 Q 160 210 200 210"/>
+        <path d="M 120 185 Q 160 290 200 290"/>
+      </g>
+
+      <!-- branch 1: 1x1 only -->
+      <rect x="200" y="40" width="90" height="40" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="245" y="65" text-anchor="middle" font-size="11">1×1 CONV (64)</text>
+      <text x="245" y="90" text-anchor="middle" font-size="10" fill="#3a63d8">28×28×64</text>
+
+      <!-- branch 2: 1x1 -> 3x3 -->
+      <rect x="200" y="115" width="90" height="35" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="245" y="135" text-anchor="middle" font-size="10" fill="#1f9d55">1×1 (96)</text>
+      <text x="245" y="147" text-anchor="middle" font-size="9" fill="#5b6478">reduce</text>
+
+      <text x="295" y="135" font-size="12">→</text>
+      <rect x="310" y="115" width="90" height="35" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="355" y="135" text-anchor="middle" font-size="10">3×3 (128)</text>
+      <text x="355" y="147" text-anchor="middle" font-size="9" fill="#5b6478">same</text>
+
+      <!-- branch 3: 1x1 -> 5x5 -->
+      <rect x="200" y="195" width="90" height="35" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="245" y="215" text-anchor="middle" font-size="10" fill="#1f9d55">1×1 (16)</text>
+      <text x="245" y="227" text-anchor="middle" font-size="9" fill="#5b6478">reduce</text>
+
+      <text x="295" y="215" font-size="12">→</text>
+      <rect x="310" y="195" width="90" height="35" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="355" y="215" text-anchor="middle" font-size="10">5×5 (32)</text>
+      <text x="355" y="227" text-anchor="middle" font-size="9" fill="#5b6478">same</text>
+
+      <!-- branch 4: maxpool -> 1x1 -->
+      <rect x="200" y="275" width="90" height="35" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="245" y="295" text-anchor="middle" font-size="10" fill="#1f9d55">MAX POOL</text>
+      <text x="245" y="307" text-anchor="middle" font-size="9" fill="#1f9d55">3×3, s=1, same</text>
+
+      <text x="295" y="295" font-size="12">→</text>
+      <rect x="310" y="275" width="90" height="35" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="355" y="295" text-anchor="middle" font-size="10" fill="#1f9d55">1×1 (32)</text>
+
+      <!-- arrows to concat -->
+      <g stroke="#3a63d8" fill="none" stroke-width="1.5">
+        <path d="M 290 60 Q 420 60 470 170"/>
+        <path d="M 400 132 Q 440 132 470 170"/>
+        <path d="M 400 212 Q 440 212 470 190"/>
+        <path d="M 400 292 Q 440 292 470 210"/>
+      </g>
+
+      <!-- concat -->
+      <rect x="470" y="140" width="110" height="80" fill="#e8fbf0" stroke="#1f9d55" stroke-width="2"/>
+      <text x="525" y="175" text-anchor="middle" font-size="13" fill="#1f9d55">Channel</text>
+      <text x="525" y="195" text-anchor="middle" font-size="13" fill="#1f9d55">Concat</text>
+
+      <text x="600" y="185" font-size="14">→</text>
+
+      <rect x="630" y="145" width="110" height="70" fill="#d3d9ff" stroke="#3a63d8"/>
+      <text x="685" y="175" text-anchor="middle" font-size="12" fill="#3a63d8">28×28×256</text>
+      <text x="685" y="195" text-anchor="middle" font-size="10" fill="#3a63d8">(64+128+32+32)</text>
+    </svg>
+    <div class="caption">Figure 9.1 — The full Inception module. Branches: 1×1 only, 1×1→3×3, 1×1→5×5, and maxpool→1×1.
+    All branches produce \(28\times28\) spatial outputs and are concatenated along channels.</div>
+  </div>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — Why Inception Works</span>
+    <ul>
+      <li><strong>Multi-scale features:</strong> 1×1, 3×3, 5×5 filters capture different-sized patterns.</li>
+      <li><strong>Cheap:</strong> 1×1 bottlenecks cut computation by ~10×.</li>
+      <li><strong>Adaptive:</strong> the network learns to weight the branches by how much it uses them.</li>
+      <li><strong>Deep but not too wide:</strong> concatenation at the end combines all branches into one tensor.</li>
+    </ul>
+  </div>
+
+  <div class="box extra">
+    <span class="label">📎 Additional Context — GoogLeNet</span>
+    <p>The full Inception network (GoogLeNet) stacks many Inception modules and also includes two auxiliary classifiers
+    attached to intermediate layers to fight vanishing gradients. Modern variants (Inception-v3, v4) refine the module
+    further, but the core "parallel branches + concatenate" idea is the same.</p>
+  </div>
+
+  <!-- ==================== MOBILENET ==================== -->
+  <h2 id="mobilenet">10. MobileNet — Depthwise Separable Convolutions</h2>
+
+  <p>Howard et al., 2017. Motivation: <strong>low computational cost at deployment time</strong>, useful for mobile and
+  embedded vision.</p>
+
+  <div class="box int">
+    <span class="label">🟢 Intuition</span>
+    <p>A normal convolution does <em>both</em> "spatial filtering" and "channel combination" in one operation. MobileNet
+    splits these two jobs into two cheaper steps:</p>
+    <ol>
+      <li><strong>Depthwise conv:</strong> one small filter per input channel (spatial filtering only).</li>
+      <li><strong>Pointwise conv:</strong> a 1×1 conv to combine channels (channel mixing only).</li>
+    </ol>
+  </div>
+
+  <h3>10.1 Normal convolution cost</h3>
+
+  <p>Example: input \(6\times6\times3\), 5 filters of size \(3\times3\), stride 1, no padding. Output is \(4\times4\times5\).</p>
+
+  <div class="eq">
+    $$
+    \text{Cost} = \underbrace{3\cdot 3\cdot 3}_{f\cdot f\cdot n_C} \times \underbrace{4\cdot 4}_{\text{positions}} \times \underbrace{5}_{n_C'} = 2160.
+    $$
+  </div>
+
+  <h3>10.2 Depthwise separable convolution</h3>
+
+  <p>Split into two steps:</p>
+
+  <p><strong>Step 1 — Depthwise conv.</strong> Use \(n_C = 3\) independent \(3\times3\) filters, one for each input
+  channel. Each produces its own feature map. No channel mixing.</p>
+
+  <div class="eq">
+    $$
+    \text{Depthwise cost} = \underbrace{3\cdot 3}_{f\cdot f} \times \underbrace{4\cdot 4}_{\text{positions}} \times \underbrace{3}_{n_C} = 432.
+    $$
+  </div>
+
+  <p><strong>Step 2 — Pointwise conv.</strong> Apply a 1×1 conv with 5 filters to combine the 3 depthwise maps into
+  5 output channels.</p>
+
+  <div class="eq">
+    $$
+    \text{Pointwise cost} = \underbrace{1\cdot 1\cdot 3}_{f\cdot f\cdot n_C} \times \underbrace{4\cdot 4}_{\text{positions}} \times \underbrace{5}_{n_C'} = 240.
+    $$
+  </div>
+
+  <p><strong>Total cost:</strong> \(432 + 240 = 672\), which is \(672 / 2160 \approx 0.31\) — about <strong>one-third</strong>
+  the cost of a normal convolution. In real networks the savings are often 8–9× because channel counts are much larger.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 280" role="img" aria-label="Normal convolution vs depthwise separable">
+      <!-- normal conv -->
+      <text x="30" y="25" font-weight="700" font-size="14">Normal Convolution</text>
+      <g>
+        <rect x="20" y="60" width="80" height="80" fill="#ff9c9c" stroke="#333"/>
+        <rect x="32" y="48" width="80" height="80" fill="#9cffa8" stroke="#333"/>
+        <rect x="44" y="36" width="80" height="80" fill="#9cc4ff" stroke="#333"/>
+      </g>
+      <text x="60" y="160" text-anchor="middle" font-size="11">6×6×3</text>
+
+      <text x="140" y="90" font-size="14">*</text>
+      <g>
+        <rect x="160" y="50" width="60" height="60" fill="#ffe14d" stroke="#333"/>
+        <rect x="168" y="42" width="60" height="60" fill="#ffe14d" stroke="#333"/>
+        <rect x="176" y="34" width="60" height="60" fill="#ffe14d" stroke="#333"/>
+      </g>
+      <text x="190" y="130" text-anchor="middle" font-size="11">3×3×3 (5 filters)</text>
+
+      <text x="260" y="90" font-size="14">=</text>
+
+      <g>
+        <rect x="280" y="50" width="60" height="60" fill="#d3d9ff" stroke="#3a63d8"/>
+        <rect x="290" y="40" width="60" height="60" fill="#e6eaff" stroke="#3a63d8"/>
+        <rect x="300" y="30" width="60" height="60" fill="#f0f4ff" stroke="#3a63d8"/>
+      </g>
+      <text x="310" y="130" text-anchor="middle" font-size="11">4×4×5</text>
+
+      <text x="410" y="90" font-size="12" fill="#d64545">cost = 2160</text>
+
+      <!-- depthwise separable -->
+      <text x="30" y="200" font-weight="700" font-size="14">Depthwise Separable Convolution</text>
+
+      <g>
+        <rect x="20" y="230" width="80" height="80" fill="#ff9c9c" stroke="#333"/>
+        <rect x="32" y="218" width="80" height="80" fill="#9cffa8" stroke="#333"/>
+        <rect x="44" y="206" width="80" height="80" fill="#9cc4ff" stroke="#333"/>
+      </g>
+
+      <text x="140" y="260" font-size="14">*</text>
+      <g>
+        <rect x="160" y="230" width="30" height="30" fill="#ff9c9c" stroke="#333"/>
+        <rect x="200" y="220" width="30" height="30" fill="#9cffa8" stroke="#333"/>
+        <rect x="240" y="210" width="30" height="30" fill="#9cc4ff" stroke="#333"/>
+      </g>
+      <text x="215" y="275" text-anchor="middle" font-size="10" fill="#1f9d55">Depthwise 3×3 (3 filters)</text>
+
+      <text x="290" y="245" font-size="14">*</text>
+
+      <g>
+        <rect x="310" y="230" width="25" height="25" fill="#ffb3ff" stroke="#333"/>
+        <rect x="320" y="220" width="25" height="25" fill="#ff80ff" stroke="#333"/>
+        <rect x="330" y="210" width="25" height="25" fill="#ff4dff" stroke="#333"/>
+        <rect x="340" y="200" width="25" height="25" fill="#ff00ff" stroke="#333"/>
+        <rect x="350" y="190" width="25" height="25" fill="#cc00cc" stroke="#333"/>
+      </g>
+      <text x="340" y="275" text-anchor="middle" font-size="10" fill="#7a3ad6">Pointwise 1×1 (5 filters)</text>
+
+      <text x="410" y="245" font-size="14">=</text>
+
+      <g>
+        <rect x="430" y="230" width="60" height="60" fill="#d3d9ff" stroke="#3a63d8"/>
+        <rect x="440" y="220" width="60" height="60" fill="#e6eaff" stroke="#3a63d8"/>
+        <rect x="450" y="210" width="60" height="60" fill="#f0f4ff" stroke="#3a63d8"/>
+      </g>
+      <text x="460" y="310" text-anchor="middle" font-size="11">4×4×5</text>
+
+      <text x="560" y="255" font-size="12" fill="#1f9d55">cost = 432 + 240 = 672 (≈ 1/3)</text>
+    </svg>
+    <div class="caption">Figure 10.1 — Normal conv (top) does spatial filtering and channel mixing together. Depthwise
+    separable (bottom) splits it into depthwise spatial filtering (one filter per channel) + pointwise channel mixing (1×1).</div>
+  </div>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — The Big Win</span>
+    <p>Depthwise separable convolutions reduce computation by roughly a factor of \(1/n_C' + 1/f^2\). For typical values
+    (\(f=3\), \(n_C'\) large), this is 8–9× cheaper than normal convolution — with minimal accuracy loss.</p>
+  </div>
+
+  <!-- ==================== MOBILENET V2 ==================== -->
+  <h2 id="mobilenet-v2">11. MobileNet v2 — Bottleneck Blocks with Residual Connections</h2>
+
+  <p>Sandler et al., 2018. MobileNet v2 stacks <strong>17 residual bottleneck blocks</strong> instead of plain
+  depthwise-separable layers. Each block has three stages:</p>
+
+  <ol>
+    <li><strong>Expansion (1×1 conv):</strong> expand channels (e.g., 24 → 144).</li>
+    <li><strong>Depthwise (3×3 conv):</strong> spatial filtering at the expanded size.</li>
+    <li><strong>Projection (1×1 conv):</strong> reduce back to a smaller channel count (e.g., 144 → 24).</li>
+  </ol>
+
+  <p>Plus a <strong>residual connection</strong> from input to output, applied when shapes match.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 200" role="img" aria-label="MobileNet v2 bottleneck block">
+      <text x="30" y="25" font-weight="700" font-size="14">MobileNet v2 — Bottleneck block (×17)</text>
+
+      <rect x="30" y="70" width="60" height="60" fill="#dcdffc" stroke="#3a63d8"/>
+      <text x="60" y="100" text-anchor="middle" font-size="10" fill="#3a63d8">input</text>
+
+      <text x="105" y="105" font-size="14">→</text>
+      <rect x="125" y="65" width="60" height="70" fill="#f0e0ff" stroke="#7a3ad6"/>
+      <text x="155" y="95" text-anchor="middle" font-size="10" fill="#7a3ad6">Expansion</text>
+      <text x="155" y="112" text-anchor="middle" font-size="9" fill="#7a3ad6">1×1</text>
+
+      <text x="200" y="105" font-size="14">→</text>
+      <rect x="220" y="65" width="60" height="70" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="250" y="95" text-anchor="middle" font-size="10" fill="#1f9d55">Depthwise</text>
+      <text x="250" y="112" text-anchor="middle" font-size="9" fill="#1f9d55">3×3</text>
+
+      <text x="295" y="105" font-size="14">→</text>
+      <rect x="315" y="65" width="60" height="70" fill="#ffe0f5" stroke="#d633d6"/>
+      <text x="345" y="95" text-anchor="middle" font-size="10" fill="#d633d6">Projection</text>
+      <text x="345" y="112" text-anchor="middle" font-size="9" fill="#d633d6">1×1</text>
+
+      <text x="395" y="105" font-size="14">→</text>
+      <rect x="415" y="70" width="60" height="60" fill="#dcdffc" stroke="#3a63d8"/>
+      <text x="445" y="105" text-anchor="middle" font-size="10" fill="#3a63d8">output</text>
+
+      <!-- residual arc -->
+      <path d="M 90 100 Q 90 20 240 20 Q 400 20 400 60" stroke="#7a3ad6" stroke-width="2.5" fill="none"/>
+      <text x="240" y="12" text-anchor="middle" font-size="12" fill="#7a3ad6">residual connection (when shapes match)</text>
+    </svg>
+    <div class="caption">Figure 11.1 — MobileNet v2 block. Expand → depthwise → project, with a residual skip. The
+    "bottleneck" name comes from the projection step shrinking channels before the next block.</div>
+  </div>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — Why Expand Then Shrink?</span>
+    <p>Depthwise convs are only efficient when each channel has enough spatial detail to work with. By <em>expanding</em>
+    first, the depthwise step has more channels to filter. Then <em>projection</em> compresses back, keeping the next block's
+    input small. This trades a little compute for much better accuracy than v1.</p>
+  </div>
+
+  <p>MobileNet v2's full architecture: 1 initial 3×3 conv, then 17 bottleneck blocks (with a few downsampling strides), then
+  a final 1×1 conv, global average pool, and a softmax classifier.</p>
+
+  <!-- ==================== EFFICIENTNET ==================== -->
+  <h2 id="efficientnet">12. EfficientNet</h2>
+
+  <p>Tan &amp; Le, 2019. The question: if you have a compute budget, should you make the network <em>deeper</em>,
+  <em>wider</em>, or feed it <em>higher-resolution</em> images?</p>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — Compound Scaling</span>
+    <p><strong>Compound scaling</strong> means scaling depth, width, and input resolution <em>together</em>, in a
+    carefully balanced way, rather than one at a time.</p>
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 260" role="img" aria-label="Baseline vs compound scaled network">
+      <text x="30" y="25" font-weight="700" font-size="14">Baseline</text>
+      <rect x="30" y="60" width="60" height="60" fill="#d3d9ff" stroke="#3a63d8"/>
+      <text x="60" y="145" text-anchor="middle" font-size="10">small</text>
+      <rect x="110" y="70" width="50" height="50" fill="#d3d9ff" stroke="#3a63d8"/>
+      <rect x="180" y="80" width="40" height="40" fill="#d3d9ff" stroke="#3a63d8"/>
+      <rect x="240" y="85" width="15" height="30" fill="#d3d9ff" stroke="#3a63d8"/>
+      <rect x="270" y="85" width="15" height="30" fill="#d3d9ff" stroke="#3a63d8"/>
+      <text x="300" y="105" font-size="14">→ ŷ</text>
+
+      <text x="30" y="190" font-weight="700" font-size="14">Compound scaled (deeper + wider + higher-res)</text>
+      <rect x="30" y="205" width="80" height="40" fill="#b8c4ff" stroke="#3a63d8"/>
+      <rect x="120" y="210" width="70" height="30" fill="#b8c4ff" stroke="#3a63d8"/>
+      <rect x="200" y="210" width="60" height="30" fill="#b8c4ff" stroke="#3a63d8"/>
+      <rect x="270" y="213" width="50" height="25" fill="#b8c4ff" stroke="#3a63d8"/>
+      <rect x="330" y="213" width="50" height="25" fill="#b8c4ff" stroke="#3a63d8"/>
+      <rect x="390" y="217" width="40" height="18" fill="#b8c4ff" stroke="#3a63d8"/>
+      <rect x="440" y="217" width="40" height="18" fill="#b8c4ff" stroke="#3a63d8"/>
+      <rect x="490" y="222" width="12" height="8" fill="#b8c4ff" stroke="#3a63d8"/>
+      <rect x="510" y="222" width="12" height="8" fill="#b8c4ff" stroke="#3a63d8"/>
+      <rect x="530" y="222" width="12" height="8" fill="#b8c4ff" stroke="#3a63d8"/>
+      <text x="560" y="230" font-size="14">→ ŷ</text>
+    </svg>
+    <div class="caption">Figure 12.1 — Instead of scaling just one axis, EfficientNet scales depth (more layers),
+    width (more channels per layer), and input resolution <em>jointly</em> with a fixed ratio, achieving better
+    accuracy-per-FLOP than scaling any one axis alone.</div>
+  </div>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — The Takeaway</span>
+    <p>EfficientNet's message: <strong>architecture search + principled scaling beats naive scaling</strong>. If you have
+    a compute budget, jointly scaling depth, width, and resolution is more efficient than dumping everything into one of
+    them. EfficientNet-B0 through B7 are a family of models with increasing compute/accuracy.</p>
+  </div>
+
+  <!-- ==================== TRANSFER LEARNING ==================== -->
+  <h2 id="transfer">13. Transfer Learning</h2>
+
+  <p>This is arguably the <em>single most practical</em> lesson of the entire course. Almost nobody trains a big CNN from
+  scratch on a new task — they <strong>fine-tune a pretrained network</strong>.</p>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — Transfer Learning</span>
+    <p>Take a network that was trained on a large dataset (e.g., ImageNet, 1.2M images, 1000 classes), keep its learned
+    weights, and adapt the network to a new task with a much smaller dataset.</p>
+  </div>
+
+  <h3>13.1 How to apply it — a three-step recipe</h3>
+
+  <ol>
+    <li><strong>Download a pretrained model</strong> (e.g., ResNet‑50 trained on ImageNet). Keep its convolutional
+    layers ("the backbone") intact.</li>
+    <li><strong>Remove the original classification head</strong> (the final FC + softmax) and replace it with your own
+    output layer for your task (e.g., softmax over 3 classes).</li>
+    <li><strong>Choose a training strategy</strong> based on dataset size (see table below).</li>
+  </ol>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Your dataset</th><th>Strategy</th><th>Why</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Very small</strong> (e.g., &lt; 1000 examples)</td>
+          <td>Freeze all conv layers; train only the new output layer</td>
+          <td>Too few examples to safely fine-tune the backbone.</td>
+        </tr>
+        <tr>
+          <td><strong>Medium</strong> (1000–100K)</td>
+          <td>Freeze early layers; fine-tune later layers + new output layer</td>
+          <td>Early layers detect generic edges/textures; later layers can adapt to your domain.</td>
+        </tr>
+        <tr>
+          <td><strong>Large</strong> (100K+)</td>
+          <td>Fine-tune the entire network (often with a small learning rate)</td>
+          <td>Enough data to safely adapt even the early filters.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box int">
+    <span class="label">🟢 Intuition — Why Does It Work?</span>
+    <p>The early layers of any CNN learn <em>generic</em> visual features — edges, corners, colour blobs, textures —
+    which are useful for almost any vision task. Later layers learn <em>task-specific</em> features (e.g., "cat ear")
+    which you may need to replace. So transfer learning lets you keep the hard-won generic features and only relearn the
+    last few layers.</p>
+  </div>
+
+  <div class="box exam">
+    <span class="label">🟣 Worked example</span>
+    <p>You want to classify 500 images of three types of flowers.</p>
+    <ol>
+      <li>Download ResNet‑50 pretrained on ImageNet.</li>
+      <li>Delete the 1000-unit softmax. Add a new FC layer with 3 outputs + softmax.</li>
+      <li>Freeze all ResNet layers. Train only the new FC for a few epochs.</li>
+      <li>Optionally: unfreeze the last residual block and fine-tune with a very small learning rate (e.g., 1e‑4).</li>
+    </ol>
+    <p>This typically achieves strong accuracy with far less data and compute than training from scratch.</p>
+  </div>
+
+  <div class="box warn">
+    <span class="label">🔴 Warning — Two Common Mistakes</span>
+    <ul>
+      <li><strong>Fine-tuning with too large a learning rate</strong> — destroys the pretrained weights. Use a small LR
+      (often 10× smaller than you'd use for training from scratch).</li>
+      <li><strong>Freezing the whole network and only training the output</strong> on a medium dataset — you leave
+      accuracy on the table; unfreeze the later layers.</li>
+    </ul>
+  </div>
+
+  <!-- ==================== DATA AUGMENTATION ==================== -->
+  <h2 id="augment">14. Data Augmentation</h2>
+
+  <p>More data → better CNNs. When you can't get more images, you can <em>synthesize</em> new ones from your existing data
+  by applying label-preserving transformations.</p>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — Data Augmentation</span>
+    <p>Generate additional training examples by applying transformations that preserve the label. The augmented images
+    look different to the network but still show the same class.</p>
+  </div>
+
+  <h3>14.1 Common augmentation methods</h3>
+
+  <div class="diagram">
+    <svg viewBox="0 0 720 320" role="img" aria-label="Data augmentation methods: mirroring, cropping, color shifting">
+      <!-- mirroring -->
+      <text x="30" y="25" font-weight="700" font-size="14">Mirroring</text>
+      <rect x="30" y="40" width="120" height="70" fill="#fbd9a5" stroke="#333"/>
+      <text x="90" y="80" text-anchor="middle" font-size="26">🐱</text>
+      <text x="170" y="80" font-size="14">→</text>
+      <rect x="200" y="40" width="120" height="70" fill="#fbd9a5" stroke="#333"/>
+      <text x="260" y="80" text-anchor="middle" font-size="26" transform="scale(-1,1) translate(-520,0)">🐱</text>
+      <text x="340" y="80" font-size="12" fill="#5b6478">horizontal flip</text>
+
+      <!-- random cropping -->
+      <text x="30" y="155" font-weight="700" font-size="14">Random Cropping</text>
+      <rect x="30" y="170" width="120" height="70" fill="#fbd9a5" stroke="#333"/>
+      <rect x="35" y="175" width="50" height="50" fill="none" stroke="#d64545" stroke-width="2" stroke-dasharray="4 2"/>
+      <text x="90" y="215" text-anchor="middle" font-size="22">🐱</text>
+      <text x="170" y="210" font-size="14">→</text>
+      <rect x="200" y="170" width="80" height="70" fill="#fbd9a5" stroke="#333"/>
+      <text x="240" y="215" text-anchor="middle" font-size="22">🐱</text>
+      <rect x="300" y="170" width="80" height="70" fill="#fbd9a5" stroke="#333"/>
+      <text x="340" y="215" text-anchor="middle" font-size="22">🐱</text>
+      <text x="400" y="210" font-size="12" fill="#5b6478">random crop of the image</text>
+
+      <!-- color shifting -->
+      <text x="30" y="285" font-weight="700" font-size="14">Color Shifting</text>
+      <rect x="30" y="295" width="80" height="20" fill="#fbd9a5"/>
+      <text x="120" y="310" font-size="12">→</text>
+      <rect x="140" y="295" width="80" height="20" fill="#fbc9a5"/>
+      <rect x="240" y="295" width="80" height="20" fill="#d9fba5"/>
+      <rect x="340" y="295" width="80" height="20" fill="#a5d9fb"/>
+      <text x="440" y="310" font-size="12" fill="#5b6478">vary RGB channels</text>
+    </svg>
+    <div class="caption">Figure 14.1 — Common augmentations. Mirroring and cropping change geometry; colour shifting changes
+    pixel values. Each produces a "new" training example the network has never seen.</div>
+  </div>
+
+  <h3>14.2 Color shifting</h3>
+
+  <p>A technique from AlexNet: add a random offset to each of the R, G, B channels of an image. For example:</p>
+
+  <div class="eq">
+    $$ (R,G,B) \;\to\; (R + 20,\; G - 20,\; B + 20) $$
+  </div>
+
+  <p>Different random offsets give many colour-tinted versions of the same image. The idea is to make the network
+  robust to colour variations (e.g., lighting differences at test time).</p>
+
+  <div class="box extra">
+    <span class="label">📎 Additional Context — PCA Colour Augmentation</span>
+    <p>AlexNet's original paper also applied PCA-based colour augmentation, which shifts colours along the principal
+    axes of variation in the dataset. This tends to be slightly more effective than pure random offsets but is rarely
+    used in modern pipelines.</p>
+  </div>
+
+  <h3>14.3 Implementing augmentation during training</h3>
+
+  <div class="box int">
+    <span class="label">🟢 Implementation Pattern</span>
+    <p>Augmentation is typically applied <em>on the fly</em> during training:</p>
+    <ol>
+      <li>A CPU thread loads a mini-batch of images from disk.</li>
+      <li>Another thread applies random distortions (mirror, crop, colour shift).</li>
+      <li>The distorted mini-batch is handed to the GPU for the forward/backward pass.</li>
+    </ol>
+    <p>This keeps the GPU busy while the CPU prepares the next batch.</p>
+  </div>
+
+  <div class="box warn">
+    <span class="label">🔴 Warning — Don't Augment Test Data (Usually)</span>
+    <p>Augmentation is a <em>training-time</em> technique. The test set should reflect the real distribution you care about.
+    One exception is "test-time augmentation" (TTA) — running the classifier on several augmented versions of a test image
+    and averaging predictions. Used in competitions, less common in production.</p>
+  </div>
+
+  <!-- ==================== STATE OF CV ==================== -->
+  <h2 id="state-cv">15. The State of Computer Vision</h2>
+
+  <p>Different problems have different amounts of labelled data. Understanding this lets you decide how much
+  <em>hand-engineering</em> (design effort) to invest.</p>
+
+  <h3>15.1 Data vs hand-engineering</h3>
+
+  <div class="box int">
+    <span class="label">🟢 The Two Sources of Knowledge</span>
+    <p>Any ML system can draw on:</p>
+    <ul>
+      <li><strong>Labelled data</strong> \((x, y)\) — the more the better, but expensive.</li>
+      <li><strong>Hand-engineered knowledge</strong> — network architecture, loss functions, feature engineering, domain
+      constraints.</li>
+    </ul>
+    <p>When you have little data, you rely more on hand-engineering. When you have lots of data, simpler algorithms with
+    less hand-engineering win.</p>
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 220" role="img" aria-label="Data vs hand-engineering trade-off">
+      <!-- axis -->
+      <line x1="50" y1="180" x2="850" y2="180" stroke="#333" stroke-width="1.5"/>
+      <text x="60" y="60" font-size="12" fill="#3a63d8" font-weight="700">Little data</text>
+      <text x="60" y="80" font-size="12">More hand-engineering</text>
+      <text x="60" y="100" font-size="11" fill="#5b6478">("hacks")</text>
+
+      <text x="700" y="60" font-size="12" fill="#3a63d8" font-weight="700">Lots of data</text>
+      <text x="700" y="80" font-size="12">Simpler algorithms</text>
+      <text x="700" y="100" font-size="11" fill="#5b6478">less hand-engineering</text>
+
+      <!-- arrow -->
+      <line x1="200" y1="110" x2="720" y2="110" stroke="#3a63d8" stroke-width="2" marker-end="url(#arrow)"/>
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#3a63d8"/>
+        </marker>
+      </defs>
+
+      <!-- domain labels -->
+      <text x="250" y="155" text-anchor="middle" font-size="11" fill="#5b6478">object detection</text>
+      <text x="420" y="155" text-anchor="middle" font-size="11" fill="#5b6478">image recognition</text>
+      <text x="600" y="155" text-anchor="middle" font-size="11" fill="#5b6478">speech recognition</text>
+    </svg>
+    <div class="caption">Figure 15.1 — Different vision tasks sit at different points on this spectrum. Object detection
+    typically has less data (harder labels) → more hand-engineering. Speech recognition has more data → simpler
+    architectures often win.</div>
+  </div>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — Transfer Learning Shifts the Balance</span>
+    <p>Even when your task has little labelled data, you can borrow a pretrained network — effectively <em>importing</em>
+    the hand-engineering work of others. This is why transfer learning is so powerful for small-data tasks.</p>
+  </div>
+
+  <h3>15.2 Tips for doing well on benchmarks / winning competitions</h3>
+
+  <p>These are the techniques Andrew Ng recommends for squeezing out the last few percent of accuracy — mainly useful in
+  research/competition, less so in production:</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Technique</th><th>How it works</th><th>When to use</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Ensembling</strong></td>
+          <td>Train 3–15 independent networks. Average their outputs (or take a vote) at test time.</td>
+          <td>When accuracy matters more than inference cost.</td>
+        </tr>
+        <tr>
+          <td><strong>Multi-crop at test time</strong></td>
+          <td>Run the classifier on multiple crops / mirrors of each test image and average the results
+          (e.g., the classic "10-crop").</td>
+          <td>Competitions; sometimes as a cheap accuracy boost.</td>
+        </tr>
+        <tr>
+          <td><strong>Use open-source code</strong></td>
+          <td>Start from published architectures and pretrained models rather than reimplementing from scratch.</td>
+          <td>Almost always.</td>
+        </tr>
+        <tr>
+          <td><strong>Use pretrained models</strong></td>
+          <td>Fine-tune an ImageNet-pretrained backbone on your data.</td>
+          <td>Whenever your dataset is small or medium.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box warn">
+    <span class="label">🔴 Warning — Ensembling Is Expensive at Inference</span>
+    <p>If you ensemble 10 networks, you pay 10× the inference cost. In production this is often unacceptable. Use
+    ensembling when accuracy is worth the cost, not by default.</p>
+  </div>
+
+  <h3>15.3 The classic 10-crop test-time trick</h3>
+
+  <p>For each test image, extract 10 versions — the four corners, the centre, and their horizontal mirrors — run the
+  classifier on each, and average the softmax outputs. This "votes" against small translations and left/right flips,
+  making the prediction more robust.</p>
+
+  <!-- ==================== SUMMARY ==================== -->
+  <h2 id="summary">16. Weekly Summary</h2>
+
+  <p>This week surveyed the architectures that made CNNs the dominant tool in vision.</p>
+
+  <ul>
+    <li><strong>LeNet‑5 (1998):</strong> CONV-POOL-CONV-POOL-FC-FC-Softmax; ~60K params; established the
+    shrink-spatial / grow-channel pattern.</li>
+    <li><strong>AlexNet (2012):</strong> same pattern but much bigger; ReLU + max pooling + multiple GPUs + data
+    augmentation; ~60M params.</li>
+    <li><strong>VGG (2014):</strong> radical simplicity — only 3×3 convs; two 3×3 convs have a 5×5 receptive field with
+    fewer params; used as a pretrained backbone.</li>
+    <li><strong>ResNet (2015):</strong> residual blocks with skip connections let you train 100+ layer networks.
+    \(a^{[l+2]} = g(z^{[l+2]} + a^{[l]})\).</li>
+    <li><strong>Why ResNets work:</strong> the identity shortcut makes it easy for a block to "do nothing," and the
+    shortcut gives gradients a direct path.</li>
+    <li><strong>1×1 convolutions:</strong> operate across channels at every pixel; used to reduce (bottleneck) or expand
+    channels; add non-linearity without changing spatial size.</li>
+    <li><strong>Inception module:</strong> run 1×1, 3×3, 5×5 convs and max pool in parallel; concatenate. Use 1×1
+    bottlenecks to keep compute manageable.</li>
+    <li><strong>MobileNet:</strong> depthwise separable convs (depthwise + pointwise) reduce compute ~3–9×.</li>
+    <li><strong>MobileNet v2:</strong> bottleneck blocks (expand → depthwise → project) + residual connections.</li>
+    <li><strong>EfficientNet:</strong> jointly scale depth, width, and resolution.</li>
+    <li><strong>Transfer learning:</strong> fine-tune a pretrained backbone — the single most practical technique in
+    the course.</li>
+    <li><strong>Data augmentation:</strong> mirroring, cropping, colour shifting; applied during training, not test.</li>
+    <li><strong>Benchmark tips:</strong> ensembling, multi-crop, use open-source code and pretrained models.</li>
+  </ul>
+
+  <!-- ==================== EQUATIONS ==================== -->
+  <h2 id="equations">17. Important Equations</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Equation</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>\(a^{[l+2]} = g\!\left(z^{[l+2]} + a^{[l]}\right)\)</td>
+          <td>Residual block output: layer output plus skip connection, passed through ReLU.</td>
+        </tr>
+        <tr>
+          <td>\(a^{[l+2]} = g\!\left(z^{[l+2]} + W_s\,a^{[l]}\right)\)</td>
+          <td>Residual block when dimensions mismatch — \(W_s\) (often a 1×1 conv) projects \(a^{[l]}\) to match.</td>
+        </tr>
+        <tr>
+          <td>\(y = \sum_{c=1}^{n_C} x_c\, w_c + b\)</td>
+          <td>1×1 convolution: per-pixel weighted sum across channels.</td>
+        </tr>
+        <tr>
+          <td>\(\text{Cost}_\text{normal} = f\cdot f\cdot n_C \times n_H' \cdot n_W' \times n_C'\)</td>
+          <td>Compute of a normal convolution (filter size × output positions × filters).</td>
+        </tr>
+        <tr>
+          <td>\(\text{Cost}_\text{depthwise} = f\cdot f \times n_H' \cdot n_W' \times n_C\)</td>
+          <td>Depthwise conv cost — one filter per input channel, no channel mixing.</td>
+        </tr>
+        <tr>
+          <td>\(\text{Cost}_\text{pointwise} = 1\cdot 1\cdot n_C \times n_H' \cdot n_W' \times n_C'\)</td>
+          <td>Pointwise (1×1) conv cost — combines channels with a 1×1 filter.</td>
+        </tr>
+        <tr>
+          <td>\(\text{Cost}_\text{sep} = \text{Cost}_\text{depthwise} + \text{Cost}_\text{pointwise}\)</td>
+          <td>Total cost of a depthwise separable convolution.</td>
+        </tr>
+        <tr>
+          <td>\(\dfrac{\text{Cost}_\text{sep}}{\text{Cost}_\text{normal}}\)</td>
+          <td>Typical ratio ≈ \(1/n_C' + 1/f^2\), often 1/8 or better.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== CONFUSIONS ==================== -->
+  <h2 id="confusions">18. Common Confusions</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Often confused</th><th>Correct distinction</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>LeNet‑5 vs AlexNet</td>
+          <td>LeNet‑5: small (~60K params), grayscale, sigmoid/tanh, average pooling. AlexNet: 1000× bigger (~60M params),
+          RGB, ReLU, max pooling, multi-GPU.</td>
+        </tr>
+        <tr>
+          <td>VGG's "3×3 only" claim</td>
+          <td>VGG uses only 3×3 conv filters (not 11×11 or 5×5 like AlexNet). Its pooling is still 2×2, and it has FC
+          layers at the end.</td>
+        </tr>
+        <tr>
+          <td>Residual block vs skip connection</td>
+          <td>The skip connection is the wire that carries \(a^{[l]}\) forward. The residual block is the whole unit
+          (main path + skip + final activation).</td>
+        </tr>
+        <tr>
+          <td>Why ResNets don't suffer from degradation</td>
+          <td>Not because they have fewer parameters — they have <em>more</em>. It's because a block can learn the identity
+          mapping, so adding layers can't hurt.</td>
+        </tr>
+        <tr>
+          <td>1×1 conv vs FC layer</td>
+          <td>A 1×1 conv is applied per spatial position, so it works on arbitrary image sizes. An FC layer flattens
+          spatial dims, so the input size must be fixed.</td>
+        </tr>
+        <tr>
+          <td>Inception module vs Inception network</td>
+          <td>The <em>module</em> is one block (parallel branches + concatenate). The <em>network</em> (GoogLeNet) stacks
+          many modules together.</td>
+        </tr>
+        <tr>
+          <td>Depthwise vs pointwise convolution</td>
+          <td><strong>Depthwise</strong>: one small filter per input channel (spatial filtering only). <strong>Pointwise</strong>:
+          1×1 conv that mixes channels. Together = depthwise separable conv.</td>
+        </tr>
+        <tr>
+          <td>Training from scratch vs transfer learning</td>
+          <td>Training from scratch requires a huge dataset and lots of compute. Transfer learning reuses pretrained features
+          and works well even with tiny datasets.</td>
+        </tr>
+        <tr>
+          <td>Training-time vs test-time augmentation</td>
+          <td>Training-time augmentation generates new training examples. Test-time augmentation (10-crop, TTA) runs the
+          classifier multiple times per test image and averages.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== REVIEW ==================== -->
+  <h2 id="review">19. Review Questions</h2>
+
+  <details>
+    <summary>Q1. What is the main architectural difference between LeNet‑5 and AlexNet?</summary>
+    <div class="answer">
+      AlexNet is essentially "LeNet but much bigger." It uses ~60M parameters (1000× more than LeNet‑5), a 227×227×3 RGB
+      input (instead of 32×32×1), ReLU activations (instead of sigmoid/tanh), max pooling (instead of average), and was
+      trained across two GPUs on the much larger ImageNet dataset.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q2. Why does VGG use only 3×3 convolutions?</summary>
+    <div class="answer">
+      Because a stack of small filters has the same receptive field as one large filter — two 3×3 convs = 5×5 receptive
+      field, three 3×3 convs = 7×7 — but uses fewer parameters and injects more non-linearity (ReLU after each conv).
+      It's a simpler, more uniform design.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q3. What problem does ResNet solve, and how?</summary>
+    <div class="answer">
+      ResNet solves the <strong>degradation problem</strong>: plain deep networks get <em>worse</em> training error as
+      depth increases. ResNet's residual blocks add a skip connection so the input \(a^{[l]}\) is added to the output of
+      two layers ahead: \(a^{[l+2]} = g(z^{[l+2]} + a^{[l]})\). This makes it easy to learn the identity mapping, so
+      adding layers can't hurt, and it gives gradients a direct path during backprop.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q4. Write the equation for a residual block output.</summary>
+    <div class="answer">
+      $$a^{[l+2]} = g\!\left(z^{[l+2]} + a^{[l]}\right)$$
+      where \(z^{[l+2]}\) is the output of the last linear layer in the block and \(a^{[l]}\) is the input via the
+      skip connection.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q5. What does a 1×1 convolution do?</summary>
+    <div class="answer">
+      It performs a per-pixel weighted sum across the channel dimension. It doesn't look at spatial neighbours. Its
+      primary use is to reduce (bottleneck) or increase channel count, adding non-linearity (via ReLU) without changing
+      spatial size.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q6. How does a 1×1 bottleneck reduce compute in the Inception module?</summary>
+    <div class="answer">
+      Instead of running an expensive 5×5 conv directly on a 192-channel input (~120M multiplications), you first run a
+      1×1 conv with 16 filters to shrink channels to 16, then run the 5×5 conv on the smaller volume
+      (~2.4M + ~10M = ~12.4M multiplications). That's about a 10× reduction with negligible loss in expressiveness.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q7. Describe the Inception module in one sentence.</summary>
+    <div class="answer">
+      It runs 1×1, 3×3, and 5×5 convolutions plus a 3×3 max pool in parallel (each branch is preceded by a 1×1 conv to
+      reduce channels where needed), then concatenates all branch outputs along the channel dimension.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q8. What is a depthwise separable convolution?</summary>
+    <div class="answer">
+      A convolution split into two stages: (1) <strong>depthwise</strong> — a small filter applied independently to each
+      input channel (spatial filtering only), and (2) <strong>pointwise</strong> — a 1×1 conv that mixes channels
+      (produces the desired number of output channels). It's much cheaper than a normal convolution.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q9. Compute the cost of a normal convolution on a 6×6×3 input with a 3×3×3 filter and 5 filters.</summary>
+    <div class="answer">
+      $$(3 \cdot 3 \cdot 3) \times (4 \cdot 4) \times 5 = 27 \cdot 16 \cdot 5 = 2160.$$
+    </div>
+  </details>
+
+  <details>
+    <summary>Q10. Compute the cost of the corresponding depthwise separable convolution.</summary>
+    <div class="answer">
+      Depthwise: \(3 \cdot 3 \cdot 4 \cdot 4 \cdot 3 = 432\). Pointwise: \(1 \cdot 1 \cdot 3 \cdot 4 \cdot 4 \cdot 5 = 240\).
+      Total = 672. Ratio to normal = 672/2160 ≈ 0.31.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q11. What are the three stages of a MobileNet v2 bottleneck block?</summary>
+    <div class="answer">
+      (1) <strong>Expansion</strong> — 1×1 conv that expands channels. (2) <strong>Depthwise</strong> — 3×3 depthwise
+      conv at the expanded size. (3) <strong>Projection</strong> — 1×1 conv that reduces channels. Plus a residual
+      connection when shapes match.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q12. What is compound scaling (EfficientNet)?</summary>
+    <div class="answer">
+      Scaling a network along three axes <em>jointly</em>: depth (more layers), width (more channels), and input resolution
+      (larger images). EfficientNet finds a good ratio between these and achieves better accuracy per FLOP than scaling any
+      single axis.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q13. When should you freeze the convolutional backbone and only train the new output layer?</summary>
+    <div class="answer">
+      When your target dataset is very small (roughly &lt; 1000 examples). With so little data, fine-tuning the whole
+      network risks overfitting and destroying the pretrained features. Training only the new head is safer.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q14. What is the difference between training-time augmentation and test-time augmentation?</summary>
+    <div class="answer">
+      <strong>Training-time augmentation</strong> expands your dataset by applying random transformations (mirror, crop,
+      colour shift) to training images. <strong>Test-time augmentation</strong> runs the classifier on multiple
+      transformed versions of each test image and averages the outputs — often used in competitions ("10-crop").
+    </div>
+  </details>
+
+  <details>
+    <summary>Q15. What are the "two sources of knowledge" in computer vision?</summary>
+    <div class="answer">
+      (1) <strong>Labelled data</strong> \((x, y)\) — the more you have, the simpler your algorithms can be.
+      (2) <strong>Hand-engineered knowledge</strong> — network architectures, loss functions, domain-specific design.
+      When data is scarce, you rely more on hand-engineering.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q16. Why does a 1×1 conv make sense as a bottleneck?</summary>
+    <div class="answer">
+      Because spatial convolution cost scales with the <em>number of input channels</em> in the filter. If you shrink
+      channels first with a cheap 1×1 conv, the subsequent expensive spatial conv operates on fewer channels → much less
+      compute. It's essentially dimensionality reduction across channels.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q17. Why does VGG use so many parameters compared to LeNet‑5?</summary>
+    <div class="answer">
+      VGG's parameter count is dominated by its <strong>fully connected</strong> layers at the end (7×7×512 → 4096, then
+      4096 → 4096, then 4096 → 1000). These alone contain most of the ~138M parameters. AlexNet has the same pattern
+      (~60M parameters, mostly in FC). In LeNet, everything is small, so total is ~60K.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q18. What was AlexNet's "Local Response Normalization" and does modern practice still use it?</summary>
+    <div class="answer">
+      LRN normalises activations across channels at each position, suppressing very active channels. Modern networks
+      almost never use LRN — <strong>batch normalization</strong> (from Course 2) has replaced it and works much better.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q19. Why do modern architectures often replace pooling with strided convolutions?</summary>
+    <div class="answer">
+      A strided conv still learns parameters (the filter), so the network can learn <em>how</em> to downsample. Pooling
+      is a fixed operation with no parameters. For accuracy-focused tasks, learning to downsample often wins.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q20. Give the three practical tips from the "state of computer vision" slide for winning competitions.</summary>
+    <div class="answer">
+      (1) <strong>Ensembling</strong> — train 3–15 networks and average their outputs. (2) <strong>Multi-crop at test
+      time</strong> — run the classifier on multiple crops/mirrors of each test image and average. (3) <strong>Use
+      open-source code and pretrained models</strong> — reuse what already works.
+    </div>
+  </details>
+
+  <!-- ==================== SELF-TEST ==================== -->
+  <h2 id="selftest">20. Self‑Test</h2>
+
+  <h3>Easy</h3>
+
+  <details>
+    <summary>1. Which classic network first used ReLU activations at scale?</summary>
+    <div class="answer">AlexNet (2012). LeNet‑5 used sigmoid/tanh.</div>
+  </details>
+
+  <details>
+    <summary>2. In a residual block, what is added before the final activation?</summary>
+    <div class="answer">
+      The input activation \(a^{[l]}\) (via the skip connection) is added to \(z^{[l+2]}\) (the output of the main path),
+      producing \(g(z^{[l+2]} + a^{[l]})\).
+    </div>
+  </details>
+
+  <details>
+    <summary>3. How many parameters does a 1×1 conv with 32 filters have, on an input with 64 channels (ignore bias)?</summary>
+    <div class="answer">\(1 \cdot 1 \cdot 64 \cdot 32 = 2048\).</div>
+  </details>
+
+  <details>
+    <summary>4. Which is cheaper: a 3×3 conv with 64 filters, or a depthwise separable conv with 3×3 depthwise + 64 pointwise, on 64 input channels?</summary>
+    <div class="answer">
+      Normal: \(3\cdot 3 \cdot 64 \cdot 64 = 36{,}864\) per output position. Depthwise: \(9 \cdot 64 = 576\) per position.
+      Pointwise: \(1 \cdot 64 \cdot 64 = 4096\) per position. Total sep = 4672 — roughly 8× cheaper.
+    </div>
+  </details>
+
+  <h3>Medium</h3>
+
+  <details>
+    <summary>5. Why does the ResNet identity shortcut keep gradients from vanishing?</summary>
+    <div class="answer">
+      The skip connection adds \(a^{[l]}\) directly to \(z^{[l+2]}\). During backprop, the gradient from \(a^{[l+2]}\) w.r.t.
+      \(a^{[l]}\) includes a term equal to 1 (from the identity path) plus the usual weight-matrix term. This extra
+      "always-present" gradient provides a direct highway for error signals to flow back, avoiding vanishing gradients in
+      very deep networks.
+    </div>
+  </details>
+
+  <details>
+    <summary>6. In the Inception module, why is the max-pool branch followed by a 1×1 conv?</summary>
+    <div class="answer">
+      Max pooling outputs \(n_C^{in}\) channels (the same as its input). To keep the concatenated output balanced (the
+      other branches produce fewer channels after their 1×1 bottlenecks), a 1×1 conv after the max pool reduces the
+      channel count to a smaller value (e.g., 32). It also adds non-linearity.
+    </div>
+  </details>
+
+  <details>
+    <summary>7. Why does MobileNet v2 expand channels before the depthwise step?</summary>
+    <div class="answer">
+      The depthwise conv has only \(f \cdot f\) weights per channel — very little capacity. Expanding the channels first
+      gives the depthwise step more channels to work with, allowing richer features before the projection step shrinks
+      channels back down.
+    </div>
+  </details>
+
+  <details>
+    <summary>8. You have 50 images of 5 rare bird species. How would you train a classifier?</summary>
+    <div class="answer">
+      Use transfer learning: load a pretrained network (e.g., ResNet‑50 on ImageNet), freeze all its conv layers, replace
+      the classification head with a softmax over 5 classes, and train only the new head. With 50 images (10 per class),
+      fine-tuning the whole network would overfit badly.
+    </div>
+  </details>
+
+  <details>
+    <summary>9. What is the difference between the Inception module and GoogLeNet?</summary>
+    <div class="answer">
+      The Inception module is a single building block (parallel 1×1, 3×3, 5×5 convs + max pool, concatenated).
+      GoogLeNet (Inception v1) is the <em>full network</em> built by stacking many Inception modules together.
+    </div>
+  </details>
+
+  <h3>Hard</h3>
+
+  <details>
+    <summary>10. Prove that two stacked 3×3 convs have a receptive field equal to one 5×5 conv.</summary>
+    <div class="answer">
+      The first 3×3 conv maps an output cell to a 3×3 region of the input. The second 3×3 conv maps its output cell to a
+      3×3 region of the first conv's output, which corresponds to a 3×3 region of the first conv's inputs (since each
+      first-conv output cell already maps to 3×3 of the original input). The union is a \(3 + (3-1) = 5\) region.
+      So two stacked 3×3 = one 5×5 receptive field. Similarly, three stacked 3×3 = one 7×7.
+    </div>
+  </details>
+
+  <details>
+    <summary>11. How many parameters does one 5×5 conv with 64 output channels on 64 input channels have? Compare to three stacked 3×3 convs with 64 channels each.</summary>
+    <div class="answer">
+      5×5 conv: \(5\cdot 5 \cdot 64 \cdot 64 = 102{,}400\) (plus biases).
+      Three 3×3 convs: \(3 \cdot (3\cdot 3 \cdot 64 \cdot 64) = 3 \cdot 36{,}864 = 110{,}592\). Similar count, but the
+      3×3 stack has three ReLUs (more non-linearity) and similar receptive field.
+    </div>
+  </details>
+
+  <details>
+    <summary>12. Derive the depthwise separable cost ratio in terms of \(f\) and \(n_C'\).</summary>
+    <div class="answer">
+      Let the number of input channels be \(n_C\) and output channels be \(n_C'\), output spatial size \(H \cdot W\).
+      Normal: \(f^2 \cdot n_C \cdot H \cdot W \cdot n_C'\).
+      Depthwise: \(f^2 \cdot n_C \cdot H \cdot W\).
+      Pointwise: \(1 \cdot n_C \cdot H \cdot W \cdot n_C'\).
+      Total sep: \(H W n_C (f^2 + n_C')\).
+      Ratio: \(\dfrac{f^2 + n_C'}{f^2 n_C'} = \dfrac{1}{n_C'} + \dfrac{1}{f^2}\).
+      For \(f=3, n_C'=64\): ratio = \(1/64 + 1/9 \approx 0.13\) — about 8× cheaper.
+    </div>
+  </details>
+
+  <details>
+    <summary>13. In a residual block where the main path uses stride 2 (to downsample), why can't you just add \(a^{[l]}\) directly?</summary>
+    <div class="answer">
+      Because the shapes no longer match: the main path output \(z^{[l+2]}\) has half the spatial size of \(a^{[l]}\).
+      You need to project \(a^{[l]}\) to match — typically with a 1×1 conv with stride 2 (plus possibly more filters
+      to match channel count), denoted \(W_s\). So \(a^{[l+2]} = g(z^{[l+2]} + W_s a^{[l]})\).
+    </div>
+  </details>
+
+  <details>
+    <summary>14. What does it mean that MobileNet v2's bottleneck uses "expansion" then "projection"?</summary>
+    <div class="answer">
+      The input has few channels (say 24). The expansion 1×1 conv expands it to many channels (say 144). The depthwise
+      conv then operates at this larger channel count, giving it more capacity. The projection 1×1 conv then reduces back
+      to a small channel count (say 24). The input and output both have 24 channels, so a residual connection can be
+      applied — this is the "bottleneck": narrow → wide → narrow.
+    </div>
+  </details>
+
+  <details>
+    <summary>15. Why does EfficientNet use a fixed scaling coefficient across depth, width, and resolution?</summary>
+    <div class="answer">
+      Empirically, scaling one axis alone saturates quickly — you get diminishing returns and the model becomes
+      unbalanced (e.g., very deep but very narrow). Joint scaling with a fixed ratio keeps the three dimensions in
+      proportion, so each helps the others. EfficientNet found this ratio via architecture search and achieved a better
+      accuracy-vs-FLOP Pareto frontier than prior methods.
+    </div>
+  </details>
+
+  <details>
+    <summary>16. Suppose you want to deploy a classifier on a smartphone with limited compute. Which architecture family from this week is best suited, and why?</summary>
+    <div class="answer">
+      MobileNet (v1 or v2) or EfficientNet-Lite. MobileNet's depthwise separable convolutions cut compute by ~3–9× vs
+      a normal conv of the same shape. EfficientNet scales efficiently. Both are designed for mobile/embedded deployment.
+      VGG and ResNet‑152 would be too heavy.
+    </div>
+  </details>
+
+  <details>
+    <summary>17. In the "data vs hand-engineering" spectrum, why does transfer learning effectively "shift" a small-data task to the right?</summary>
+    <div class="answer">
+      Because transfer learning imports the hand-engineering (and learned features) of a network trained on a large
+      dataset. Even though your <em>own</em> task has little data, you get the benefit of the pretrained network's
+      knowledge — so you need less hand-engineering to make it work. Effectively, you've borrowed the "lots of data"
+      advantage.
+    </div>
+  </details>
+
+  <details>
+    <summary>18. Name three augmentations that AlexNet used and explain briefly why each helps.</summary>
+    <div class="answer">
+      (1) <strong>Mirroring</strong> — horizontal flips double the dataset and make the model invariant to left-right
+      orientation. (2) <strong>Random cropping</strong> — forces the model to recognise objects even when partially
+      cut off, improving robustness to translation. (3) <strong>PCA colour augmentation</strong> — varies colour along
+      the dataset's principal colour axes, making the model robust to lighting and colour variations.
+    </div>
+  </details>
+
+  <details>
+    <summary>19. Explain the intuition behind the classic "10-crop" test-time augmentation.</summary>
+    <div class="answer">
+      For each test image, extract the 4 corners and the centre (5 crops), plus their horizontal mirrors (5 more) = 10
+      versions. Run the classifier on all 10, then average the softmax outputs. This "votes" over small translations and
+      flips, reducing the risk that a single unlucky crop misclassifies the image.
+    </div>
+  </details>
+
+  <details>
+    <summary>20. In one paragraph, describe how a modern practitioner would build a state-of-the-art image classifier in 2024, borrowing from this week's ideas.</summary>
+    <div class="answer">
+      Start from a pretrained backbone (EfficientNet or a modern ResNet variant trained on ImageNet), replace the
+      classification head with a new one matching the target classes, freeze the backbone for a few epochs while
+      training the head, then unfreeze later layers and fine-tune with a small learning rate. Use augmentation
+      (mirror, crop, colour shift) during training. If accuracy is paramount and inference cost is not, ensemble
+      several such models and use test-time augmentation. Use data augmentation to bridge the gap between the
+      (possibly small) target dataset and the pretrained model. This recipe combines LeNet's structural insights,
+      ResNet's depth, Inception's multi-scale intuition, MobileNet/EfficientNet's efficiency, and transfer learning's
+      reuse of pretrained knowledge.
+    </div>
+  </details>
+
+  <!-- ==================== WEEK NAV ==================== -->
+  <div class="weeknav">
+    <a href="C4_W1.html" class="nav-btn">← Previous Week</a>
+    <a href="#" title="Course 4 index">↑ Course 4 Index</a>
+    <a href="#" title="Specialization index">⌂ Specialization</a>
+    <a href="C4_W3.html" class="nav-btn">Next Week →</a>
+  </div>
+
+  </main>
+</div>
+
+<footer>
+  Notes compiled from the Deep Learning Specialization · Course 4 Week 2 · DeepLearning.AI · Andrew Ng.
+  Additional context and recreated diagrams are labelled where they appear.
+</footer>
+
+<button id="backTop" title="Back to top">↑</button>
+
+<script>
+(function(){
+  var root = document.documentElement;
+  var stored = null;
+  try { stored = localStorage.getItem('dls-theme'); } catch(e){}
+  if (stored) root.setAttribute('data-theme', stored);
+  var btn = document.getElementById('themeBtn');
+  btn.addEventListener('click', function(){
+    var cur = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', cur);
+    try { localStorage.setItem('dls-theme', cur); } catch(e){}
+  });
+})();
+
+(function(){
+  var btn = document.getElementById('backTop');
+  window.addEventListener('scroll', function(){
+    if (window.scrollY > 500) btn.classList.add('show'); else btn.classList.remove('show');
+  });
+  btn.addEventListener('click', function(){ window.scrollTo({top:0,behavior:'smooth'}); });
+})();
+
+(function(){
+  var input = document.getElementById('searchInput');
+  if (!input) return;
+  var timer = null;
+  input.addEventListener('input', function(){
+    clearTimeout(timer);
+    timer = setTimeout(function(){
+      var q = input.value.trim();
+      document.querySelectorAll('mark.hit').forEach(function(m){
+        var t = document.createTextNode(m.textContent);
+        m.parentNode.replaceChild(t, m);
+      });
+      if (!q || q.length < 2) return;
+      var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+        acceptNode: function(node){
+          if (!node.parentNode) return NodeFilter.FILTER_REJECT;
+          var tag = node.parentNode.tagName;
+          if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'MARK') return NodeFilter.FILTER_REJECT;
+          if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      });
+      var re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi');
+      var hits = 0, first = null;
+      var nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      nodes.forEach(function(node){
+        if (hits >= 200) return;
+        var v = node.nodeValue;
+        if (!re.test(v)) return;
+        re.lastIndex = 0;
+        var frag = document.createDocumentFragment();
+        var last = 0, m;
+        while ((m = re.exec(v)) !== null){
+          frag.appendChild(document.createTextNode(v.slice(last, m.index)));
+          var mk = document.createElement('mark');
+          mk.className = 'hit';
+          mk.textContent = m[0];
+          frag.appendChild(mk);
+          last = m.index + m[0].length;
+          hits++;
+          if (hits >= 200) break;
+        }
+        frag.appendChild(document.createTextNode(v.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+        if (!first) first = frag;
+      });
+      if (first && first.querySelector) {
+        var el = first.querySelector('mark.hit');
+        if (el) el.scrollIntoView({behavior:'smooth', block:'center'});
+      }
+    }, 220);
+  });
+})();
+</script>
+
+</body>
+</html>

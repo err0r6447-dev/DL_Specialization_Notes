@@ -1,0 +1,2698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Course 5 Week 1 — Recurrent Neural Networks | Deep Learning Specialization Notes</title>
+
+<!-- MathJax for equation rendering -->
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']],
+      processEscapes: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+/* ============================================================
+   THEME VARIABLES
+   ============================================================ */
+:root {
+  --bg: #f7f9fc;
+  --bg-card: #ffffff;
+  --bg-alt: #eef2f7;
+  --bg-code: #1e293b;
+  --text: #1f2937;
+  --text-muted: #4b5563;
+  --heading: #0f172a;
+  --border: #dbe2ea;
+  --border-strong: #b9c4d1;
+  --accent: #2563eb;
+  --accent-soft: #dbeafe;
+  --accent-hover: #1d4ed8;
+  --def-bg: #e0f2fe;   --def-border: #0284c7;
+  --int-bg: #dcfce7;   --int-border: #16a34a;
+  --imp-bg: #fef3c7;   --imp-border: #d97706;
+  --warn-bg: #fee2e2;  --warn-border: #dc2626;
+  --ex-bg: #f3e8ff;    --ex-border: #9333ea;
+  --impl-bg: #ecfeff;  --impl-border: #0891b2;
+  --ins-bg: #fff7ed;   --ins-border: #ea580c;
+  --rem-bg: #f1f5f9;   --rem-border: #64748b;
+  --cm-bg: #fce7f3;    --cm-border: #db2777;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.08);
+  --radius: 10px;
+}
+
+[data-theme="dark"] {
+  --bg: #0f172a;
+  --bg-card: #1e293b;
+  --bg-alt: #172033;
+  --bg-code: #0b1220;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --heading: #f1f5f9;
+  --border: #334155;
+  --border-strong: #475569;
+  --accent: #60a5fa;
+  --accent-soft: #1e3a8a;
+  --accent-hover: #93c5fd;
+  --def-bg: #0c2a3d;   --def-border: #38bdf8;
+  --int-bg: #0a2e1a;   --int-border: #4ade80;
+  --imp-bg: #3a2a08;   --imp-border: #fbbf24;
+  --warn-bg: #3a1010;  --warn-border: #f87171;
+  --ex-bg: #2a1240;    --ex-border: #c084fc;
+  --impl-bg: #0a2a30;  --impl-border: #22d3ee;
+  --ins-bg: #3a1c08;   --ins-border: #fb923c;
+  --rem-bg: #1e2637;   --rem-border: #94a3b8;
+  --cm-bg: #3a0a24;    --cm-border: #f472b6;
+  --shadow: 0 1px 3px rgba(0,0,0,0.4);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 70px; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 17px;
+  line-height: 1.7;
+  background: var(--bg);
+  color: var(--text);
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px 80px;
+}
+
+/* ============================================================
+   TOP BAR
+   ============================================================ */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(8px);
+}
+
+.topbar-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.topbar-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--heading);
+  flex: 1;
+  min-width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar-btn {
+  background: var(--bg-alt);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.topbar-btn:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent-hover);
+}
+
+/* ============================================================
+   PAGE HEADER
+   ============================================================ */
+.page-header {
+  margin: 40px 0 30px;
+  padding: 30px 24px;
+  background: linear-gradient(135deg, var(--accent) 0%, #7c3aed 100%);
+  border-radius: var(--radius);
+  color: #ffffff;
+  box-shadow: var(--shadow-lg);
+}
+
+.page-header .course-tag {
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  opacity: 0.9;
+  margin-bottom: 8px;
+}
+
+.page-header h1 {
+  margin: 0 0 10px;
+  font-size: 32px;
+  line-height: 1.25;
+  color: #ffffff;
+}
+
+.page-header .subtitle {
+  font-size: 16px;
+  opacity: 0.95;
+  margin: 0;
+}
+
+/* ============================================================
+   HEADINGS
+   ============================================================ */
+h2 {
+  font-size: 26px;
+  color: var(--heading);
+  margin-top: 55px;
+  margin-bottom: 18px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+  scroll-margin-top: 80px;
+}
+
+h3 {
+  font-size: 21px;
+  color: var(--heading);
+  margin-top: 36px;
+  margin-bottom: 12px;
+  scroll-margin-top: 80px;
+}
+
+h4 {
+  font-size: 17.5px;
+  color: var(--heading);
+  margin-top: 26px;
+  margin-bottom: 10px;
+}
+
+p { margin: 12px 0; }
+ul, ol { padding-left: 26px; }
+li { margin: 6px 0; }
+a { color: var(--accent); }
+a:hover { color: var(--accent-hover); }
+
+/* ============================================================
+   TOC
+   ============================================================ */
+.toc {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin: 30px 0;
+  box-shadow: var(--shadow);
+}
+
+.toc h2 {
+  margin-top: 0;
+  font-size: 20px;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.toc ol {
+  columns: 2;
+  column-gap: 30px;
+  margin: 12px 0 0;
+  padding-left: 20px;
+}
+
+.toc li { break-inside: avoid; margin: 4px 0; font-size: 15px; }
+
+@media (max-width: 640px) { .toc ol { columns: 1; } }
+
+/* ============================================================
+   CALLOUTS
+   ============================================================ */
+.callout {
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin: 20px 0;
+  border-left: 5px solid;
+  box-shadow: var(--shadow);
+}
+
+.callout .callout-title {
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.callout p:first-of-type { margin-top: 0; }
+.callout p:last-child { margin-bottom: 0; }
+
+.callout.definition { background: var(--def-bg); border-color: var(--def-border); }
+.callout.definition .callout-title { color: var(--def-border); }
+
+.callout.intuition { background: var(--int-bg); border-color: var(--int-border); }
+.callout.intuition .callout-title { color: var(--int-border); }
+
+.callout.important { background: var(--imp-bg); border-color: var(--imp-border); }
+.callout.important .callout-title { color: var(--imp-border); }
+
+.callout.warning { background: var(--warn-bg); border-color: var(--warn-border); }
+.callout.warning .callout-title { color: var(--warn-border); }
+
+.callout.example { background: var(--ex-bg); border-color: var(--ex-border); }
+.callout.example .callout-title { color: var(--ex-border); }
+
+.callout.implementation { background: var(--impl-bg); border-color: var(--impl-border); }
+.callout.implementation .callout-title { color: var(--impl-border); }
+
+.callout.insight { background: var(--ins-bg); border-color: var(--ins-border); }
+.callout.insight .callout-title { color: var(--ins-border); }
+
+.callout.remember { background: var(--rem-bg); border-color: var(--rem-border); }
+.callout.remember .callout-title { color: var(--rem-border); }
+
+.callout.mistake { background: var(--cm-bg); border-color: var(--cm-border); }
+.callout.mistake .callout-title { color: var(--cm-border); }
+
+/* ============================================================
+   TABLES
+   ============================================================ */
+.table-wrap {
+  overflow-x: auto;
+  margin: 20px 0;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 480px;
+  background: var(--bg-card);
+  font-size: 15px;
+}
+
+th, td {
+  padding: 11px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+th {
+  background: var(--bg-alt);
+  font-weight: 700;
+  color: var(--heading);
+  font-size: 14px;
+  letter-spacing: 0.3px;
+}
+
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg-alt); }
+
+/* ============================================================
+   CODE
+   ============================================================ */
+pre {
+  background: var(--bg-code);
+  color: #e2e8f0;
+  padding: 16px 20px;
+  border-radius: var(--radius);
+  overflow-x: auto;
+  font-size: 14px;
+  line-height: 1.55;
+  margin: 18px 0;
+  box-shadow: var(--shadow);
+}
+
+code {
+  font-family: "SF Mono", Monaco, Menlo, Consolas, "Courier New", monospace;
+  font-size: 0.92em;
+}
+
+p code, li code, td code {
+  background: var(--bg-alt);
+  color: var(--accent);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+pre code { background: transparent; color: inherit; padding: 0; border: none; }
+
+.kw { color: #c792ea; }
+.str { color: #c3e88d; }
+.num { color: #f78c6c; }
+.com { color: #6b7a99; font-style: italic; }
+.fn { color: #82aaff; }
+
+/* ============================================================
+   DIAGRAMS
+   ============================================================ */
+.diagram {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin: 24px 0;
+  text-align: center;
+  overflow-x: auto;
+  box-shadow: var(--shadow);
+}
+
+.diagram svg { max-width: 100%; height: auto; }
+
+.diagram-caption {
+  margin-top: 12px;
+  font-size: 14px;
+  color: var(--text-muted);
+  font-style: italic;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   EQUATIONS
+   ============================================================ */
+.eq { overflow-x: auto; padding: 8px 0; margin: 14px 0; }
+mjx-container { font-size: 105% !important; }
+
+/* ============================================================
+   DETAILS / Q&A
+   ============================================================ */
+details {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin: 10px 0;
+  box-shadow: var(--shadow);
+  transition: all 0.15s;
+}
+
+details[open] { border-color: var(--accent); }
+
+details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--heading);
+  list-style: none;
+  outline: none;
+  position: relative;
+  padding-right: 26px;
+  font-size: 15.5px;
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details summary::after {
+  content: "▸";
+  position: absolute;
+  right: 0;
+  top: 0;
+  font-size: 14px;
+  color: var(--accent);
+  transition: transform 0.15s;
+}
+
+details[open] summary::after { content: "▾"; }
+
+details .answer {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+  color: var(--text);
+  font-weight: normal;
+  font-size: 15.5px;
+}
+
+details .answer p:first-child { margin-top: 0; }
+details .answer p:last-child { margin-bottom: 0; }
+
+/* ============================================================
+   NAV / BACK TO TOP
+   ============================================================ */
+.page-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  margin: 50px 0 20px;
+  padding: 20px 0;
+  border-top: 1px solid var(--border);
+}
+
+.nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-card);
+  color: var(--accent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  font-size: 14.5px;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: var(--shadow);
+  transition: all 0.15s;
+}
+
+.nav-btn:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.nav-btn.disabled { opacity: 0.4; pointer-events: none; }
+
+#backToTop {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #ffffff;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: var(--shadow-lg);
+  display: none;
+  z-index: 90;
+  transition: transform 0.15s, background 0.15s;
+}
+
+#backToTop:hover { background: var(--accent-hover); transform: translateY(-2px); }
+#backToTop.visible { display: block; }
+
+/* ============================================================
+   SEARCH
+   ============================================================ */
+.search-wrap { margin: 20px 0; position: relative; }
+
+.search-wrap input {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 15px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  outline: none;
+  transition: border 0.15s;
+}
+
+.search-wrap input:focus { border-color: var(--accent); }
+
+.search-info {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  padding-left: 4px;
+}
+
+.highlight { background: #fde68a; color: #1f2937; border-radius: 3px; padding: 0 2px; }
+[data-theme="dark"] .highlight { background: #a16207; color: #fef3c7; }
+
+/* ============================================================
+   MISC
+   ============================================================ */
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+
+.small-note {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 640px) {
+  body { font-size: 16px; }
+  .container { padding: 0 14px 60px; }
+  .page-header { padding: 22px 18px; margin-top: 22px; }
+  .page-header h1 { font-size: 24px; }
+  h2 { font-size: 22px; margin-top: 42px; }
+  h3 { font-size: 18.5px; }
+  .topbar-title { font-size: 13px; }
+  .topbar-btn { padding: 6px 10px; font-size: 13px; }
+  .callout { padding: 14px 16px; }
+  pre { padding: 12px 14px; font-size: 13px; }
+  details { padding: 10px 14px; }
+}
+
+@media print {
+  .topbar, #backToTop, .page-nav, .search-wrap { display: none; }
+  body { background: white; color: black; font-size: 12pt; }
+  .callout { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     TOP BAR
+     ============================================================ -->
+<div class="topbar">
+  <div class="topbar-inner">
+    <span class="topbar-title">C5 · W1 — Recurrent Neural Networks</span>
+    <a href="#toc" class="topbar-btn">📖 TOC</a>
+    <button class="topbar-btn" id="themeToggle" title="Toggle dark mode">🌙 Dark</button>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ============================================================
+     PAGE HEADER
+     ============================================================ -->
+<div class="page-header">
+  <div class="course-tag">Deep Learning Specialization · Course 5 · Week 1</div>
+  <h1>Recurrent Neural Networks</h1>
+  <p class="subtitle">Why sequence models matter, how RNNs work, and the architectures that power modern NLP: GRUs, LSTMs, bidirectional RNNs, and deep RNNs.</p>
+</div>
+
+<!-- ============================================================
+     SEARCH
+     ============================================================ -->
+<div class="search-wrap">
+  <input type="text" id="searchInput" placeholder="🔍 Search this week's notes…" aria-label="Search notes">
+  <div class="search-info" id="searchInfo"></div>
+</div>
+
+<!-- ============================================================
+     TOC
+     ============================================================ -->
+<div class="toc" id="toc">
+  <h2>📑 Table of Contents</h2>
+  <ol>
+    <li><a href="#intro">Introduction: Why Sequence Models?</a></li>
+    <li><a href="#examples">Examples of Sequence Data</a></li>
+    <li><a href="#notation">Notation</a></li>
+    <li><a href="#rnn-model">Why Not a Standard Network?</a></li>
+    <li><a href="#rnn-arch">The Recurrent Neural Network Model</a></li>
+    <li><a href="#forward">Forward Propagation</a></li>
+    <li><a href="#simplified">Simplified RNN Notation</a></li>
+    <li><a href="#bptt">Backpropagation Through Time</a></li>
+    <li><a href="#types">Different Types of RNNs</a></li>
+    <li><a href="#lang-model">Language Modelling &amp; Sequence Generation</a></li>
+    <li><a href="#sampling">Sampling Novel Sequences</a></li>
+    <li><a href="#char-level">Character-Level Language Models</a></li>
+    <li><a href="#vanishing">Vanishing Gradients with RNNs</a></li>
+    <li><a href="#gru">Gated Recurrent Unit (GRU)</a></li>
+    <li><a href="#lstm">LSTM (Long Short-Term Memory)</a></li>
+    <li><a href="#bidi">Bidirectional RNN</a></li>
+    <li><a href="#deep">Deep RNNs</a></li>
+    <li><a href="#summary">Weekly Summary</a></li>
+    <li><a href="#mustknow">Must-Know Concepts</a></li>
+    <li><a href="#equations">Important Equations</a></li>
+    <li><a href="#confusions">Common Confusions</a></li>
+    <li><a href="#review">Quick Review (Q&amp;A)</a></li>
+    <li><a href="#selftest">Self-Test</a></li>
+  </ol>
+</div>
+
+<!-- ============================================================
+     1. INTRODUCTION
+     ============================================================ -->
+<h2 id="intro">1. Introduction: Why Sequence Models?</h2>
+
+<p>All the neural networks we have studied so far — logistic regression, fully connected networks, CNNs — take a <em>fixed-size</em> input and produce a <em>fixed-size</em> output. But many real-world problems involve <strong>sequences</strong>: ordered lists of items whose meaning depends on the order.</p>
+
+<p>Consider the two sentences:</p>
+<ul>
+  <li>"He said, <strong>Teddy Roosevelt</strong> was a great President."</li>
+  <li>"He said, <strong>Teddy bears</strong> are on sale!"</li>
+</ul>
+
+<p>Both start with "He said, Teddy" — but "Teddy" means a person in the first and an object in the second. A model must look at what comes <em>after</em> "Teddy" to decide. That is the essence of sequence modelling: <strong>the meaning of an item depends on its neighbours</strong>.</p>
+
+<div class="callout intuition">
+  <span class="callout-title">🟢 Intuition — Why Order Matters</span>
+  <p>Think of a sentence as a train of words. If you shuffle the carriages, the train still has the same carriages, but it is no longer the same train. "Dog bites man" and "Man bites dog" use identical words but mean very different things. Sequence models are designed to respect this ordering.</p>
+</div>
+
+<div class="callout important">
+  <span class="callout-title">🟡 Important — Notation Convention</span>
+  <p>We use \(T_x\) to denote the length of the input sequence and \(T_y\) to denote the length of the output sequence. They may be equal or different depending on the task. The \(t\)-th element of a sequence is written with angle brackets: \(x^{\langle t \rangle}\). The parentheses notation \(x^{(i)}\) is reserved for the \(i\)-th training example.</p>
+</div>
+
+<!-- ============================================================
+     2. EXAMPLES
+     ============================================================ -->
+<h2 id="examples">2. Examples of Sequence Data</h2>
+
+<p>The lecture lists seven canonical examples. For each, note whether the input length \(T_x\) and output length \(T_y\) are the same, and what the "sequence" represents.</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>Task</th><th>Input \(x\)</th><th>Output \(y\)</th><th>\(T_x\) vs \(T_y\)</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Speech recognition</strong></td>
+      <td>Audio waveform (sequence of samples)</td>
+      <td>Transcribed words</td>
+      <td>\(T_x \neq T_y\) (audio much longer)</td>
+    </tr>
+    <tr>
+      <td><strong>Music generation</strong></td>
+      <td>Nothing / a starting note</td>
+      <td>Sequence of notes</td>
+      <td>\(T_x = 0\), \(T_y > 0\)</td>
+    </tr>
+    <tr>
+      <td><strong>Sentiment classification</strong></td>
+      <td>Text (e.g., "There is nothing to like in this movie")</td>
+      <td>Star rating (1–5) or positive/negative</td>
+      <td>\(T_x > 0\), \(T_y = 1\)</td>
+    </tr>
+    <tr>
+      <td><strong>DNA sequence analysis</strong></td>
+      <td>Nucleotide string (e.g., AGCCCCTGTGAGGAACTAG)</td>
+      <td>Label per nucleotide or per sequence</td>
+      <td>Depends</td>
+    </tr>
+    <tr>
+      <td><strong>Machine translation</strong></td>
+      <td>Sentence in one language</td>
+      <td>Sentence in another language</td>
+      <td>\(T_x \neq T_y\)</td>
+    </tr>
+    <tr>
+      <td><strong>Video activity recognition</strong></td>
+      <td>Sequence of video frames</td>
+      <td>Action label (e.g., "Running")</td>
+      <td>\(T_x > 0\), \(T_y = 1\)</td>
+    </tr>
+    <tr>
+      <td><strong>Named entity recognition</strong></td>
+      <td>Sentence</td>
+      <td>Label per word (person / not person)</td>
+      <td>\(T_x = T_y\)</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout insight">
+  <span class="callout-title">💡 Insight — One Framework, Many Tasks</span>
+  <p>All these tasks are instances of the same abstract problem: map a sequence (possibly empty) to another sequence (possibly of length 1). This is why RNNs are so powerful — the same architecture can be adapted to all of them.</p>
+</div>
+
+<!-- ============================================================
+     3. NOTATION
+     ============================================================ -->
+<h2 id="notation">3. Notation</h2>
+
+<p>To feed a sentence into a neural network, we first need to convert it into a sequence of vectors. Consider the running example:</p>
+
+<p style="text-align:center; font-style:italic;">"Harry Potter and Hermione Granger invented a new spell."</p>
+
+<h3>3.1 Word Indexing</h3>
+
+<p>We assign every word in our vocabulary an integer index:</p>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Word</th><th>Index</th></tr></thead>
+  <tbody>
+    <tr><td>a</td><td>1</td></tr>
+    <tr><td>and</td><td>367</td></tr>
+    <tr><td>harry</td><td>4075</td></tr>
+    <tr><td>potter</td><td>6830</td></tr>
+    <tr><td>hermione</td><td>4200</td></tr>
+    <tr><td>granger</td><td>4000</td></tr>
+    <tr><td>invented</td><td>4700</td></tr>
+    <tr><td>new</td><td>5976</td></tr>
+    <tr><td>spell</td><td>8376</td></tr>
+    <tr><td>⋮</td><td>⋮</td></tr>
+    <tr><td>zulu</td><td>10,000</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>3.2 One-Hot Encoding</h3>
+
+<p>Each word is then converted into a one-hot vector — a column of length \(|V| = 10{,}000\) that is all zeros except for a 1 at the word's index position.</p>
+
+<div class="diagram">
+<svg viewBox="0 0 800 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sentence converted to one-hot vectors">
+  <!-- Sentence -->
+  <text x="20" y="25" font-size="15" font-weight="700" fill="#0f172a">x:</text>
+  <text x="60" y="25" font-size="15" fill="#1f2937">Harry  Potter  and  Hermione  Granger  invented  a  new  spell.</text>
+
+  <!-- x labels -->
+  <g font-size="12" fill="#2563eb" text-anchor="middle">
+    <text x="95" y="55">x⟨1⟩</text>
+    <text x="175" y="55">x⟨2⟩</text>
+    <text x="255" y="55">x⟨3⟩</text>
+    <text x="340" y="55">x⟨4⟩</text>
+    <text x="425" y="55">x⟨5⟩</text>
+    <text x="510" y="55">x⟨6⟩</text>
+    <text x="580" y="55">x⟨7⟩</text>
+    <text x="650" y="55">x⟨8⟩</text>
+    <text x="720" y="55">x⟨9⟩</text>
+  </g>
+
+  <!-- One-hot columns -->
+  <g>
+    <rect x="80" y="70" width="30" height="150" fill="#dbeafe" stroke="#2563eb" rx="4"/>
+    <text x="95" y="100" font-size="10" text-anchor="middle" fill="#1f2937">0</text>
+    <text x="95" y="125" font-size="10" text-anchor="middle" fill="#1f2937">⋮</text>
+    <text x="95" y="160" font-size="10" text-anchor="middle" fill="#dc2626" font-weight="700">1</text>
+    <text x="95" y="195" font-size="10" text-anchor="middle" fill="#1f2937">⋮</text>
+    <text x="95" y="215" font-size="10" text-anchor="middle" fill="#1f2937">0</text>
+
+    <rect x="160" y="70" width="30" height="150" fill="#dbeafe" stroke="#2563eb" rx="4"/>
+    <text x="175" y="100" font-size="10" text-anchor="middle" fill="#1f2937">0</text>
+    <text x="175" y="125" font-size="10" text-anchor="middle" fill="#1f2937">⋮</text>
+    <text x="175" y="160" font-size="10" text-anchor="middle" fill="#dc2626" font-weight="700">1</text>
+    <text x="175" y="195" font-size="10" text-anchor="middle" fill="#1f2937">⋮</text>
+    <text x="175" y="215" font-size="10" text-anchor="middle" fill="#1f2937">0</text>
+
+    <rect x="240" y="70" width="30" height="150" fill="#dbeafe" stroke="#2563eb" rx="4"/>
+    <text x="255" y="100" font-size="10" text-anchor="middle" fill="#1f2937">0</text>
+    <text x="255" y="125" font-size="10" text-anchor="middle" fill="#1f2937">⋮</text>
+    <text x="255" y="160" font-size="10" text-anchor="middle" fill="#dc2626" font-weight="700">1</text>
+    <text x="255" y="195" font-size="10" text-anchor="middle" fill="#1f2937">⋮</text>
+    <text x="255" y="215" font-size="10" text-anchor="middle" fill="#1f2937">0</text>
+
+    <rect x="325" y="70" width="30" height="150" fill="#dbeafe" stroke="#2563eb" rx="4"/>
+    <text x="340" y="160" font-size="10" text-anchor="middle" fill="#dc2626" font-weight="700">1</text>
+
+    <rect x="410" y="70" width="30" height="150" fill="#dbeafe" stroke="#2563eb" rx="4"/>
+    <text x="425" y="160" font-size="10" text-anchor="middle" fill="#dc2626" font-weight="700">1</text>
+
+    <rect x="495" y="70" width="30" height="150" fill="#dbeafe" stroke="#2563eb" rx="4"/>
+    <text x="510" y="160" font-size="10" text-anchor="middle" fill="#dc2626" font-weight="700">1</text>
+
+    <rect x="565" y="70" width="30" height="150" fill="#dbeafe" stroke="#2563eb" rx="4"/>
+    <text x="580" y="160" font-size="10" text-anchor="middle" fill="#dc2626" font-weight="700">1</text>
+
+    <rect x="635" y="70" width="30" height="150" fill="#dbeafe" stroke="#2563eb" rx="4"/>
+    <text x="650" y="160" font-size="10" text-anchor="middle" fill="#dc2626" font-weight="700">1</text>
+
+    <rect x="705" y="70" width="30" height="150" fill="#dbeafe" stroke="#2563eb" rx="4"/>
+    <text x="720" y="160" font-size="10" text-anchor="middle" fill="#dc2626" font-weight="700">1</text>
+  </g>
+
+  <text x="400" y="245" font-size="13" text-anchor="middle" fill="#4b5563">Each x⟨t⟩ is a 10,000-dimensional one-hot column vector</text>
+</svg>
+<p class="diagram-caption"><strong>Figure 1.</strong> A sentence is broken into words, each word is converted to a one-hot vector. The superscript \(\langle t \rangle\) denotes the position in the sequence (not the training example).</p>
+</div>
+
+<div class="callout warning">
+  <span class="callout-title">🔴 Warning — One-Hot Vectors Are Weak</span>
+  <p>One-hot vectors contain no information about word similarity. "Harry" and "Potter" are as far apart as "Harry" and "zulu." In Course 5 Week 2, we will replace one-hot vectors with learned <em>word embeddings</em> that capture meaning. For this week, we use one-hot to keep the notation simple.</p>
+</div>
+
+<h3>3.3 Notation Summary</h3>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Symbol</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>\(x^{\langle t \rangle}\)</td><td>Input at time step \(t\) (e.g., word #t in a sentence)</td></tr>
+    <tr><td>\(y^{\langle t \rangle}\)</td><td>Output / label at time step \(t\)</td></tr>
+    <tr><td>\(T_x\)</td><td>Length of input sequence</td></tr>
+    <tr><td>\(T_y\)</td><td>Length of output sequence</td></tr>
+    <tr><td>\(x^{(i)\langle t \rangle}\)</td><td>Input at time step \(t\) of the \(i\)-th training example</td></tr>
+    <tr><td>\(T_x^{(i)}\)</td><td>Input length of the \(i\)-th training example</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ============================================================
+     4. WHY NOT STANDARD NETWORK
+     ============================================================ -->
+<h2 id="rnn-model">4. Why Not a Standard Network?</h2>
+
+<p>Before building the RNN, it is worth understanding why a plain fully-connected network fails.</p>
+
+<div class="diagram">
+<svg viewBox="0 0 780 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A naive fully connected network for sequences">
+  <!-- Input layer -->
+  <g font-size="12" fill="#1f2937">
+    <text x="15" y="60" fill="#2563eb" font-weight="700">x⟨1⟩</text>
+    <text x="15" y="130" fill="#2563eb" font-weight="700">x⟨2⟩</text>
+    <text x="15" y="185" fill="#2563eb" font-weight="700">⋮</text>
+    <text x="15" y="240" fill="#2563eb" font-weight="700">x⟨Tx⟩</text>
+  </g>
+
+  <g>
+    <circle cx="100" cy="55" r="14" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+    <circle cx="100" cy="125" r="14" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+    <circle cx="100" cy="190" r="4" fill="#0284c7"/>
+    <circle cx="100" cy="200" r="4" fill="#0284c7"/>
+    <circle cx="100" cy="210" r="4" fill="#0284c7"/>
+    <circle cx="100" cy="235" r="14" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+  </g>
+
+  <!-- Arrows to hidden -->
+  <g stroke="#94a3b8" stroke-width="1.3" fill="none">
+    <path d="M115 55 L200 130"/>
+    <path d="M115 125 L200 135"/>
+    <path d="M115 200 L200 150"/>
+    <path d="M115 235 L200 165"/>
+    <path d="M115 55 L200 155"/>
+    <path d="M115 235 L200 135"/>
+  </g>
+
+  <!-- Hidden layer -->
+  <rect x="205" y="100" width="60" height="100" fill="#fef3c7" stroke="#d97706" stroke-width="2" rx="6"/>
+  <text x="235" y="155" font-size="13" text-anchor="middle" fill="#0f172a" font-weight="700">Hidden</text>
+
+  <path d="M270 150 L355 150" stroke="#94a3b8" stroke-width="1.5" fill="none"/>
+
+  <!-- Second hidden -->
+  <rect x="360" y="100" width="60" height="100" fill="#fef3c7" stroke="#d97706" stroke-width="2" rx="6"/>
+  <text x="390" y="155" font-size="13" text-anchor="middle" fill="#0f172a" font-weight="700">Hidden</text>
+
+  <g stroke="#94a3b8" stroke-width="1.3" fill="none">
+    <path d="M425 130 L510 55"/>
+    <path d="M425 135 L510 125"/>
+    <path d="M425 145 L510 185"/>
+    <path d="M425 165 L510 235"/>
+    <path d="M425 130 L510 235"/>
+    <path d="M425 165 L510 55"/>
+  </g>
+
+  <!-- Output neurons -->
+  <g>
+    <circle cx="525" cy="55" r="14" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+    <circle cx="525" cy="125" r="14" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+    <circle cx="525" cy="190" r="4" fill="#16a34a"/>
+    <circle cx="525" cy="200" r="4" fill="#16a34a"/>
+    <circle cx="525" cy="210" r="4" fill="#16a34a"/>
+    <circle cx="525" cy="235" r="14" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  </g>
+
+  <g font-size="12" fill="#1f2937">
+    <text x="555" y="60" fill="#16a34a" font-weight="700">ŷ⟨1⟩</text>
+    <text x="555" y="130" fill="#16a34a" font-weight="700">ŷ⟨2⟩</text>
+    <text x="555" y="195" fill="#16a34a" font-weight="700">⋮</text>
+    <text x="555" y="240" fill="#16a34a" font-weight="700">ŷ⟨Ty⟩</text>
+  </g>
+</svg>
+<p class="diagram-caption"><strong>Figure 2.</strong> A naive fully connected approach: feed \(x^{\langle 1\rangle}, x^{\langle 2\rangle}, \dots, x^{\langle T_x\rangle}\) as a single wide input vector and predict all outputs at once. This has two fatal flaws (see below).</p>
+</div>
+
+<div class="callout warning">
+  <span class="callout-title">🔴 Warning — Two Fundamental Problems</span>
+  <ol>
+    <li><strong>Variable length:</strong> Inputs and outputs can have different lengths in different examples (\(T_x\) and \(T_y\) vary), but a fully connected network expects a fixed-size input and produces a fixed-size output.</li>
+    <li><strong>No weight sharing across positions:</strong> The weights that recognize "Harry" at position 1 are completely different from the weights that would recognize "Harry" at position 5. The network cannot learn a general "Harry" detector — it must relearn it for every position. This is wasteful and does not generalize.</li>
+  </ol>
+</div>
+
+<div class="callout insight">
+  <span class="callout-title">💡 Insight — What We Want Instead</span>
+  <p>We want a network that:</p>
+  <ul>
+    <li>Processes the sequence <em>one element at a time</em> (so length is flexible).</li>
+    <li><em>Shares weights</em> across time steps (so "Harry" is recognized the same way anywhere).</li>
+    <li>Maintains a <em>memory</em> of what it has seen so far, so the meaning of later words can depend on earlier ones.</li>
+  </ul>
+  <p>That is exactly what an RNN does.</p>
+</div>
+
+<!-- ============================================================
+     5. RNN ARCHITECTURE
+     ============================================================ -->
+<h2 id="rnn-arch">5. The Recurrent Neural Network Model</h2>
+
+<p>An RNN scans the input sequence from left to right. At each time step \(t\), it reads the current input \(x^{\langle t \rangle}\) <em>and</em> the hidden state \(a^{\langle t-1 \rangle}\) from the previous step. It produces a new hidden state \(a^{\langle t \rangle}\) and (optionally) an output \(\hat{y}^{\langle t \rangle}\).</p>
+
+<div class="diagram">
+<svg viewBox="0 0 900 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Unrolled RNN architecture">
+  <!-- Arrows: hidden to next hidden -->
+  <g stroke="#16a34a" stroke-width="2" fill="none">
+    <path d="M130 145 L185 145"/>
+    <path d="M245 145 L300 145"/>
+    <path d="M360 145 L415 145"/>
+    <path d="M475 145 L560 145"/>
+    <path d="M635 145 L710 145"/>
+  </g>
+
+  <!-- Hidden state cells -->
+  <g>
+    <rect x="65" y="100" width="60" height="90" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <text x="95" y="150" font-size="14" text-anchor="middle" font-weight="700" fill="#0f172a">a⟨1⟩</text>
+
+    <rect x="185" y="100" width="60" height="90" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <text x="215" y="150" font-size="14" text-anchor="middle" font-weight="700" fill="#0f172a">a⟨2⟩</text>
+
+    <rect x="300" y="100" width="60" height="90" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <text x="330" y="150" font-size="14" text-anchor="middle" font-weight="700" fill="#0f172a">a⟨3⟩</text>
+
+    <rect x="415" y="100" width="60" height="90" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <text x="445" y="150" font-size="14" text-anchor="middle" font-weight="700" fill="#0f172a">a⟨4⟩</text>
+
+    <text x="520" y="150" font-size="20" fill="#0f172a">…</text>
+
+    <rect x="560" y="100" width="75" height="90" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <text x="598" y="150" font-size="14" text-anchor="middle" font-weight="700" fill="#0f172a">a⟨Tx⟩</text>
+  </g>
+
+  <!-- Inputs x(t) -->
+  <g font-size="13" fill="#0f172a" text-anchor="middle">
+    <text x="95" y="240">x⟨1⟩</text>
+    <text x="215" y="240">x⟨2⟩</text>
+    <text x="330" y="240">x⟨3⟩</text>
+    <text x="445" y="240">x⟨4⟩</text>
+    <text x="598" y="240">x⟨Tx⟩</text>
+  </g>
+
+  <g stroke="#2563eb" stroke-width="1.6" fill="none">
+    <path d="M95 220 L95 195"/>
+    <path d="M215 220 L215 195"/>
+    <path d="M330 220 L330 195"/>
+    <path d="M445 220 L445 195"/>
+    <path d="M598 220 L598 195"/>
+  </g>
+
+  <!-- Outputs y-hat -->
+  <g font-size="13" fill="#dc2626" text-anchor="middle" font-weight="700">
+    <text x="95" y="75">ŷ⟨1⟩</text>
+    <text x="215" y="75">ŷ⟨2⟩</text>
+    <text x="330" y="75">ŷ⟨3⟩</text>
+    <text x="445" y="75">ŷ⟨4⟩</text>
+    <text x="598" y="75">ŷ⟨Tx⟩</text>
+  </g>
+
+  <g stroke="#dc2626" stroke-width="1.6" fill="none">
+    <path d="M95 90 L95 100"/>
+    <path d="M215 90 L215 100"/>
+    <path d="M330 90 L330 100"/>
+    <path d="M445 90 L445 100"/>
+    <path d="M598 90 L598 100"/>
+  </g>
+
+  <!-- Initial hidden state -->
+  <text x="20" y="150" font-size="13" fill="#0f172a" font-weight="700">a⟨0⟩</text>
+  <path d="M50 145 L65 145" stroke="#16a34a" stroke-width="2" fill="none"/>
+
+  <!-- Weight labels -->
+  <text x="155" y="132" font-size="11" fill="#16a34a" text-anchor="middle">W_aa</text>
+  <text x="270" y="132" font-size="11" fill="#16a34a" text-anchor="middle">W_aa</text>
+  <text x="385" y="132" font-size="11" fill="#16a34a" text-anchor="middle">W_aa</text>
+  <text x="515" y="132" font-size="11" fill="#16a34a" text-anchor="middle">W_aa</text>
+
+  <text x="75" y="205" font-size="11" fill="#2563eb">W_ax</text>
+  <text x="195" y="205" font-size="11" fill="#2563eb">W_ax</text>
+  <text x="310" y="205" font-size="11" fill="#2563eb">W_ax</text>
+  <text x="425" y="205" font-size="11" fill="#2563eb">W_ax</text>
+  <text x="578" y="205" font-size="11" fill="#2563eb">W_ax</text>
+
+  <text x="110" y="92" font-size="11" fill="#dc2626">W_ya</text>
+  <text x="230" y="92" font-size="11" fill="#dc2626">W_ya</text>
+  <text x="345" y="92" font-size="11" fill="#dc2626">W_ya</text>
+  <text x="460" y="92" font-size="11" fill="#dc2626">W_ya</text>
+  <text x="613" y="92" font-size="11" fill="#dc2626">W_ya</text>
+
+  <!-- Shared weights note -->
+  <text x="380" y="310" font-size="13" text-anchor="middle" fill="#4b5563" font-style="italic">Same weights W_ax, W_aa, W_ya are reused at every time step</text>
+</svg>
+<p class="diagram-caption"><strong>Figure 3.</strong> An RNN "unrolled" over time. At each step, the current input \(x^{\langle t \rangle}\) and the previous hidden state \(a^{\langle t-1 \rangle}\) are combined to produce a new hidden state \(a^{\langle t \rangle}\) and output \(\hat{y}^{\langle t \rangle}\). The <strong>same weights</strong> \(W_{ax}, W_{aa}, W_{ya}\) (and biases) are used at every time step — this is the weight-sharing property that makes RNNs so powerful.</p>
+</div>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 Definition — Hidden State \(a^{\langle t \rangle}\)</span>
+  <p>The hidden state (also called <em>activation</em>) \(a^{\langle t \rangle}\) is a vector that summarizes everything the RNN has seen up to time \(t\). It acts as the network's "memory." The initial hidden state \(a^{\langle 0 \rangle}\) is typically set to the zero vector.</p>
+</div>
+
+<div class="callout intuition">
+  <span class="callout-title">🟢 Intuition — The RNN as a Reader</span>
+  <p>Imagine reading a sentence word by word and keeping a mental summary of what you've read so far. When you reach word 5, your mental summary (hidden state) already contains the gist of words 1–4. As you read each new word, you update your summary. An RNN works exactly this way.</p>
+</div>
+
+<!-- ============================================================
+     6. FORWARD PROPAGATION
+     ============================================================ -->
+<h2 id="forward">6. Forward Propagation</h2>
+
+<p>At each time step \(t\), the RNN performs two computations:</p>
+
+<div class="eq">
+$$a^{\langle t \rangle} = g_1\!\left( W_{aa}\, a^{\langle t-1 \rangle} + W_{ax}\, x^{\langle t \rangle} + b_a \right)$$
+</div>
+
+<div class="eq">
+$$\hat{y}^{\langle t \rangle} = g_2\!\left( W_{ya}\, a^{\langle t \rangle} + b_y \right)$$
+</div>
+
+<p>Let's unpack every symbol:</p>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Symbol</th><th>Shape</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>\(x^{\langle t \rangle}\)</td><td>\(n_x \times 1\)</td><td>Input at time \(t\) (e.g., one-hot word vector of size 10,000)</td></tr>
+    <tr><td>\(a^{\langle t \rangle}\)</td><td>\(n_a \times 1\)</td><td>Hidden state at time \(t\) (e.g., \(n_a = 100\))</td></tr>
+    <tr><td>\(W_{aa}\)</td><td>\(n_a \times n_a\)</td><td>Weight matrix mapping previous hidden state to current hidden state</td></tr>
+    <tr><td>\(W_{ax}\)</td><td>\(n_a \times n_x\)</td><td>Weight matrix mapping current input to current hidden state</td></tr>
+    <tr><td>\(W_{ya}\)</td><td>\(n_y \times n_a\)</td><td>Weight matrix mapping hidden state to output</td></tr>
+    <tr><td>\(b_a\)</td><td>\(n_a \times 1\)</td><td>Bias for the hidden state</td></tr>
+    <tr><td>\(b_y\)</td><td>\(n_y \times 1\)</td><td>Bias for the output</td></tr>
+    <tr><td>\(g_1\)</td><td>—</td><td>Activation function for hidden state — usually \(\tanh\) or ReLU</td></tr>
+    <tr><td>\(g_2\)</td><td>—</td><td>Activation for output — usually sigmoid (binary) or softmax (multi-class)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout important">
+  <span class="callout-title">🟡 Important — Why \(\tanh\) for the Hidden State?</span>
+  <p>The hidden state can take both positive and negative values (it must be able to represent "the word is positive" or "the word is negative"), so \(\tanh\) (which outputs values in \([-1, 1]\)) is the traditional choice. ReLU is also used in some modern variants. The output activation depends on the task: sigmoid for binary classification, softmax for multi-class.</p>
+</div>
+
+<div class="callout example">
+  <span class="callout-title">🟣 Example — Numerical Illustration (Small)</span>
+  <p>Suppose \(n_a = 2\), \(n_x = 2\), and at time \(t=1\):</p>
+  <ul>
+    <li>\(a^{\langle 0 \rangle} = [0, 0]^T\)</li>
+    <li>\(x^{\langle 1 \rangle} = [1, 0]^T\)</li>
+    <li>\(W_{aa} = \begin{bmatrix} 0.1 & 0.2 \\ 0.3 & 0.4 \end{bmatrix}, \quad W_{ax} = \begin{bmatrix} 0.5 & 0.6 \\ 0.7 & 0.8 \end{bmatrix}, \quad b_a = [0.1, 0.1]^T\)</li>
+  </ul>
+  <p>Then:</p>
+  <div class="eq">
+  $$W_{aa}\,a^{\langle 0\rangle} + W_{ax}\,x^{\langle 1\rangle} + b_a = \begin{bmatrix} 0.5 + 0.1 \\ 0.7 + 0.1 \end{bmatrix} = \begin{bmatrix} 0.6 \\ 0.8 \end{bmatrix}$$
+  </div>
+  <p>Applying \(\tanh\) element-wise gives:</p>
+  <div class="eq">
+  $$a^{\langle 1 \rangle} = [\tanh(0.6), \tanh(0.8)] \approx [0.537, 0.664]$$
+  </div>
+  <p>This activation is then passed forward to time \(t=2\) and also used to compute \(\hat{y}^{\langle 1 \rangle}\).</p>
+</div>
+
+<!-- ============================================================
+     7. SIMPLIFIED NOTATION
+     ============================================================ -->
+<h2 id="simplified">7. Simplified RNN Notation</h2>
+
+<p>The two weight matrices \(W_{aa}\) and \(W_{ax}\) always act together on the pair \((a^{\langle t-1 \rangle}, x^{\langle t \rangle})\). We can merge them into one matrix and stack the two inputs into one vector:</p>
+
+<div class="eq">
+$$a^{\langle t \rangle} = g\!\left( W_a \begin{bmatrix} a^{\langle t-1 \rangle} \\ x^{\langle t \rangle} \end{bmatrix} + b_a \right)$$
+</div>
+
+<p>where:</p>
+<ul>
+  <li>\(W_a = [\,W_{aa} \;\;|\;\; W_{ax}\,]\) — the concatenation of the two matrices along columns.</li>
+  <li>\(\begin{bmatrix} a^{\langle t-1 \rangle} \\ x^{\langle t \rangle} \end{bmatrix}\) — a vertical stack of the previous hidden state and current input.</li>
+</ul>
+
+<div class="diagram">
+<svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Simplified RNN notation by concatenation">
+  <!-- W_aa and W_ax -->
+  <rect x="60" y="80" width="90" height="50" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="4"/>
+  <text x="105" y="112" font-size="15" text-anchor="middle" font-weight="700" fill="#0f172a">W_aa</text>
+  <rect x="155" y="80" width="90" height="50" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="4"/>
+  <text x="200" y="112" font-size="15" text-anchor="middle" font-weight="700" fill="#0f172a">W_ax</text>
+
+  <text x="280" y="112" font-size="20" fill="#0f172a">⟶</text>
+
+  <!-- W_a -->
+  <rect x="320" y="80" width="160" height="50" fill="#dcfce7" stroke="#16a34a" stroke-width="2" rx="4"/>
+  <text x="400" y="112" font-size="15" text-anchor="middle" font-weight="700" fill="#0f172a">W_a = [ W_aa | W_ax ]</text>
+
+  <!-- ============================================== -->
+  <text x="280" y="175" font-size="20" fill="#0f172a">⟶</text>
+
+  <!-- Stacked input -->
+  <rect x="60" y="200" width="90" height="30" fill="#fee2e2" stroke="#dc2626" stroke-width="2" rx="4"/>
+  <text x="105" y="221" font-size="13" text-anchor="middle" fill="#0f172a">a⟨t-1⟩</text>
+  <rect x="155" y="200" width="90" height="30" fill="#fee2e2" stroke="#dc2626" stroke-width="2" rx="4"/>
+  <text x="200" y="221" font-size="13" text-anchor="middle" fill="#0f172a">x⟨t⟩</text>
+
+  <text x="320" y="221" font-size="20" fill="#0f172a">⟶</text>
+
+  <rect x="360" y="200" width="120" height="30" fill="#fef3c7" stroke="#d97706" stroke-width="2" rx="4"/>
+  <text x="420" y="221" font-size="13" text-anchor="middle" fill="#0f172a">[ a⟨t-1⟩ ; x⟨t⟩ ]</text>
+</svg>
+<p class="diagram-caption"><strong>Figure 4.</strong> The simplified notation stacks \(a^{\langle t-1\rangle}\) and \(x^{\langle t\rangle}\) into one vector and merges \(W_{aa}\) and \(W_{ax}\) into one matrix \(W_a\). It is mathematically equivalent but cleaner to write.</p>
+</div>
+
+<div class="callout remember">
+  <span class="callout-title">🔵 Remember — Simplified Forward Propagation</span>
+  <div class="eq">
+  $$a^{\langle t \rangle} = g\!\left( W_a \begin{bmatrix} a^{\langle t-1 \rangle} \\ x^{\langle t \rangle} \end{bmatrix} + b_a \right)$$
+  </div>
+  <div class="eq">
+  $$\hat{y}^{\langle t \rangle} = g\!\left( W_y\, a^{\langle t \rangle} + b_y \right)$$
+  </div>
+</div>
+
+<!-- ============================================================
+     8. BPTT
+     ============================================================ -->
+<h2 id="bptt">8. Backpropagation Through Time</h2>
+
+<p>Training an RNN is like training a regular neural network — we compute a loss, then compute gradients of the loss with respect to every parameter, then update the parameters with gradient descent. The twist is that the RNN is "unrolled" over time, so gradients must flow backwards <em>through time as well as through layers</em>. This is called <strong>Backpropagation Through Time (BPTT)</strong>.</p>
+
+<h3>8.1 The Loss Function</h3>
+
+<p>At each time step \(t\), we compute a per-step loss. For binary classification (e.g., is the current word a person's name?), the loss is the logistic loss:</p>
+
+<div class="eq">
+$$\mathcal{L}^{\langle t \rangle}\!\left(\hat{y}^{\langle t \rangle}, y^{\langle t \rangle}\right) = -\,y^{\langle t \rangle} \log \hat{y}^{\langle t \rangle} - \left(1 - y^{\langle t \rangle}\right) \log\!\left(1 - \hat{y}^{\langle t \rangle}\right)$$
+</div>
+
+<p>The total loss over the whole sequence is simply the sum:</p>
+
+<div class="eq">
+$$\mathcal{L}(\hat{y}, y) = \sum_{t=1}^{T_y} \mathcal{L}^{\langle t \rangle}\!\left(\hat{y}^{\langle t \rangle}, y^{\langle t \rangle}\right)$$
+</div>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 Definition — Loss Function</span>
+  <p>A loss function measures how wrong the network's prediction is compared to the true label. A lower loss means a better prediction. Training means adjusting the network's weights to reduce the loss.</p>
+</div>
+
+<h3>8.2 The Backward Pass</h3>
+
+<p>Once the total loss is computed, we need \(\partial \mathcal{L} / \partial W\) for every weight. Because the hidden states are chained (\(a^{\langle t \rangle}\) depends on \(a^{\langle t-1 \rangle}\), which depends on \(a^{\langle t-2 \rangle}\), …), we apply the chain rule across time.</p>
+
+<div class="diagram">
+<svg viewBox="0 0 780 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Forward and backward flow in an RNN">
+  <!-- Forward arrows (blue) -->
+  <g stroke="#2563eb" stroke-width="2" fill="none" marker-end="url(#arrowBlue)">
+    <path d="M60 150 L120 150"/>
+    <path d="M180 150 L240 150"/>
+    <path d="M300 150 L360 150"/>
+    <path d="M420 150 L480 150"/>
+    <path d="M540 150 L600 150"/>
+  </g>
+  <!-- Backward arrows (red) -->
+  <g stroke="#dc2626" stroke-width="2" fill="none" marker-end="url(#arrowRed)">
+    <path d="M600 175 L540 175"/>
+    <path d="M480 175 L420 175"/>
+    <path d="M360 175 L300 175"/>
+    <path d="M240 175 L180 175"/>
+    <path d="M120 175 L60 175"/>
+  </g>
+
+  <!-- Hidden state boxes -->
+  <g>
+    <rect x="125" y="120" width="50" height="60" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <text x="150" y="155" font-size="13" text-anchor="middle" font-weight="700">a⟨1⟩</text>
+
+    <rect x="245" y="120" width="50" height="60" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <text x="270" y="155" font-size="13" text-anchor="middle" font-weight="700">a⟨2⟩</text>
+
+    <rect x="365" y="120" width="50" height="60" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <text x="390" y="155" font-size="13" text-anchor="middle" font-weight="700">a⟨3⟩</text>
+
+    <rect x="485" y="120" width="50" height="60" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <text x="510" y="155" font-size="13" text-anchor="middle" font-weight="700">a⟨4⟩</text>
+
+    <rect x="605" y="120" width="60" height="60" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <text x="635" y="155" font-size="13" text-anchor="middle" font-weight="700">a⟨Tx⟩</text>
+  </g>
+
+  <!-- Loss labels -->
+  <g font-size="12" fill="#dc2626" text-anchor="middle">
+    <text x="150" y="100">L⟨1⟩</text>
+    <text x="270" y="100">L⟨2⟩</text>
+    <text x="390" y="100">L⟨3⟩</text>
+    <text x="510" y="100">L⟨4⟩</text>
+    <text x="635" y="100">L⟨Tx⟩</text>
+  </g>
+
+  <!-- y-hat to L arrows -->
+  <g stroke="#94a3b8" stroke-width="1.2" fill="none">
+    <path d="M150 120 L150 112"/>
+    <path d="M270 120 L270 112"/>
+    <path d="M390 120 L390 112"/>
+    <path d="M510 120 L510 112"/>
+    <path d="M635 120 L635 112"/>
+  </g>
+
+  <!-- x(t) inputs -->
+  <g font-size="12" text-anchor="middle" fill="#0f172a">
+    <text x="150" y="210">x⟨1⟩</text>
+    <text x="270" y="210">x⟨2⟩</text>
+    <text x="390" y="210">x⟨3⟩</text>
+    <text x="510" y="210">x⟨4⟩</text>
+    <text x="635" y="210">x⟨Tx⟩</text>
+  </g>
+  <g stroke="#94a3b8" stroke-width="1.2" fill="none">
+    <path d="M150 190 L150 180"/>
+    <path d="M270 190 L270 180"/>
+    <path d="M390 190 L390 180"/>
+    <path d="M510 190 L510 180"/>
+    <path d="M635 190 L635 180"/>
+  </g>
+
+  <defs>
+    <marker id="arrowBlue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <polygon points="0,0 8,3 0,6" fill="#2563eb"/>
+    </marker>
+    <marker id="arrowRed" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <polygon points="0,0 8,3 0,6" fill="#dc2626"/>
+    </marker>
+  </defs>
+
+  <!-- Legend -->
+  <text x="60" y="270" font-size="13" fill="#2563eb">→ Forward propagation (blue)</text>
+  <text x="60" y="290" font-size="13" fill="#dc2626">← Backward propagation through time (red)</text>
+</svg>
+<p class="diagram-caption"><strong>Figure 5.</strong> Forward propagation (blue) flows left to right, computing \(a^{\langle t \rangle}\) and \(\hat{y}^{\langle t \rangle}\). Backpropagation through time (red) flows right to left, computing gradients of the total loss with respect to each weight matrix. The same weights are shared across time, so gradients from <em>all</em> time steps accumulate before the weights are updated.</p>
+</div>
+
+<div class="callout insight">
+  <span class="callout-title">💡 Insight — Why "Through Time"?</span>
+  <p>In a normal feedforward network, backprop travels backwards through <em>layers</em>. In an RNN, the "layers" are the same layer reused at different time steps. Backprop still flows backwards, but now it flows through <em>time steps</em> instead of distinct layers. Hence the name.</p>
+</div>
+
+<!-- ============================================================
+     9. TYPES OF RNNs
+     ============================================================ -->
+<h2 id="types">9. Different Types of RNNs</h2>
+
+<p>Not all sequence problems have \(T_x = T_y\). RNNs can be adapted to many shapes by choosing which time steps produce output and which consume input.</p>
+
+<div class="diagram">
+<svg viewBox="0 0 900 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Five RNN architecture types">
+  <!-- One-to-one -->
+  <g>
+    <text x="80" y="25" font-size="14" font-weight="700" text-anchor="middle" fill="#0f172a">One to one</text>
+    <rect x="55" y="60" width="50" height="50" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <text x="80" y="90" font-size="11" text-anchor="middle">RNN</text>
+    <path d="M80 60 L80 40" stroke="#dc2626" stroke-width="1.5"/>
+    <text x="80" y="33" font-size="11" text-anchor="middle" fill="#dc2626">ŷ⟨1⟩</text>
+    <path d="M80 130 L80 150" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="80" y="167" font-size="11" text-anchor="middle">x⟨1⟩</text>
+  </g>
+
+  <!-- One-to-many -->
+  <g>
+    <text x="300" y="25" font-size="14" font-weight="700" text-anchor="middle" fill="#0f172a">One to many</text>
+    <rect x="225" y="60" width="50" height="50" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <rect x="295" y="60" width="50" height="50" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <rect x="365" y="60" width="50" height="50" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <g stroke="#16a34a" stroke-width="1.5" fill="none">
+      <path d="M275 85 L295 85"/>
+      <path d="M345 85 L365 85"/>
+    </g>
+    <text x="250" y="90" font-size="11" text-anchor="middle">RNN</text>
+    <text x="320" y="90" font-size="11" text-anchor="middle">RNN</text>
+    <text x="390" y="90" font-size="11" text-anchor="middle">RNN</text>
+    <g stroke="#dc2626" stroke-width="1.5">
+      <path d="M250 60 L250 40"/>
+      <path d="M320 60 L320 40"/>
+      <path d="M390 60 L390 40"/>
+    </g>
+    <text x="250" y="33" font-size="11" text-anchor="middle" fill="#dc2626">ŷ⟨1⟩</text>
+    <text x="320" y="33" font-size="11" text-anchor="middle" fill="#dc2626">ŷ⟨2⟩</text>
+    <text x="390" y="33" font-size="11" text-anchor="middle" fill="#dc2626">ŷ⟨Ty⟩</text>
+    <path d="M250 130 L250 150" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="250" y="167" font-size="11" text-anchor="middle">x⟨1⟩</text>
+  </g>
+
+  <!-- Many-to-one -->
+  <g>
+    <text x="600" y="25" font-size="14" font-weight="700" text-anchor="middle" fill="#0f172a">Many to one</text>
+    <rect x="520" y="60" width="50" height="50" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <rect x="590" y="60" width="50" height="50" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <rect x="660" y="60" width="50" height="50" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <g stroke="#16a34a" stroke-width="1.5" fill="none">
+      <path d="M570 85 L590 85"/>
+      <path d="M640 85 L660 85"/>
+    </g>
+    <text x="545" y="90" font-size="11" text-anchor="middle">RNN</text>
+    <text x="615" y="90" font-size="11" text-anchor="middle">RNN</text>
+    <text x="685" y="90" font-size="11" text-anchor="middle">RNN</text>
+    <path d="M685 60 L685 40" stroke="#dc2626" stroke-width="1.5"/>
+    <text x="700" y="33" font-size="11" text-anchor="middle" fill="#dc2626">ŷ</text>
+    <g stroke="#16a34a" stroke-width="1.5">
+      <path d="M545 130 L545 150"/>
+      <path d="M615 130 L615 150"/>
+      <path d="M685 130 L685 150"/>
+    </g>
+    <text x="545" y="167" font-size="11" text-anchor="middle">x⟨1⟩</text>
+    <text x="615" y="167" font-size="11" text-anchor="middle">x⟨2⟩</text>
+    <text x="685" y="167" font-size="11" text-anchor="middle">x⟨Tx⟩</text>
+  </g>
+
+  <!-- Many-to-many (Tx = Ty) -->
+  <g>
+    <text x="80" y="230" font-size="14" font-weight="700" text-anchor="middle" fill="#0f172a">Many to many (Tx = Ty)</text>
+    <rect x="30" y="260" width="45" height="45" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <rect x="95" y="260" width="45" height="45" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <rect x="160" y="260" width="45" height="45" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <g stroke="#16a34a" stroke-width="1.5" fill="none">
+      <path d="M75 282 L95 282"/>
+      <path d="M140 282 L160 282"/>
+    </g>
+    <text x="52" y="287" font-size="10" text-anchor="middle">RNN</text>
+    <text x="117" y="287" font-size="10" text-anchor="middle">RNN</text>
+    <text x="182" y="287" font-size="10" text-anchor="middle">RNN</text>
+    <g stroke="#dc2626" stroke-width="1.5">
+      <path d="M52 260 L52 242"/>
+      <path d="M117 260 L117 242"/>
+      <path d="M182 260 L182 242"/>
+    </g>
+    <text x="52" y="236" font-size="10" text-anchor="middle" fill="#dc2626">ŷ⟨1⟩</text>
+    <text x="117" y="236" font-size="10" text-anchor="middle" fill="#dc2626">ŷ⟨2⟩</text>
+    <text x="182" y="236" font-size="10" text-anchor="middle" fill="#dc2626">ŷ⟨Ty⟩</text>
+    <g stroke="#16a34a" stroke-width="1.5">
+      <path d="M52 325 L52 305"/>
+      <path d="M117 325 L117 305"/>
+      <path d="M182 325 L182 305"/>
+    </g>
+    <text x="52" y="340" font-size="10" text-anchor="middle">x⟨1⟩</text>
+    <text x="117" y="340" font-size="10" text-anchor="middle">x⟨2⟩</text>
+    <text x="182" y="340" font-size="10" text-anchor="middle">x⟨Tx⟩</text>
+  </g>
+
+  <!-- Many-to-many encoder-decoder -->
+  <g>
+    <text x="600" y="230" font-size="14" font-weight="700" text-anchor="middle" fill="#0f172a">Many to many (Tx ≠ Ty)</text>
+    <text x="600" y="250" font-size="12" text-anchor="middle" fill="#4b5563" font-style="italic">Encoder → Decoder</text>
+    <rect x="470" y="280" width="45" height="45" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <rect x="530" y="280" width="45" height="45" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <rect x="620" y="280" width="45" height="45" fill="#fef3c7" stroke="#d97706" stroke-width="2" rx="6"/>
+    <rect x="680" y="280" width="45" height="45" fill="#fef3c7" stroke="#d97706" stroke-width="2" rx="6"/>
+    <text x="492" y="307" font-size="10" text-anchor="middle">RNN</text>
+    <text x="552" y="307" font-size="10" text-anchor="middle">RNN</text>
+    <text x="642" y="307" font-size="10" text-anchor="middle">RNN</text>
+    <text x="702" y="307" font-size="10" text-anchor="middle">RNN</text>
+    <g stroke="#16a34a" stroke-width="1.5" fill="none">
+      <path d="M515 302 L530 302"/>
+      <path d="M575 302 L620 302"/>
+      <path d="M665 302 L680 302"/>
+    </g>
+    <g stroke="#dc2626" stroke-width="1.5">
+      <path d="M642 280 L642 262"/>
+      <path d="M702 280 L702 262"/>
+    </g>
+    <text x="642" y="256" font-size="10" text-anchor="middle" fill="#dc2626">ŷ⟨1⟩</text>
+    <text x="702" y="256" font-size="10" text-anchor="middle" fill="#dc2626">ŷ⟨Ty⟩</text>
+    <g stroke="#16a34a" stroke-width="1.5">
+      <path d="M492 345 L492 325"/>
+      <path d="M552 345 L552 325"/>
+    </g>
+    <text x="492" y="360" font-size="10" text-anchor="middle">x⟨1⟩</text>
+    <text x="552" y="360" font-size="10" text-anchor="middle">x⟨Tx⟩</text>
+  </g>
+</svg>
+<p class="diagram-caption"><strong>Figure 6.</strong> Five common RNN architectures. A single architecture can be adapted by controlling which time steps receive input and which produce output. <em>One-to-one</em> is standard; <em>one-to-many</em> is music generation; <em>many-to-one</em> is sentiment classification; <em>many-to-many (Tx=Ty)</em> is named entity recognition; <em>many-to-many (Tx≠Ty)</em> is machine translation, which uses an encoder to read the input and a decoder to generate the output.</p>
+</div>
+
+<div class="callout important">
+  <span class="callout-title">🟡 Important — Task ↔ Architecture</span>
+  <ul>
+    <li><strong>One-to-one:</strong> standard neural network (not really an RNN).</li>
+    <li><strong>One-to-many:</strong> music generation (input = genre or starting note, output = melody).</li>
+    <li><strong>Many-to-one:</strong> sentiment classification (input = text, output = rating).</li>
+    <li><strong>Many-to-many (Tx = Ty):</strong> named entity recognition (input = words, output = label per word).</li>
+    <li><strong>Many-to-many (Tx ≠ Ty):</strong> machine translation (input = French sentence, output = English sentence). Uses an <em>encoder</em> RNN to read the input and a <em>decoder</em> RNN to generate the output.</li>
+  </ul>
+</div>
+
+<!-- ============================================================
+     10. LANGUAGE MODEL
+     ============================================================ -->
+<h2 id="lang-model">10. Language Modelling &amp; Sequence Generation</h2>
+
+<h3>10.1 What Is a Language Model?</h3>
+
+<p>A <strong>language model</strong> estimates the probability that a given sequence of words is a valid sentence in a language. This is useful for:</p>
+<ul>
+  <li><strong>Speech recognition:</strong> distinguishing "The apple and pear salad" from "The apple and pair salad." Both sound similar, but the first is far more probable English.</li>
+  <li><strong>Machine translation:</strong> picking the most fluent translation among candidates.</li>
+  <li><strong>Text generation:</strong> generating new text one word at a time.</li>
+</ul>
+
+<div class="callout example">
+  <span class="callout-title">🟣 Example — Why Probabilities Matter</span>
+  <p>If a speech recognizer hears a garbled phrase that could be either:</p>
+  <ul>
+    <li>"The apple and <strong>pair</strong> salad" — \(P = 3.2 \times 10^{-13}\)</li>
+    <li>"The apple and <strong>pear</strong> salad" — \(P = 5.7 \times 10^{-10}\)</li>
+  </ul>
+  <p>A language model ranks the second one much higher, so the recognizer picks "pear salad."</p>
+</div>
+
+<h3>10.2 Training an RNN Language Model</h3>
+
+<p>Given a large corpus of English text, we train an RNN to predict the next word at every position.</p>
+
+<div class="diagram">
+<svg viewBox="0 0 850 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="RNN language model predicting next word">
+  <!-- RNN cells -->
+  <rect x="70" y="120" width="60" height="70" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+  <rect x="180" y="120" width="60" height="70" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+  <rect x="290" y="120" width="60" height="70" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+  <rect x="400" y="120" width="60" height="70" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+  <text x="520" y="160" font-size="18" fill="#0f172a">…</text>
+  <rect x="560" y="120" width="70" height="70" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+
+  <g font-size="12" text-anchor="middle" font-weight="700">
+    <text x="100" y="160" fill="#0f172a">a⟨1⟩</text>
+    <text x="210" y="160" fill="#0f172a">a⟨2⟩</text>
+    <text x="320" y="160" fill="#0f172a">a⟨3⟩</text>
+    <text x="430" y="160" fill="#0f172a">a⟨4⟩</text>
+    <text x="595" y="160" fill="#0f172a">a⟨9⟩</text>
+  </g>
+
+  <!-- Hidden arrows -->
+  <g stroke="#16a34a" stroke-width="2" fill="none">
+    <path d="M130 155 L180 155"/>
+    <path d="M240 155 L290 155"/>
+    <path d="M350 155 L400 155"/>
+    <path d="M460 155 L560 155"/>
+  </g>
+
+  <!-- Outputs -->
+  <g font-size="12" text-anchor="middle" font-weight="700" fill="#dc2626">
+    <text x="100" y="98">ŷ⟨1⟩</text>
+    <text x="210" y="98">ŷ⟨2⟩</text>
+    <text x="320" y="98">ŷ⟨3⟩</text>
+    <text x="430" y="98">ŷ⟨4⟩</text>
+    <text x="595" y="98">ŷ⟨9⟩</text>
+  </g>
+  <g stroke="#dc2626" stroke-width="1.5">
+    <path d="M100 110 L100 120"/>
+    <path d="M210 110 L210 120"/>
+    <path d="M320 110 L320 120"/>
+    <path d="M430 110 L430 120"/>
+    <path d="M595 110 L595 120"/>
+  </g>
+
+  <!-- Input words -->
+  <g font-size="12" text-anchor="middle" fill="#0f172a">
+    <text x="100" y="230">Cats</text>
+    <text x="210" y="230">average</text>
+    <text x="320" y="230">15</text>
+    <text x="430" y="230">hours</text>
+    <text x="595" y="230">day</text>
+  </g>
+  <g stroke="#2563eb" stroke-width="1.5" fill="none">
+    <path d="M100 210 L100 190"/>
+    <path d="M210 210 L210 190"/>
+    <path d="M320 210 L320 190"/>
+    <path d="M430 210 L430 190"/>
+    <path d="M595 210 L595 190"/>
+  </g>
+
+  <!-- Labels for targets -->
+  <g font-size="11" text-anchor="middle" fill="#7c3aed">
+    <text x="100" y="265">target: average</text>
+    <text x="210" y="265">target: 15</text>
+    <text x="320" y="265">target: hours</text>
+    <text x="430" y="265">target: of</text>
+    <text x="595" y="265">target: &lt;EOS&gt;</text>
+  </g>
+
+  <text x="380" y="300" font-size="13" text-anchor="middle" fill="#4b5563" font-style="italic">P(y⟨1⟩, y⟨2⟩, …) = P(y⟨1⟩) · P(y⟨2⟩ | y⟨1⟩) · P(y⟨3⟩ | y⟨1⟩, y⟨2⟩) · ⋯</text>
+</svg>
+<p class="diagram-caption"><strong>Figure 7.</strong> RNN language model. Given the words so far, the RNN predicts a probability distribution over the entire vocabulary for the next word. At step \(t\), the input is the previous word \(y^{\langle t-1 \rangle}\) (or \(x^{\langle 1\rangle}\) for the first step), and the target is the next word \(y^{\langle t \rangle}\).</p>
+</div>
+
+<h3>10.3 The Output Distribution</h3>
+
+<p>At each time step, the RNN produces:</p>
+
+<div class="eq">
+$$\hat{y}^{\langle t \rangle} = \text{softmax}\!\left(W_y\, a^{\langle t \rangle} + b_y\right)$$
+</div>
+
+<p>\(\hat{y}^{\langle t \rangle}\) is a vector of length \(|V|\), where each entry is the probability that the next word is the corresponding vocabulary word.</p>
+
+<h3>10.4 The Loss</h3>
+
+<p>The per-step loss is cross-entropy over the vocabulary:</p>
+
+<div class="eq">
+$$\mathcal{L}^{\langle t \rangle}\!\left(\hat{y}^{\langle t \rangle}, y^{\langle t \rangle}\right) = -\sum_{i=1}^{|V|} y_i^{\langle t \rangle} \log \hat{y}_i^{\langle t \rangle}$$
+</div>
+
+<p>Total loss is the sum over time steps:</p>
+
+<div class="eq">
+$$\mathcal{L}(\hat{y}, y) = \sum_{t=1}^{T_y} \mathcal{L}^{\langle t \rangle}\!\left(\hat{y}^{\langle t \rangle}, y^{\langle t \rangle}\right)$$
+</div>
+
+<h3>10.5 The Special Tokens</h3>
+
+<ul>
+  <li><strong>&lt;EOS&gt;</strong> ("end of sentence"): marks the end of a sequence. The model must learn to output this token to signal completion.</li>
+  <li><strong>&lt;UNK&gt;</strong> ("unknown"): represents any word not in the vocabulary.</li>
+</ul>
+
+<div class="callout remember">
+  <span class="callout-title">🔵 Remember — Sequence Probability</span>
+  <p>The language model lets us compute:</p>
+  <div class="eq">
+  $$P(y^{\langle 1 \rangle}, y^{\langle 2 \rangle}, \dots, y^{\langle T_y \rangle}) = \prod_{t=1}^{T_y} P\!\left(y^{\langle t \rangle} \mid y^{\langle 1 \rangle}, \dots, y^{\langle t-1 \rangle}\right)$$
+  </div>
+  <p>This is the chain rule of probability — the probability of the whole sentence is the product of each word's probability given all previous words.</p>
+</div>
+
+<!-- ============================================================
+     11. SAMPLING
+     ============================================================ -->
+<h2 id="sampling">11. Sampling Novel Sequences</h2>
+
+<p>Once an RNN language model is trained, we can use it to <em>generate</em> new text. This is called <strong>sampling</strong>.</p>
+
+<h3>11.1 The Sampling Procedure</h3>
+
+<ol>
+  <li>Start with \(a^{\langle 0 \rangle} = \vec{0}\) and \(x^{\langle 1 \rangle} = \vec{0}\).</li>
+  <li>Run the RNN to get \(\hat{y}^{\langle 1 \rangle}\), a probability distribution over the vocabulary.</li>
+  <li>Randomly sample one word from this distribution using <code>np.random.choice</code>.</li>
+  <li>Feed the sampled word as the input to the next time step.</li>
+  <li>Repeat until the model outputs &lt;EOS&gt; or a preset maximum length is reached.</li>
+</ol>
+
+<div class="callout important">
+  <span class="callout-title">🟡 Important — Training vs. Sampling</span>
+  <ul>
+    <li><strong>Training:</strong> the input at step \(t\) is the <em>true</em> previous word (from the training data).</li>
+    <li><strong>Sampling:</strong> the input at step \(t\) is the model's <em>own</em> previous output. Errors can therefore compound.</li>
+  </ul>
+</div>
+
+<div class="diagram">
+<svg viewBox="0 0 820 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Training vs sampling in an RNN">
+  <!-- Training row -->
+  <text x="20" y="40" font-size="14" font-weight="700" fill="#0f172a">Training:</text>
+  <g>
+    <rect x="120" y="20" width="50" height="50" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="4"/>
+    <rect x="230" y="20" width="50" height="50" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="4"/>
+    <rect x="340" y="20" width="50" height="50" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="4"/>
+    <rect x="450" y="20" width="50" height="50" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="4"/>
+    <g stroke="#16a34a" stroke-width="1.5">
+      <path d="M170 45 L230 45"/>
+      <path d="M280 45 L340 45"/>
+      <path d="M390 45 L450 45"/>
+    </g>
+    <text x="145" y="50" font-size="11" text-anchor="middle">a⟨1⟩</text>
+    <text x="255" y="50" font-size="11" text-anchor="middle">a⟨2⟩</text>
+    <text x="365" y="50" font-size="11" text-anchor="middle">a⟨3⟩</text>
+    <text x="475" y="50" font-size="11" text-anchor="middle">a⟨4⟩</text>
+  </g>
+  <!-- Inputs = true words -->
+  <g stroke="#2563eb" stroke-width="1.5">
+    <path d="M145 100 L145 70"/>
+    <path d="M255 100 L255 70"/>
+    <path d="M365 100 L365 70"/>
+    <path d="M475 100 L475 70"/>
+  </g>
+  <g font-size="11" text-anchor="middle" fill="#0f172a">
+    <text x="145" y="115">x⟨1⟩=0</text>
+    <text x="255" y="115">y⟨1⟩=The</text>
+    <text x="365" y="115">y⟨2⟩=cat</text>
+    <text x="475" y="115">y⟨3⟩=ate</text>
+  </g>
+
+  <!-- Separator -->
+  <line x1="20" y1="150" x2="800" y2="150" stroke="#cbd5e1" stroke-dasharray="4 4"/>
+
+  <!-- Sampling row -->
+  <text x="20" y="195" font-size="14" font-weight="700" fill="#0f172a">Sampling:</text>
+  <g>
+    <rect x="120" y="170" width="50" height="50" fill="#dcfce7" stroke="#16a34a" stroke-width="2" rx="4"/>
+    <rect x="230" y="170" width="50" height="50" fill="#dcfce7" stroke="#16a34a" stroke-width="2" rx="4"/>
+    <rect x="340" y="170" width="50" height="50" fill="#dcfce7" stroke="#16a34a" stroke-width="2" rx="4"/>
+    <rect x="450" y="170" width="50" height="50" fill="#dcfce7" stroke="#16a34a" stroke-width="2" rx="4"/>
+    <g stroke="#16a34a" stroke-width="1.5">
+      <path d="M170 195 L230 195"/>
+      <path d="M280 195 L340 195"/>
+      <path d="M390 195 L450 195"/>
+    </g>
+  </g>
+  <!-- Model outputs become next inputs -->
+  <g stroke="#dc2626" stroke-width="1.5">
+    <path d="M145 170 L145 155"/>
+    <path d="M255 170 L255 155"/>
+    <path d="M365 170 L365 155"/>
+  </g>
+  <g font-size="11" text-anchor="middle" fill="#dc2626">
+    <text x="145" y="150">ŷ⟨1⟩</text>
+    <text x="255" y="150">ŷ⟨2⟩</text>
+    <text x="365" y="150">ŷ⟨3⟩</text>
+  </g>
+  <!-- Sampled words go to next inputs -->
+  <path d="M145 220 Q 145 250, 255 250 Q 255 230, 255 220" stroke="#2563eb" stroke-width="1.5" fill="none"/>
+  <path d="M255 220 Q 255 260, 365 260 Q 365 230, 365 220" stroke="#2563eb" stroke-width="1.5" fill="none"/>
+  <path d="M365 220 Q 365 270, 475 270 Q 475 230, 475 220" stroke="#2563eb" stroke-width="1.5" fill="none"/>
+  <text x="200" y="295" font-size="11" fill="#2563eb">sampled "The"</text>
+  <text x="310" y="295" font-size="11" fill="#2563eb">sampled "cat"</text>
+  <text x="420" y="295" font-size="11" fill="#2563eb">sampled "ate"</text>
+
+  <!-- Arrows up -->
+  <g stroke="#2563eb" stroke-width="1.5">
+    <path d="M145 245 L145 220"/>
+    <path d="M255 245 L255 220"/>
+    <path d="M365 245 L365 220"/>
+    <path d="M475 245 L475 220"/>
+  </g>
+</svg>
+<p class="diagram-caption"><strong>Figure 8.</strong> Training vs. sampling. During training, the true previous word is fed as input. During sampling, the model's own previously-sampled word is fed back as input. The blue curved arrows show this feedback loop.</p>
+</div>
+
+<h3>11.2 Character-Level Language Models</h3>
+
+<p>Instead of words, we can build a language model where each <em>character</em> is a token. The vocabulary is then small (letters, digits, punctuation — maybe 50–100 tokens).</p>
+
+<div class="callout example">
+  <span class="callout-title">🟣 Example — Character-Level Model Output</span>
+  <p>A character-level model trained on Shakespeare can generate text like:</p>
+  <blockquote style="border-left: 3px solid var(--accent); padding-left: 12px; margin: 10px 0; font-style: italic;">
+    "The mortal moon hath her eclipse in love.<br>
+    And subject of this thou art another this fold.<br>
+    When besser be my love to me see sabl's.<br>
+    For whose are ruse of mine eyes heaves."
+  </blockquote>
+  <p>It is not real Shakespeare, but it has learned spelling, spacing, and some stylistic patterns. This kind of model is also used for generating syntactically plausible but nonsensical words (e.g., "Zaboomafoo").</p>
+</div>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Aspect</th><th>Word-level</th><th>Character-level</th></tr></thead>
+  <tbody>
+    <tr><td>Vocabulary size</td><td>Large (10,000+)</td><td>Small (~50–100)</td></tr>
+    <tr><td>Sequence length</td><td>Shorter</td><td>Much longer</td></tr>
+    <tr><td>Output quality</td><td>Usually better long-range coherence</td><td>More robust to rare words</td></tr>
+    <tr><td>Compute</td><td>More per word (large softmax)</td><td>Less per step but more steps</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ============================================================
+     12. VANISHING GRADIENTS
+     ============================================================ -->
+<h2 id="vanishing">12. Vanishing Gradients with RNNs</h2>
+
+<p>Plain RNNs have a serious training problem: as sequences get long, gradients tend to <em>vanish</em> (or occasionally <em>explode</em>) as they flow backwards through many time steps.</p>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 Definition — Vanishing Gradient</span>
+  <p>During backpropagation, the gradient of the loss with respect to early time steps is computed by multiplying together many small derivative terms (one per time step). If those terms are consistently less than 1, their product shrinks toward zero — the gradient "vanishes," and the network cannot learn long-range dependencies.</p>
+</div>
+
+<div class="callout intuition">
+  <span class="callout-title">🟢 Intuition — Passing a Whisper</span>
+  <p>Imagine a game of telephone with 50 people. Each person whispers what they heard to the next. By the end, the message is garbled or lost. The same happens to gradients in a long RNN: each "pass" multiplies the signal by a number slightly less than 1, and after 50 steps the signal is effectively zero.</p>
+</div>
+
+<div class="callout example">
+  <span class="callout-title">🟣 Example — Why It Matters</span>
+  <p>Sentence: "The <strong>cat</strong>, which already <strong>ate</strong> a full meal, <strong>was</strong> full."</p>
+  <p>The subject is singular ("cat"), so the verb must be "was" (not "were"). To get this right, the network must remember information from many time steps earlier. With a plain RNN, that information may have vanished.</p>
+</div>
+
+<div class="callout warning">
+  <span class="callout-title">🔴 Warning — Exploding Gradients Too</span>
+  <p>If the derivative terms are consistently greater than 1, the product grows exponentially — an <strong>exploding gradient</strong>. This can make training diverge. A common fix is <em>gradient clipping</em> (rescale gradients if their norm exceeds a threshold). Vanishing gradients are harder to fix and motivated the GRU and LSTM.</p>
+</div>
+
+<div class="callout insight">
+  <span class="callout-title">💡 Insight — What GRU and LSTM Fix</span>
+  <p>GRUs and LSTMs add <em>gates</em> that control how much information flows between time steps. These gates let the network <em>preserve</em> important information over many steps — the gradient can flow through a "highway" without being repeatedly multiplied by small numbers.</p>
+</div>
+
+<!-- ============================================================
+     13. GRU
+     ============================================================ -->
+<h2 id="gru">13. Gated Recurrent Unit (GRU)</h2>
+
+<p>The GRU (Cho et al., 2014) modifies the RNN cell so that it can selectively remember or forget information. It uses a <strong>memory cell</strong> \(c^{\langle t \rangle}\) and an <strong>update gate</strong> \(\Gamma_u\) to control the flow.</p>
+
+<h3>13.1 Intuition</h3>
+
+<div class="callout intuition">
+  <span class="callout-title">🟢 Intuition — A Gate That Decides What to Remember</span>
+  <p>Imagine reading a long sentence and deciding after each word: "Should I remember this, or overwrite my memory with new content?" The GRU's update gate \(\Gamma_u\) is exactly that decision — a number between 0 and 1 that says how much of the previous memory to keep and how much of the new candidate to write in.</p>
+</div>
+
+<h3>13.2 The Simplified GRU Equations</h3>
+
+<p>First, we compute a <em>candidate</em> memory \(\tilde{c}^{\langle t \rangle}\) — the new information we <em>might</em> write into memory:</p>
+
+<div class="eq">
+$$\tilde{c}^{\langle t \rangle} = \tanh\!\left( W_c \begin{bmatrix} c^{\langle t-1 \rangle} \\ x^{\langle t \rangle} \end{bmatrix} + b_c \right)$$
+</div>
+
+<p>Then we compute the update gate \(\Gamma_u\):</p>
+
+<div class="eq">
+$$\Gamma_u = \sigma\!\left( W_u \begin{bmatrix} c^{\langle t-1 \rangle} \\ x^{\langle t \rangle} \end{bmatrix} + b_u \right)$$
+</div>
+
+<p>Finally, we blend the old memory with the candidate:</p>
+
+<div class="eq">
+$$c^{\langle t \rangle} = \Gamma_u \ast \tilde{c}^{\langle t \rangle} + \left(1 - \Gamma_u\right) \ast c^{\langle t-1 \rangle}$$
+</div>
+
+<div class="eq">
+$$a^{\langle t \rangle} = c^{\langle t \rangle}$$
+</div>
+
+<p>where:</p>
+<ul>
+  <li>\(\tilde{c}^{\langle t \rangle}\) — candidate memory (what we could write).</li>
+  <li>\(c^{\langle t \rangle}\) — actual memory (what we do write).</li>
+  <li>\(\Gamma_u\) — update gate, a vector of values in \((0, 1)\) (element-wise sigmoid).</li>
+  <li>\(\ast\) — element-wise multiplication.</li>
+  <li>\(\sigma\) — sigmoid function, squashing values to \((0, 1)\).</li>
+</ul>
+
+<div class="callout important">
+  <span class="callout-title">🟡 Important — What the Gate Does</span>
+  <ul>
+    <li>If \(\Gamma_u \approx 1\): keep the candidate \(\tilde{c}^{\langle t \rangle}\) — overwrite the old memory.</li>
+    <li>If \(\Gamma_u \approx 0\): keep the old memory \(c^{\langle t-1 \rangle}\) — do not update.</li>
+    <li>Intermediate values: partially blend old and new.</li>
+  </ul>
+  <p>This lets information persist over many time steps when \(\Gamma_u\) stays near 0 — this is what solves the vanishing gradient problem.</p>
+</div>
+
+<h3>13.3 The Full GRU</h3>
+
+<p>The full GRU adds a <strong>relevance gate</strong> \(\Gamma_r\) that controls how much of the previous memory is used when computing the candidate:</p>
+
+<div class="eq">
+$$\tilde{c}^{\langle t \rangle} = \tanh\!\left( W_c \begin{bmatrix} \Gamma_r \ast c^{\langle t-1 \rangle} \\ x^{\langle t \rangle} \end{bmatrix} + b_c \right)$$
+</div>
+
+<div class="eq">
+$$\Gamma_u = \sigma\!\left( W_u \begin{bmatrix} c^{\langle t-1 \rangle} \\ x^{\langle t \rangle} \end{bmatrix} + b_u \right)$$
+</div>
+
+<div class="eq">
+$$\Gamma_r = \sigma\!\left( W_r \begin{bmatrix} c^{\langle t-1 \rangle} \\ x^{\langle t \rangle} \end{bmatrix} + b_r \right)$$
+</div>
+
+<div class="eq">
+$$c^{\langle t \rangle} = \Gamma_u \ast \tilde{c}^{\langle t \rangle} + \left(1 - \Gamma_u\right) \ast c^{\langle t-1 \rangle}$$
+</div>
+
+<div class="eq">
+$$a^{\langle t \rangle} = c^{\langle t \rangle}$$
+</div>
+
+<div class="callout remember">
+  <span class="callout-title">🔵 Remember — GRU in One Sentence</span>
+  <p>The GRU keeps a memory cell \(c^{\langle t \rangle}\) and uses gates to decide how much of the old memory to keep and how much of the newly-computed candidate to write in.</p>
+</div>
+
+<!-- ============================================================
+     14. LSTM
+     ============================================================ -->
+<h2 id="lstm">14. LSTM (Long Short-Term Memory)</h2>
+
+<p>The LSTM (Hochreiter &amp; Schmidhuber, 1997) is a more powerful and more general version of the GRU. It has <em>three</em> gates instead of two and separates the memory cell \(c^{\langle t \rangle}\) from the hidden state \(a^{\langle t \rangle}\).</p>
+
+<h3>14.1 The Three Gates</h3>
+
+<ul>
+  <li><strong>Update gate</strong> \(\Gamma_u\): how much of the new candidate to write into memory.</li>
+  <li><strong>Forget gate</strong> \(\Gamma_f\): how much of the old memory to keep (as opposed to discard).</li>
+  <li><strong>Output gate</strong> \(\Gamma_o\): how much of the memory to expose as the hidden state \(a^{\langle t \rangle}\).</li>
+</ul>
+
+<h3>14.2 The Equations</h3>
+
+<p>Candidate memory:</p>
+<div class="eq">
+$$\tilde{c}^{\langle t \rangle} = \tanh\!\left( W_c \begin{bmatrix} a^{\langle t-1 \rangle} \\ x^{\langle t \rangle} \end{bmatrix} + b_c \right)$$
+</div>
+
+<p>Three gates (each is a sigmoid):</p>
+<div class="eq">
+$$\Gamma_u = \sigma\!\left( W_u \begin{bmatrix} a^{\langle t-1 \rangle} \\ x^{\langle t \rangle} \end{bmatrix} + b_u \right)$$
+</div>
+<div class="eq">
+$$\Gamma_f = \sigma\!\left( W_f \begin{bmatrix} a^{\langle t-1 \rangle} \\ x^{\langle t \rangle} \end{bmatrix} + b_f \right)$$
+</div>
+<div class="eq">
+$$\Gamma_o = \sigma\!\left( W_o \begin{bmatrix} a^{\langle t-1 \rangle} \\ x^{\langle t \rangle} \end{bmatrix} + b_o \right)$$
+</div>
+
+<p>Update memory:</p>
+<div class="eq">
+$$c^{\langle t \rangle} = \Gamma_u \ast \tilde{c}^{\langle t \rangle} + \Gamma_f \ast c^{\langle t-1 \rangle}$$
+</div>
+
+<p>Update hidden state:</p>
+<div class="eq">
+$$a^{\langle t \rangle} = \Gamma_o \ast \tanh\!\left(c^{\langle t \rangle}\right)$$
+</div>
+
+<div class="diagram">
+<svg viewBox="0 0 780 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="LSTM cell diagram">
+  <!-- Cell box -->
+  <rect x="60" y="60" width="660" height="300" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5" rx="12"/>
+
+  <!-- Memory highway (top) -->
+  <line x1="20" y1="120" x2="760" y2="120" stroke="#dc2626" stroke-width="3"/>
+  <text x="20" y="110" font-size="13" font-weight="700" fill="#dc2626">c⟨t-1⟩</text>
+  <text x="740" y="110" font-size="13" font-weight="700" fill="#dc2626">c⟨t⟩</text>
+
+  <!-- Forget gate circle -->
+  <circle cx="180" cy="120" r="14" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <text x="180" y="124" font-size="14" text-anchor="middle" font-weight="700" fill="#dc2626">×</text>
+  <text x="180" y="80" font-size="11" text-anchor="middle" fill="#dc2626">Γ_f</text>
+
+  <!-- Add circle -->
+  <circle cx="400" cy="120" r="14" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="400" y="124" font-size="14" text-anchor="middle" font-weight="700" fill="#16a34a">+</text>
+
+  <!-- Update gate -->
+  <circle cx="500" cy="150" r="14" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text x="500" y="154" font-size="14" text-anchor="middle" font-weight="700" fill="#d97706">×</text>
+  <text x="500" y="180" font-size="11" text-anchor="middle" fill="#d97706">Γ_u</text>
+
+  <!-- tanh -->
+  <rect x="420" y="165" width="50" height="30" fill="#f3e8ff" stroke="#7c3aed" stroke-width="1.5" rx="4"/>
+  <text x="445" y="185" font-size="11" text-anchor="middle" fill="#7c3aed">tanh</text>
+
+  <!-- Output gate -->
+  <circle cx="600" cy="120" r="14" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="600" y="124" font-size="14" text-anchor="middle" font-weight="700" fill="#2563eb">×</text>
+  <text x="600" y="90" font-size="11" text-anchor="middle" fill="#2563eb">Γ_o</text>
+
+  <!-- tanh for output -->
+  <rect x="560" y="155" width="50" height="30" fill="#f3e8ff" stroke="#7c3aed" stroke-width="1.5" rx="4"/>
+  <text x="585" y="175" font-size="11" text-anchor="middle" fill="#7c3aed">tanh</text>
+
+  <!-- Bottom: a(t-1) and x(t) -->
+  <text x="60" y="380" font-size="12" font-weight="700" fill="#0f172a">a⟨t-1⟩</text>
+  <text x="200" y="380" font-size="12" font-weight="700" fill="#0f172a">x⟨t⟩</text>
+
+  <line x1="120" y1="370" x2="120" y2="320" stroke="#2563eb" stroke-width="1.5"/>
+  <line x1="230" y1="370" x2="230" y2="320" stroke="#2563eb" stroke-width="1.5"/>
+
+  <!-- Gates labels at bottom -->
+  <rect x="110" y="290" width="60" height="30" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5" rx="4"/>
+  <text x="140" y="310" font-size="11" text-anchor="middle" fill="#dc2626">forget σ</text>
+
+  <rect x="200" y="290" width="60" height="30" fill="#fef3c7" stroke="#d97706" stroke-width="1.5" rx="4"/>
+  <text x="230" y="310" font-size="11" text-anchor="middle" fill="#d97706">update σ</text>
+
+  <rect x="290" y="290" width="60" height="30" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" rx="4"/>
+  <text x="320" y="310" font-size="11" text-anchor="middle" fill="#2563eb">output σ</text>
+
+  <rect x="380" y="290" width="60" height="30" fill="#f3e8ff" stroke="#7c3aed" stroke-width="1.5" rx="4"/>
+  <text x="410" y="310" font-size="11" text-anchor="middle" fill="#7c3aed">candidate</text>
+
+  <!-- Arrow annotations -->
+  <text x="30" y="240" font-size="11" fill="#4b5563">a⟨t-1⟩</text>
+  <path d="M50 240 L720 240" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 4" fill="none"/>
+  <path d="M720 240 L720 220" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="735" y="230" font-size="11" fill="#dc2626" font-weight="700">a⟨t⟩</text>
+</svg>
+<p class="diagram-caption"><strong>Figure 9.</strong> The LSTM cell. The red horizontal line is the memory cell state \(c^{\langle t \rangle}\), which flows forward with only minor transformations (forget-gate multiply and update-gate add). This "memory highway" is why gradients can flow over long sequences without vanishing. The three sigmoid gates decide what to forget, what to update, and what to output.</p>
+</div>
+
+<h3>14.3 GRU vs LSTM Comparison</h3>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Aspect</th><th>GRU</th><th>LSTM</th></tr></thead>
+  <tbody>
+    <tr><td>Number of gates</td><td>2 (update + relevance)</td><td>3 (update, forget, output)</td></tr>
+    <tr><td>Memory cell</td><td>\(c^{\langle t \rangle} = a^{\langle t \rangle}\)</td><td>\(c^{\langle t \rangle} \neq a^{\langle t \rangle}\)</td></tr>
+    <tr><td>Years</td><td>2014</td><td>1997</td></tr>
+    <tr><td>Complexity</td><td>Simpler, fewer parameters</td><td>More powerful, more parameters</td></tr>
+    <tr><td>Performance</td><td>Often comparable to LSTM, sometimes better on small datasets</td><td>Standard choice for long-range dependencies</td></tr>
+    <tr><td>Training speed</td><td>Slightly faster</td><td>Slightly slower</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout insight">
+  <span class="callout-title">💡 Insight — Which One to Use?</span>
+  <p>Andrew Ng recommends: "The LSTM is historically more proven, but the GRU is simpler and often just as good. Try both on your task." In practice, LSTMs tend to be the safer default; GRUs are preferred when compute budget or dataset size is limited.</p>
+</div>
+
+<!-- ============================================================
+     15. BIDIRECTIONAL RNN
+     ============================================================ -->
+<h2 id="bidi">15. Bidirectional RNN</h2>
+
+<p>So far, our RNNs have processed the sequence left to right. But sometimes the meaning of a word depends on words that come <em>after</em> it.</p>
+
+<div class="callout example">
+  <span class="callout-title">🟣 Example — Information From the Future</span>
+  <ul>
+    <li>"He said, <strong>Teddy</strong> bears are on sale!"</li>
+    <li>"He said, <strong>Teddy</strong> Roosevelt was a great President!"</li>
+  </ul>
+  <p>To decide whether "Teddy" is a person's name, the model needs to know what comes <em>after</em> "Teddy". A left-to-right RNN cannot do this at the moment it reads "Teddy."</p>
+</div>
+
+<h3>15.1 The Bidirectional RNN Architecture</h3>
+
+<p>A Bidirectional RNN (BRNN) runs <em>two</em> RNNs — one left-to-right and one right-to-left — and combines their hidden states at every time step.</p>
+
+<div class="diagram">
+<svg viewBox="0 0 850 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bidirectional RNN architecture">
+  <!-- Forward RNN arrows -->
+  <g stroke="#16a34a" stroke-width="2" fill="none" marker-end="url(#arrowGreen)">
+    <path d="M80 90 L150 90"/>
+    <path d="M220 90 L290 90"/>
+    <path d="M360 90 L430 90"/>
+    <path d="M500 90 L570 90"/>
+    <path d="M640 90 L710 90"/>
+  </g>
+
+  <!-- Backward RNN arrows -->
+  <g stroke="#dc2626" stroke-width="2" fill="none" marker-end="url(#arrowRed2)">
+    <path d="M710 200 L640 200"/>
+    <path d="M570 200 L500 200"/>
+    <path d="M430 200 L360 200"/>
+    <path d="M290 200 L220 200"/>
+    <path d="M150 200 L80 200"/>
+  </g>
+
+  <!-- Forward hidden cells -->
+  <g fill="#dcfce7" stroke="#16a34a" stroke-width="1.5">
+    <rect x="80" y="65" width="60" height="50" rx="6"/>
+    <rect x="160" y="65" width="60" height="50" rx="6"/>
+    <rect x="300" y="65" width="60" height="50" rx="6"/>
+    <rect x="440" y="65" width="60" height="50" rx="6"/>
+    <rect x="580" y="65" width="60" height="50" rx="6"/>
+    <rect x="720" y="65" width="60" height="50" rx="6"/>
+  </g>
+
+  <!-- Backward hidden cells -->
+  <g fill="#fee2e2" stroke="#dc2626" stroke-width="1.5">
+    <rect x="80" y="175" width="60" height="50" rx="6"/>
+    <rect x="160" y="175" width="60" height="50" rx="6"/>
+    <rect x="300" y="175" width="60" height="50" rx="6"/>
+    <rect x="440" y="175" width="60" height="50" rx="6"/>
+    <rect x="580" y="175" width="60" height="50" rx="6"/>
+    <rect x="720" y="175" width="60" height="50" rx="6"/>
+  </g>
+
+  <g font-size="11" text-anchor="middle" font-weight="700">
+    <text x="110" y="95" fill="#0f172a">→a⟨1⟩</text>
+    <text x="190" y="95" fill="#0f172a">→a⟨2⟩</text>
+    <text x="330" y="95" fill="#0f172a">→a⟨3⟩</text>
+    <text x="470" y="95" fill="#0f172a">→a⟨4⟩</text>
+    <text x="610" y="95" fill="#0f172a">→a⟨5⟩</text>
+    <text x="750" y="95" fill="#0f172a">→a⟨6⟩</text>
+
+    <text x="110" y="205" fill="#0f172a">←a⟨1⟩</text>
+    <text x="190" y="205" fill="#0f172a">←a⟨2⟩</text>
+    <text x="330" y="205" fill="#0f172a">←a⟨3⟩</text>
+    <text x="470" y="205" fill="#0f172a">←a⟨4⟩</text>
+    <text x="610" y="205" fill="#0f172a">←a⟨5⟩</text>
+    <text x="750" y="205" fill="#0f172a">←a⟨6⟩</text>
+  </g>
+
+  <!-- y-hat outputs -->
+  <g font-size="12" text-anchor="middle" font-weight="700" fill="#7c3aed">
+    <text x="110" y="45">ŷ⟨1⟩</text>
+    <text x="190" y="45">ŷ⟨2⟩</text>
+    <text x="330" y="45">ŷ⟨3⟩</text>
+    <text x="470" y="45">ŷ⟨4⟩</text>
+    <text x="610" y="45">ŷ⟨5⟩</text>
+    <text x="750" y="45">ŷ⟨6⟩</text>
+  </g>
+
+  <!-- Arrows to y-hat from both directions -->
+  <g stroke="#7c3aed" stroke-width="1.2" fill="none">
+    <path d="M110 65 L110 55"/>
+    <path d="M190 65 L190 55"/>
+    <path d="M330 65 L330 55"/>
+    <path d="M470 65 L470 55"/>
+    <path d="M610 65 L610 55"/>
+    <path d="M750 65 L750 55"/>
+  </g>
+
+  <!-- Input words -->
+  <g font-size="12" text-anchor="middle" fill="#0f172a">
+    <text x="110" y="275">He</text>
+    <text x="190" y="275">said</text>
+    <text x="330" y="275">"Teddy</text>
+    <text x="470" y="275">bears</text>
+    <text x="610" y="275">are</text>
+    <text x="750" y="275">on</text>
+  </g>
+  <g stroke="#94a3b8" stroke-width="1.2" fill="none">
+    <path d="M110 250 L110 225"/>
+    <path d="M190 250 L190 225"/>
+    <path d="M330 250 L330 225"/>
+    <path d="M470 250 L470 225"/>
+    <path d="M610 250 L610 225"/>
+    <path d="M750 250 L750 225"/>
+  </g>
+
+  <defs>
+    <marker id="arrowGreen" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <polygon points="0,0 8,3 0,6" fill="#16a34a"/>
+    </marker>
+    <marker id="arrowRed2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <polygon points="0,0 8,3 0,6" fill="#dc2626"/>
+    </marker>
+  </defs>
+</svg>
+<p class="diagram-caption"><strong>Figure 10.</strong> A Bidirectional RNN. The green cells process the sequence left-to-right; the red cells process it right-to-left. At each time step, both hidden states are combined to produce \(\hat{y}^{\langle t \rangle}\). This gives each output access to both past and future context.</p>
+</div>
+
+<div class="callout important">
+  <span class="callout-title">🟡 Important — BRNN Needs the Full Sequence</span>
+  <p>A bidirectional RNN can only be used when you have the <em>entire</em> input sequence before producing any output. It is unsuitable for real-time generation (where the future is not yet known), but excellent for tasks like named entity recognition, where the whole sentence is available.</p>
+</div>
+
+<!-- ============================================================
+     16. DEEP RNN
+     ============================================================ -->
+<h2 id="deep">16. Deep RNNs</h2>
+
+<p>Just as we can stack layers in a feedforward network, we can stack RNN layers. The output of one RNN layer becomes the input of the next.</p>
+
+<div class="diagram">
+<svg viewBox="0 0 850 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Deep RNN with three stacked layers">
+  <!-- Layer 1 -->
+  <g fill="#dbeafe" stroke="#2563eb" stroke-width="1.5">
+    <rect x="100" y="260" width="60" height="50" rx="6"/>
+    <rect x="200" y="260" width="60" height="50" rx="6"/>
+    <rect x="300" y="260" width="60" height="50" rx="6"/>
+    <rect x="400" y="260" width="60" height="50" rx="6"/>
+    <rect x="500" y="260" width="60" height="50" rx="6"/>
+    <rect x="600" y="260" width="60" height="50" rx="6"/>
+  </g>
+  <text x="400" y="335" font-size="12" font-weight="700" text-anchor="middle" fill="#2563eb">Layer 1</text>
+
+  <!-- Layer 2 -->
+  <g fill="#dcfce7" stroke="#16a34a" stroke-width="1.5">
+    <rect x="100" y="170" width="60" height="50" rx="6"/>
+    <rect x="200" y="170" width="60" height="50" rx="6"/>
+    <rect x="300" y="170" width="60" height="50" rx="6"/>
+    <rect x="400" y="170" width="60" height="50" rx="6"/>
+    <rect x="500" y="170" width="60" height="50" rx="6"/>
+    <rect x="600" y="170" width="60" height="50" rx="6"/>
+  </g>
+  <text x="400" y="245" font-size="12" font-weight="700" text-anchor="middle" fill="#16a34a">Layer 2</text>
+
+  <!-- Layer 3 -->
+  <g fill="#fef3c7" stroke="#d97706" stroke-width="1.5">
+    <rect x="100" y="80" width="60" height="50" rx="6"/>
+    <rect x="200" y="80" width="60" height="50" rx="6"/>
+    <rect x="300" y="80" width="60" height="50" rx="6"/>
+    <rect x="400" y="80" width="60" height="50" rx="6"/>
+    <rect x="500" y="80" width="60" height="50" rx="6"/>
+    <rect x="600" y="80" width="60" height="50" rx="6"/>
+  </g>
+  <text x="400" y="155" font-size="12" font-weight="700" text-anchor="middle" fill="#d97706">Layer 3</text>
+
+  <!-- Horizontal arrows layer 1 -->
+  <g stroke="#2563eb" stroke-width="1.5" fill="none" marker-end="url(#arrB)">
+    <path d="M160 285 L200 285"/>
+    <path d="M260 285 L300 285"/>
+    <path d="M360 285 L400 285"/>
+    <path d="M460 285 L500 285"/>
+    <path d="M560 285 L600 285"/>
+  </g>
+  <!-- Horizontal arrows layer 2 -->
+  <g stroke="#16a34a" stroke-width="1.5" fill="none" marker-end="url(#arrG)">
+    <path d="M160 195 L200 195"/>
+    <path d="M260 195 L300 195"/>
+    <path d="M360 195 L400 195"/>
+    <path d="M460 195 L500 195"/>
+    <path d="M560 195 L600 195"/>
+  </g>
+  <!-- Horizontal arrows layer 3 -->
+  <g stroke="#d97706" stroke-width="1.5" fill="none" marker-end="url(#arrO)">
+    <path d="M160 105 L200 105"/>
+    <path d="M260 105 L300 105"/>
+    <path d="M360 105 L400 105"/>
+    <path d="M460 105 L500 105"/>
+    <path d="M560 105 L600 105"/>
+  </g>
+
+  <!-- Vertical arrows between layers -->
+  <g stroke="#94a3b8" stroke-width="1.2" fill="none">
+    <path d="M130 260 L130 220"/>
+    <path d="M230 260 L230 220"/>
+    <path d="M330 260 L330 220"/>
+    <path d="M430 260 L430 220"/>
+    <path d="M530 260 L530 220"/>
+    <path d="M630 260 L630 220"/>
+    <path d="M130 170 L130 130"/>
+    <path d="M230 170 L230 130"/>
+    <path d="M330 170 L330 130"/>
+    <path d="M430 170 L430 130"/>
+    <path d="M530 170 L530 130"/>
+    <path d="M630 170 L630 130"/>
+  </g>
+
+  <!-- Outputs -->
+  <g font-size="12" text-anchor="middle" font-weight="700" fill="#dc2626">
+    <text x="130" y="65">ŷ⟨1⟩</text>
+    <text x="230" y="65">ŷ⟨2⟩</text>
+    <text x="330" y="65">ŷ⟨3⟩</text>
+    <text x="430" y="65">ŷ⟨4⟩</text>
+    <text x="530" y="65">ŷ⟨5⟩</text>
+    <text x="630" y="65">ŷ⟨6⟩</text>
+  </g>
+  <g stroke="#dc2626" stroke-width="1.2" fill="none">
+    <path d="M130 80 L130 70"/>
+    <path d="M230 80 L230 70"/>
+    <path d="M330 80 L330 70"/>
+    <path d="M430 80 L430 70"/>
+    <path d="M530 80 L530 70"/>
+    <path d="M630 80 L630 70"/>
+  </g>
+
+  <!-- Inputs -->
+  <g font-size="12" text-anchor="middle" fill="#0f172a">
+    <text x="130" y="355">x⟨1⟩</text>
+    <text x="230" y="355">x⟨2⟩</text>
+    <text x="330" y="355">x⟨3⟩</text>
+    <text x="430" y="355">x⟨4⟩</text>
+    <text x="530" y="355">x⟨5⟩</text>
+    <text x="630" y="355">x⟨6⟩</text>
+  </g>
+
+  <defs>
+    <marker id="arrB" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <polygon points="0,0 8,3 0,6" fill="#2563eb"/>
+    </marker>
+    <marker id="arrG" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <polygon points="0,0 8,3 0,6" fill="#16a34a"/>
+    </marker>
+    <marker id="arrO" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <polygon points="0,0 8,3 0,6" fill="#d97706"/>
+    </marker>
+  </defs>
+</svg>
+<p class="diagram-caption"><strong>Figure 11.</strong> A deep RNN with three stacked layers. Each layer processes the sequence left-to-right, and the output of layer \(l\) at time \(t\) becomes the input of layer \(l+1\) at time \(t\). The vertical arrows represent the layer-to-layer connections.</p>
+</div>
+
+<div class="callout important">
+  <span class="callout-title">🟡 Important — How Deep Can We Go?</span>
+  <p>Unlike CNNs, which can have 100+ layers, deep RNNs are usually only <strong>3 layers</strong> deep. The reason is that each layer already processes the entire sequence, so adding more layers multiplies the sequence-length factor and makes training very expensive. 3 layers is typically enough; sometimes a deeper feedforward network is stacked on top of the final RNN output.</p>
+</div>
+
+<h3>16.1 The Deep RNN Equation</h3>
+
+<p>For layer \(l\) at time step \(t\):</p>
+
+<div class="eq">
+$$a^{[l]\langle t \rangle} = g\!\left( W_a^{[l]} \begin{bmatrix} a^{[l]\langle t-1 \rangle} \\ a^{[l-1]\langle t \rangle} \end{bmatrix} + b_a^{[l]} \right)$$
+</div>
+
+<p>Here, the input to layer \(l\) at time \(t\) is the output of layer \(l-1\) at time \(t\) (denoted \(a^{[l-1]\langle t \rangle}\)).</p>
+
+<!-- ============================================================
+     17. SUMMARY
+     ============================================================ -->
+<h2 id="summary">17. Weekly Summary</h2>
+
+<p>This week introduced the foundational ideas of sequence modelling and RNNs. Here is the full picture:</p>
+
+<ul>
+  <li><strong>Sequence data is everywhere</strong> — speech, text, DNA, music, video. Its defining feature is that order matters.</li>
+  <li><strong>One-hot vectors</strong> are the simplest way to represent words, but they carry no similarity information.</li>
+  <li><strong>A plain fully-connected network fails</strong> on sequences because it cannot handle variable lengths and cannot share weights across positions.</li>
+  <li><strong>An RNN</strong> processes the sequence one step at a time, sharing weights across time steps and maintaining a hidden state \(a^{\langle t \rangle}\) that acts as memory.</li>
+  <li><strong>Forward propagation</strong> at each step: \(a^{\langle t \rangle} = g(W_a [a^{\langle t-1\rangle}, x^{\langle t\rangle}] + b_a)\), \(\hat{y}^{\langle t \rangle} = g(W_y a^{\langle t\rangle} + b_y)\).</li>
+  <li><strong>Backpropagation through time (BPTT)</strong> flows gradients backwards through time as well as layers.</li>
+  <li><strong>RNNs can be arranged in five shapes:</strong> one-to-one, one-to-many, many-to-one, many-to-many (Tx=Ty), and many-to-many (Tx≠Ty, encoder-decoder).</li>
+  <li><strong>Language models</strong> estimate the probability of a sequence and can be used to generate new text via <em>sampling</em>.</li>
+  <li><strong>Vanishing gradients</strong> prevent plain RNNs from learning long-range dependencies.</li>
+  <li><strong>GRUs</strong> use a memory cell and two gates to control information flow.</li>
+  <li><strong>LSTMs</strong> extend this with three gates (update, forget, output) and a separate hidden state.</li>
+  <li><strong>Bidirectional RNNs</strong> read the sequence in both directions, giving each output access to past and future context.</li>
+  <li><strong>Deep RNNs</strong> stack multiple RNN layers — usually 3 layers is enough.</li>
+</ul>
+
+<!-- ============================================================
+     18. MUST-KNOW CONCEPTS
+     ============================================================ -->
+<h2 id="mustknow">18. Must-Know Concepts</h2>
+
+<div class="callout important">
+  <span class="callout-title">🟡 If You Remember Only Ten Things From This Week…</span>
+  <ol>
+    <li>The notation \(x^{\langle t \rangle}\), \(y^{\langle t \rangle}\), \(T_x\), \(T_y\), and the difference between superscripts \(\langle t \rangle\) (time) and \((i)\) (example).</li>
+    <li>Why standard networks fail on sequences and what RNNs fix.</li>
+    <li>The hidden state \(a^{\langle t \rangle}\) and what it represents.</li>
+    <li>The forward propagation equations.</li>
+    <li>What "backpropagation through time" means.</li>
+    <li>The five types of RNN architectures and which task each matches.</li>
+    <li>What a language model is and how an RNN is trained as one.</li>
+    <li>Why vanishing gradients happen and why they matter.</li>
+    <li>The GRU and LSTM equations, at least the intuition behind the gates.</li>
+    <li>Bidirectional RNNs and when they cannot be used.</li>
+  </ol>
+</div>
+
+<!-- ============================================================
+     19. EQUATIONS
+     ============================================================ -->
+<h2 id="equations">19. Important Equations (Reference)</h2>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 1. Forward Propagation — Basic RNN</span>
+  <div class="eq">$$a^{\langle t \rangle} = g_1\!\left( W_{aa}\, a^{\langle t-1 \rangle} + W_{ax}\, x^{\langle t \rangle} + b_a \right)$$</div>
+  <div class="eq">$$\hat{y}^{\langle t \rangle} = g_2\!\left( W_{ya}\, a^{\langle t \rangle} + b_y \right)$$</div>
+</div>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 2. Simplified Forward Propagation</span>
+  <div class="eq">$$a^{\langle t \rangle} = g\!\left( W_a \begin{bmatrix} a^{\langle t-1 \rangle} \\ x^{\langle t \rangle} \end{bmatrix} + b_a \right)$$</div>
+  <div class="eq">$$\hat{y}^{\langle t \rangle} = g\!\left( W_y\, a^{\langle t \rangle} + b_y \right)$$</div>
+</div>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 3. Per-Step Loss</span>
+  <div class="eq">$$\mathcal{L}^{\langle t \rangle}(\hat{y}^{\langle t \rangle}, y^{\langle t \rangle}) = -y^{\langle t \rangle}\log\hat{y}^{\langle t \rangle} - (1-y^{\langle t \rangle})\log(1-\hat{y}^{\langle t \rangle})$$</div>
+</div>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 4. Total Loss</span>
+  <div class="eq">$$\mathcal{L}(\hat{y}, y) = \sum_{t=1}^{T_y} \mathcal{L}^{\langle t \rangle}(\hat{y}^{\langle t \rangle}, y^{\langle t \rangle})$$</div>
+</div>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 5. GRU (Simplified)</span>
+  <div class="eq">$$\tilde{c}^{\langle t \rangle} = \tanh\!\left( W_c \begin{bmatrix} c^{\langle t-1 \rangle} \\ x^{\langle t \rangle} \end{bmatrix} + b_c \right)$$</div>
+  <div class="eq">$$\Gamma_u = \sigma\!\left( W_u \begin{bmatrix} c^{\langle t-1 \rangle} \\ x^{\langle t \rangle} \end{bmatrix} + b_u \right)$$</div>
+  <div class="eq">$$c^{\langle t \rangle} = \Gamma_u \ast \tilde{c}^{\langle t \rangle} + (1-\Gamma_u) \ast c^{\langle t-1 \rangle}$$</div>
+  <div class="eq">$$a^{\langle t \rangle} = c^{\langle t \rangle}$$</div>
+</div>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 6. LSTM</span>
+  <div class="eq">$$\tilde{c}^{\langle t \rangle} = \tanh\!\left( W_c \begin{bmatrix} a^{\langle t-1 \rangle} \\ x^{\langle t \rangle} \end{bmatrix} + b_c \right)$$</div>
+  <div class="eq">$$\Gamma_u = \sigma\!\left( W_u \begin{bmatrix} a^{\langle t-1 \rangle} \\ x^{\langle t \rangle} \end{bmatrix} + b_u \right),\quad \Gamma_f = \sigma\!\left( W_f \begin{bmatrix} a^{\langle t-1 \rangle} \\ x^{\langle t \rangle} \end{bmatrix} + b_f \right)$$</div>
+  <div class="eq">$$\Gamma_o = \sigma\!\left( W_o \begin{bmatrix} a^{\langle t-1 \rangle} \\ x^{\langle t \rangle} \end{bmatrix} + b_o \right)$$</div>
+  <div class="eq">$$c^{\langle t \rangle} = \Gamma_u \ast \tilde{c}^{\langle t \rangle} + \Gamma_f \ast c^{\langle t-1 \rangle}$$</div>
+  <div class="eq">$$a^{\langle t \rangle} = \Gamma_o \ast \tanh(c^{\langle t \rangle})$$</div>
+</div>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 7. Deep RNN Layer Equation</span>
+  <div class="eq">$$a^{[l]\langle t \rangle} = g\!\left( W_a^{[l]} \begin{bmatrix} a^{[l]\langle t-1 \rangle} \\ a^{[l-1]\langle t \rangle} \end{bmatrix} + b_a^{[l]} \right)$$</div>
+</div>
+
+<!-- ============================================================
+     20. COMMON CONFUSIONS
+     ============================================================ -->
+<h2 id="confusions">20. Common Confusions</h2>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>Concept A</th><th>Concept B</th><th>Key difference</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>\(x^{\langle t \rangle}\) (angle brackets)</td>
+      <td>\(x^{(i)}\) (parentheses)</td>
+      <td>\(\langle t \rangle\) = position in sequence; \((i)\) = training example index.</td>
+    </tr>
+    <tr>
+      <td>\(T_x\)</td>
+      <td>\(T_y\)</td>
+      <td>\(T_x\) = input length; \(T_y\) = output length. They can differ.</td>
+    </tr>
+    <tr>
+      <td>Hidden state \(a^{\langle t \rangle}\)</td>
+      <td>Memory cell \(c^{\langle t \rangle}\)</td>
+      <td>In basic RNN and GRU, \(a = c\). In LSTM, they are separate: \(c\) is the "protected" memory, \(a\) is the exposed output.</td>
+    </tr>
+    <tr>
+      <td>GRU</td>
+      <td>LSTM</td>
+      <td>GRU has 2 gates; LSTM has 3. LSTM has more parameters and generally performs better on long sequences; GRU is simpler and faster.</td>
+    </tr>
+    <tr>
+      <td>Forward RNN</td>
+      <td>Bidirectional RNN</td>
+      <td>Forward RNN only sees past; BRNN sees both past and future, but requires the full input before producing any output.</td>
+    </tr>
+    <tr>
+      <td>Language model</td>
+      <td>Sampling</td>
+      <td>Language model: learns \(P(\text{sentence})\). Sampling: uses the model to generate new sentences.</td>
+    </tr>
+    <tr>
+      <td>Training input</td>
+      <td>Sampling input</td>
+      <td>During training, input at step \(t\) is the true previous word; during sampling, it is the model's own previous output.</td>
+    </tr>
+    <tr>
+      <td>Word-level model</td>
+      <td>Character-level model</td>
+      <td>Word-level vocabulary is large (10,000+); character-level vocabulary is small (~50–100) but sequences are longer.</td>
+    </tr>
+    <tr>
+      <td>Vanishing gradient</td>
+      <td>Exploding gradient</td>
+      <td>Vanishing: derivatives multiply to ~0, so the network cannot learn long-range dependencies. Exploding: derivatives multiply to a huge number, causing instability. Fixes differ.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ============================================================
+     21. QUICK REVIEW
+     ============================================================ -->
+<h2 id="review">21. Quick Review (Q&amp;A)</h2>
+
+<p class="small-note">Click each question to reveal its answer.</p>
+
+<details>
+  <summary>Q1. What is the difference between \(x^{\langle t \rangle}\) and \(x^{(i)}\)?</summary>
+  <div class="answer"><p>\(x^{\langle t \rangle}\) is the input at time step \(t\) in a sequence (e.g., the 3rd word of a sentence). \(x^{(i)}\) is the \(i\)-th training example. They use different brackets to avoid confusion.</p></div>
+</details>
+
+<details>
+  <summary>Q2. Why can't a standard fully-connected network handle sequences well?</summary>
+  <div class="answer"><p>Two reasons: (1) inputs and outputs have variable lengths, but fully-connected networks expect fixed sizes; (2) they cannot share weights across positions of the sequence, so they cannot learn a general "word detector" that works anywhere in the sequence.</p></div>
+</details>
+
+<details>
+  <summary>Q3. What is the hidden state \(a^{\langle t \rangle}\), and why is it important?</summary>
+  <div class="answer"><p>The hidden state is a vector that summarizes everything the RNN has seen up to time \(t\). It acts as the network's memory, allowing the meaning of later elements to depend on earlier ones.</p></div>
+</details>
+
+<details>
+  <summary>Q4. Write down the simplified RNN forward-propagation equations.</summary>
+  <div class="answer">
+  <p>\(a^{\langle t \rangle} = g(W_a [a^{\langle t-1 \rangle}; x^{\langle t \rangle}] + b_a)\)</p>
+  <p>\(\hat{y}^{\langle t \rangle} = g(W_y\, a^{\langle t \rangle} + b_y)\)</p>
+  <p>where \([a; x]\) denotes vertical concatenation, and \(g\) is the activation function (\(\tanh\) for the hidden state, sigmoid or softmax for the output).</p>
+  </div>
+</details>
+
+<details>
+  <summary>Q5. What is backpropagation through time?</summary>
+  <div class="answer"><p>It is the process of computing gradients of the loss with respect to the RNN's weights by applying the chain rule across both layers and time steps. Because the same weights are shared at every time step, their gradients accumulate from all time steps before the parameter update.</p></div>
+</details>
+
+<details>
+  <summary>Q6. List the five types of RNN architectures and give one application of each.</summary>
+  <div class="answer">
+  <ul>
+    <li>One-to-one: standard classification (not really sequence).</li>
+    <li>One-to-many: music generation.</li>
+    <li>Many-to-one: sentiment classification.</li>
+    <li>Many-to-many (Tx=Ty): named entity recognition.</li>
+    <li>Many-to-many (Tx≠Ty): machine translation (encoder-decoder).</li>
+  </ul>
+  </div>
+</details>
+
+<details>
+  <summary>Q7. What is a language model, and what is it used for?</summary>
+  <div class="answer"><p>A language model estimates the probability of a sequence of words. It is used in speech recognition (to disambiguate similar-sounding phrases), machine translation (to pick fluent output), and text generation.</p></div>
+</details>
+
+<details>
+  <summary>Q8. How does sampling work during text generation?</summary>
+  <div class="answer"><p>Starting from \(a^{\langle 0 \rangle} = \vec{0}\) and \(x^{\langle 1 \rangle} = \vec{0}\), the RNN produces a probability distribution over the vocabulary at each step. We randomly sample one word from this distribution and feed it back as the input to the next time step. This continues until &lt;EOS&gt; or a max length is reached.</p></div>
+</details>
+
+<details>
+  <summary>Q9. What is the difference between word-level and character-level language models?</summary>
+  <div class="answer"><p>Word-level models have large vocabularies (10,000+) and shorter sequences. Character-level models have small vocabularies (~50–100 tokens) and much longer sequences. Character-level models are more robust to rare words but usually produce text with less long-range coherence.</p></div>
+</details>
+
+<details>
+  <summary>Q10. Why do plain RNNs suffer from vanishing gradients?</summary>
+  <div class="answer"><p>During backprop, gradients are multiplied by a chain of derivative terms (one per time step). If those terms are consistently less than 1, their product shrinks to zero. After many time steps, the gradient to early steps is effectively zero — the network cannot learn long-range dependencies.</p></div>
+</details>
+
+<details>
+  <summary>Q11. What does the update gate \(\Gamma_u\) in a GRU control?</summary>
+  <div class="answer"><p>It controls how much of the newly computed candidate memory \(\tilde{c}^{\langle t \rangle}\) to write into memory. If \(\Gamma_u \approx 1\), the candidate overwrites the old memory. If \(\Gamma_u \approx 0\), the old memory is preserved.</p></div>
+</details>
+
+<details>
+  <summary>Q12. What are the three gates in an LSTM, and what does each do?</summary>
+  <div class="answer">
+  <ul>
+    <li><strong>Update gate</strong> \(\Gamma_u\): how much of the new candidate to write into memory.</li>
+    <li><strong>Forget gate</strong> \(\Gamma_f\): how much of the old memory to keep.</li>
+    <li><strong>Output gate</strong> \(\Gamma_o\): how much of the memory to expose as the hidden state \(a^{\langle t \rangle}\).</li>
+  </ul>
+  </div>
+</details>
+
+<details>
+  <summary>Q13. What is the key difference between GRU and LSTM?</summary>
+  <div class="answer"><p>LSTM has three gates (update, forget, output) and a separate hidden state \(a\) and memory cell \(c\). GRU has only two gates (update, relevance) and sets \(a = c\). LSTM is more expressive, GRU is simpler and faster.</p></div>
+</details>
+
+<details>
+  <summary>Q14. Why is a bidirectional RNN useful, and when can't you use one?</summary>
+  <div class="answer"><p>It processes the sequence both left-to-right and right-to-left, giving each output access to past <em>and</em> future context. This is useful for named entity recognition, where the meaning of a word can depend on words after it. You cannot use it for real-time generation (where the future is unknown) or when the entire input must be streamed.</p></div>
+</details>
+
+<details>
+  <summary>Q15. How deep are deep RNNs usually, and why not deeper?</summary>
+  <div class="answer"><p>Usually 3 layers. Each layer already processes the whole sequence, so adding layers multiplies the sequence-length factor and makes training very expensive. Deeper than 3 rarely helps.</p></div>
+</details>
+
+<details>
+  <summary>Q16. How is the initial hidden state \(a^{\langle 0 \rangle}\) usually set?</summary>
+  <div class="answer"><p>To the zero vector. It can also be learned as a parameter, but zero initialization is the standard choice.</p></div>
+</details>
+
+<details>
+  <summary>Q17. What is the role of the &lt;EOS&gt; token?</summary>
+  <div class="answer"><p>&lt;EOS&gt; (End Of Sentence) marks the end of a sequence. During training, the model learns to output it at the end; during sampling, it tells the generator to stop.</p></div>
+</details>
+
+<details>
+  <summary>Q18. Why is the softmax output at each time step a vector of length |V|?</summary>
+  <div class="answer"><p>Because the model is predicting the probability of the next word among all possible words in the vocabulary. Each entry in the vector is the probability of the corresponding word being the next one.</p></div>
+</details>
+
+<details>
+  <summary>Q19. What is the total loss for an RNN sequence model?</summary>
+  <div class="answer"><p>The sum of per-step losses: \(\mathcal{L} = \sum_{t=1}^{T_y} \mathcal{L}^{\langle t \rangle}\). Alternatively, the average can be used. During backprop, gradients from all time steps are accumulated.</p></div>
+</details>
+
+<details>
+  <summary>Q20. In an LSTM, why is the memory cell \(c^{\langle t \rangle}\) called a "highway"?</summary>
+  <div class="answer"><p>Because the memory cell passes through time with only two simple operations — a multiply by \(\Gamma_f\) and an add of \(\Gamma_u \ast \tilde{c}^{\langle t \rangle}\) — which are both near-identity if the gates are near 1 and 0. This lets gradients flow over many time steps without vanishing, unlike the many-multiplication path in a plain RNN.</p></div>
+</details>
+
+<!-- ============================================================
+     22. SELF-TEST
+     ============================================================ -->
+<h2 id="selftest">22. Self-Test</h2>
+
+<p class="small-note">Conceptual questions from easy → hard. Click to reveal.</p>
+
+<h3>Easy</h3>
+
+<details>
+  <summary>ST1. Name three real-world applications of sequence models.</summary>
+  <div class="answer"><p>Any three of: speech recognition, music generation, sentiment classification, DNA sequence analysis, machine translation, video activity recognition, named entity recognition.</p></div>
+</details>
+
+<details>
+  <summary>ST2. What is the difference between \(T_x\) and \(T_y\)?</summary>
+  <div class="answer"><p>\(T_x\) is the length of the input sequence; \(T_y\) is the length of the output sequence. They can be equal (e.g., named entity recognition) or different (e.g., machine translation).</p></div>
+</details>
+
+<details>
+  <summary>ST3. What activation function is typically used for the hidden state, and why?</summary>
+  <div class="answer"><p>\(\tanh\) is typically used because the hidden state needs to be able to take both positive and negative values (representing "the word is positive" or "negative" about some feature), and \(\tanh\) outputs in \([-1, 1]\). ReLU is also sometimes used in modern variants.</p></div>
+</details>
+
+<h3>Medium</h3>
+
+<details>
+  <summary>ST4. Explain why the same weights \(W_{aa}, W_{ax}, W_{ya}\) are used at every time step. What would go wrong if each time step had its own weights?</summary>
+  <div class="answer"><p>Sharing weights lets the network learn a general "how to update memory from input and previous memory" function that works regardless of position. If each time step had its own weights, the network would have to relearn patterns at every position — wasteful, impossible for variable-length sequences, and unable to generalize to new positions.</p></div>
+</details>
+
+<details>
+  <summary>ST5. A training example has \(T_x = 5\) and \(T_y = 5\). Which RNN architecture types are consistent with this?</summary>
+  <div class="answer"><p>Many-to-many (Tx = Ty), like named entity recognition. Also many-to-one if only the last step outputs, or one-to-many if only the first step receives input. The shapes \(T_x = T_y = 5\) are compatible with several architectures — the choice depends on the task.</p></div>
+</details>
+
+<details>
+  <summary>ST6. During sampling, why must you use the model's own output as the next input instead of the true next word?</summary>
+  <div class="answer"><p>Because at generation time, the true next word is not available (you're generating new text, not evaluating on a fixed dataset). The model must generate the next word based on what it has generated so far. This is why errors can compound — an early mistake propagates into later steps.</p></div>
+</details>
+
+<details>
+  <summary>ST7. Give a concrete example where a bidirectional RNN outperforms a unidirectional RNN.</summary>
+  <div class="answer"><p>Named entity recognition: "He said, 'Teddy bears are on sale!'" vs. "He said, 'Teddy Roosevelt was a great President!'" To decide whether "Teddy" is part of a person's name, the model needs the following word ("bears" vs. "Roosevelt"). A unidirectional left-to-right RNN cannot use this future information; a bidirectional RNN can.</p></div>
+</details>
+
+<h3>Hard</h3>
+
+<details>
+  <summary>ST8. Derive the intuition for why the LSTM's memory highway helps with vanishing gradients.</summary>
+  <div class="answer"><p>In a plain RNN, the gradient at time \(t\) with respect to time \(t-k\) is a product of \(k\) Jacobian matrices. If each matrix's spectral norm is less than 1, the product vanishes. In an LSTM, the memory cell update is \(c^{\langle t \rangle} = \Gamma_f \ast c^{\langle t-1 \rangle} + \Gamma_u \ast \tilde{c}^{\langle t \rangle}\). The gradient of \(c^{\langle t \rangle}\) with respect to \(c^{\langle t-1 \rangle}\) is essentially \(\Gamma_f\) — a diagonal matrix of gate values in \((0,1)\). When \(\Gamma_f \approx 1\), this gradient is close to the identity, so the gradient can flow backwards through time without shrinking. The model learns when to open or close this highway via the gates.</p></div>
+</details>
+
+<details>
+  <summary>ST9. Suppose you train an RNN language model on English text. Why does the model sometimes generate sentences that are grammatically correct but semantically nonsense?</summary>
+  <div class="answer"><p>Because the model learns the <em>statistical patterns</em> of the training text (what word tends to follow what), not the underlying semantics. It can produce locally plausible sequences (grammar) without maintaining global coherence (meaning), especially for longer passages. Character-level models are especially prone to this, since they have less context per token.</p></div>
+</details>
+
+<details>
+  <summary>ST10. In the LSTM equations, why is \(\Gamma_f\) used as the coefficient of \(c^{\langle t-1 \rangle}\) and \(\Gamma_u\) as the coefficient of \(\tilde{c}^{\langle t \rangle}\), rather than the other way around?</summary>
+  <div class="answer"><p>Both gates are sigmoids in (0,1), so the roles are conventional. The convention is that \(\Gamma_f\) ("forget gate") controls how much of the <em>old</em> memory to keep, and \(\Gamma_u\) ("update gate") controls how much of the <em>new</em> candidate to write in. Note that in the GRU, the corresponding gate is written as \(\Gamma_u\) for the new candidate and \((1-\Gamma_u)\) for the old memory — the GRU uses a single complementary gate, while the LSTM has two independent gates. This extra independence (two separate gates) is what makes the LSTM more expressive.</p></div>
+</details>
+
+<details>
+  <summary>ST11. Why does the deep RNN equation have \(a^{[l-1]\langle t \rangle}\) as part of its input, rather than \(x^{\langle t \rangle}\)?</summary>
+  <div class="answer"><p>Because layer \(l\) receives input from the layer below it, at the same time step. Layer 1 receives \(x^{\langle t \rangle}\); layer 2 receives the output of layer 1 at time \(t\), which is \(a^{[1]\langle t \rangle}\); in general layer \(l\) receives \(a^{[l-1]\langle t \rangle}\).</p></div>
+</details>
+
+<details>
+  <summary>ST12. A student says: "Bidirectional RNNs are always better than unidirectional RNNs because they see more information." Critique this claim.</summary>
+  <div class="answer"><p>The claim is false in general. Bidirectional RNNs require the <em>entire</em> input sequence before producing any output, which is impossible in online or real-time settings (e.g., streaming speech recognition, autoregressive text generation). They also cost roughly twice as much compute and memory. For offline tasks like named entity recognition or translation, they do outperform unidirectional RNNs — but the trade-off must be considered for each task.</p></div>
+</details>
+
+<!-- ============================================================
+     NAVIGATION FOOTER
+     ============================================================ -->
+<div class="page-nav">
+  <a href="#" class="nav-btn disabled">← Previous Week</a>
+  <a href="#toc" class="nav-btn">↑ Table of Contents</a>
+  <a href="#" class="nav-btn disabled">Next Week →</a>
+</div>
+
+<p class="small-note" style="text-align:center; margin-top: 30px;">
+  Notes prepared from the DeepLearning.AI Deep Learning Specialization — Course 5, Week 1 ("Recurrent Neural Networks").<br>
+  All explanations, examples, and diagrams are expanded for beginner-friendly study and faithful to the original lecture material.
+</p>
+
+</div><!-- /.container -->
+
+<!-- BACK TO TOP -->
+<button id="backToTop" aria-label="Back to top">↑</button>
+
+<script>
+/* ============================================================
+   DARK / LIGHT MODE
+   ============================================================ */
+(function() {
+  const root = document.documentElement;
+  const toggle = document.getElementById('themeToggle');
+  const stored = localStorage.getItem('dl-theme');
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const initial = stored || (prefersDark ? 'dark' : 'light');
+  setTheme(initial);
+
+  function setTheme(theme) {
+    if (theme === 'dark') {
+      root.setAttribute('data-theme', 'dark');
+      toggle.textContent = '☀️ Light';
+    } else {
+      root.removeAttribute('data-theme');
+      toggle.textContent = '🌙 Dark';
+    }
+    localStorage.setItem('dl-theme', theme);
+  }
+
+  toggle.addEventListener('click', function() {
+    const current = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    setTheme(current === 'dark' ? 'light' : 'dark');
+  });
+})();
+
+/* ============================================================
+   BACK TO TOP
+   ============================================================ */
+(function() {
+  const btn = document.getElementById('backToTop');
+  window.addEventListener('scroll', function() {
+    if (window.scrollY > 600) btn.classList.add('visible');
+    else btn.classList.remove('visible');
+  });
+  btn.addEventListener('click', function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+})();
+
+/* ============================================================
+   SIMPLE CLIENT-SIDE SEARCH
+   ============================================================ */
+(function() {
+  const input = document.getElementById('searchInput');
+  const info = document.getElementById('searchInfo');
+  const container = document.querySelector('.container');
+  const original = container.innerHTML;
+  let timer = null;
+
+  function escapeRegExp(s) {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function doSearch(query) {
+    container.innerHTML = original;
+    if (!query) { info.textContent = ''; return; }
+
+    const q = query.trim();
+    if (q.length < 2) { info.textContent = 'Type at least 2 characters.'; return; }
+
+    const targets = container.querySelectorAll('p, li, td, h2, h3, h4, summary, .answer, .callout-title');
+    const re = new RegExp('(' + escapeRegExp(q) + ')', 'gi');
+    let count = 0;
+
+    targets.forEach(function(el) {
+      if (el.closest('pre') || el.closest('code')) return;
+      const html = el.innerHTML;
+      if (!re.test(html)) return;
+      if (html.includes('<span class="highlight">')) return;
+      el.innerHTML = html.replace(re, '<span class="highlight">$1</span>');
+      count++;
+    });
+
+    info.textContent = count > 0
+      ? `Found ${count} section(s) matching "${q}".`
+      : `No results for "${q}".`;
+  }
+
+  input.addEventListener('input', function() {
+    clearTimeout(timer);
+    timer = setTimeout(function() { doSearch(input.value); }, 220);
+  });
+})();
+</script>
+
+</body>
+</html>

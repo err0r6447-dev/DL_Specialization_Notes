@@ -1,0 +1,1736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Course 1 · Week 3 — Shallow Neural Networks</title>
+
+<!-- MathJax with graceful fallback -->
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$','$'], ['\\(','\\)']], displayMath: [['$$','$$'], ['\\[','\\]']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+:root{
+  --bg:#f7f8fb;
+  --bg-elev:#ffffff;
+  --bg-soft:#eef2f7;
+  --text:#1c2330;
+  --text-soft:#4a5568;
+  --muted:#6b7280;
+  --border:#dfe5ee;
+  --accent:#2563eb;
+  --accent-soft:#e0ebff;
+  --accent-2:#7c3aed;
+
+  --def-bg:#eaf2ff;      --def-bd:#2563eb;
+  --intu-bg:#e9f9ef;     --intu-bd:#16a34a;
+  --imp-bg:#fff7e0;      --imp-bd:#d97706;
+  --warn-bg:#ffeaea;     --warn-bd:#dc2626;
+  --ex-bg:#f4ecff;       --ex-bd:#7c3aed;
+  --impl-bg:#e7f6fb;     --impl-bd:#0891b2;
+  --ins-bg:#fff0f6;      --ins-bd:#db2777;
+
+  --code-bg:#0f172a;
+  --code-fg:#e2e8f0;
+
+  --shadow: 0 1px 2px rgba(16,24,40,.04), 0 4px 14px rgba(16,24,40,.06);
+  --radius:14px;
+  --radius-sm:10px;
+  --maxw:960px;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+               Arial, "Noto Sans", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+               "Liberation Mono", "Courier New", monospace;
+}
+
+html[data-theme="dark"]{
+  --bg:#0d1117;
+  --bg-elev:#161b22;
+  --bg-soft:#1c2230;
+  --text:#e6edf3;
+  --text-soft:#c9d1d9;
+  --muted:#8b949e;
+  --border:#2a3240;
+  --accent:#58a6ff;
+  --accent-soft:#1b2a45;
+  --accent-2:#a78bfa;
+
+  --def-bg:#12233f;      --def-bd:#3b82f6;
+  --intu-bg:#0f2a1c;     --intu-bd:#22c55e;
+  --imp-bg:#2c220c;      --imp-bd:#f59e0b;
+  --warn-bg:#2b1313;     --warn-bd:#ef4444;
+  --ex-bg:#241640;       --ex-bd:#a78bfa;
+  --impl-bg:#0b2730;     --impl-bd:#06b6d4;
+  --ins-bg:#2b1220;      --ins-bd:#ec4899;
+
+  --code-bg:#010409;
+  --code-fg:#e6edf3;
+
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.35);
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-sans);
+  line-height:1.7;
+  font-size:16.5px;
+  -webkit-font-smoothing:antialiased;
+}
+img{max-width:100%;height:auto;display:block}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:color-mix(in srgb, var(--bg-elev) 92%, transparent);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--border);
+}
+.topbar-inner{
+  max-width:var(--maxw);margin:0 auto;
+  padding:.6rem 1rem;
+  display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;
+}
+.brand{
+  font-weight:700;font-size:.95rem;color:var(--accent);
+  text-decoration:none;white-space:nowrap;
+}
+.brand:hover{text-decoration:underline}
+.topbar .spacer{flex:1}
+.topbar button{
+  background:var(--bg-soft);border:1px solid var(--border);
+  color:var(--text);border-radius:999px;
+  padding:.4rem .8rem;font-size:.85rem;cursor:pointer;
+  font-family:inherit;
+}
+.topbar button:hover{border-color:var(--accent);color:var(--accent)}
+
+.wrap{
+  max-width:var(--maxw);
+  margin:0 auto;
+  padding:1.25rem 1rem 5rem;
+}
+
+/* ============================================================
+   HEADINGS
+   ============================================================ */
+h1,h2,h3,h4{line-height:1.28;color:var(--text);margin:1.6em 0 .6em}
+h1{font-size:2rem;margin-top:.4em;letter-spacing:-.02em}
+h2{
+  font-size:1.45rem;letter-spacing:-.01em;
+  padding-bottom:.35rem;border-bottom:2px solid var(--accent-soft);
+  margin-top:2.4em;
+}
+h3{font-size:1.15rem;color:var(--text-soft)}
+h4{color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;font-size:.8rem;margin:1.4em 0 .5em}
+
+p{margin:.7em 0}
+ul,ol{margin:.5em 0 .9em;padding-left:1.4em}
+li{margin:.35em 0}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+hr{border:none;border-top:1px solid var(--border);margin:2.5em 0}
+
+/* ============================================================
+   HERO / TITLE
+   ============================================================ */
+.hero{
+  background:linear-gradient(135deg, var(--accent-soft), transparent 65%);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:1.5rem 1.4rem 1.3rem;
+  box-shadow:var(--shadow);
+  margin-bottom:1.5rem;
+}
+.hero .eyebrow{
+  font-size:.78rem;text-transform:uppercase;letter-spacing:.14em;
+  color:var(--accent);font-weight:700;
+}
+.hero h1{margin:.15em 0 .25em;font-size:1.85rem}
+.hero .sub{color:var(--text-soft);font-size:1rem;margin:0}
+.hero .meta{
+  margin-top:.9rem;display:flex;flex-wrap:wrap;gap:.5rem;
+}
+.pill{
+  background:var(--bg-elev);border:1px solid var(--border);
+  border-radius:999px;padding:.25rem .7rem;font-size:.8rem;color:var(--text-soft);
+}
+
+/* ============================================================
+   TOC
+   ============================================================ */
+.toc{
+  background:var(--bg-elev);border:1px solid var(--border);
+  border-radius:var(--radius);padding:1rem 1.2rem;
+  box-shadow:var(--shadow);
+  margin-bottom:2rem;
+}
+.toc h2{
+  font-size:1.05rem;border:none;margin:.1em 0 .5em;padding:0;
+}
+.toc ol{
+  columns:1;
+  list-style:none;padding-left:0;margin:0;
+}
+@media(min-width:640px){
+  .toc ol{columns:2;column-gap:1.6rem}
+}
+.toc li{margin:.25em 0;break-inside:avoid}
+.toc a{
+  color:var(--text-soft);font-size:.94rem;
+  display:inline-block;
+}
+.toc a:hover{color:var(--accent)}
+.toc .num{color:var(--muted);font-variant-numeric:tabular-nums;margin-right:.4em}
+
+/* ============================================================
+   CALLOUT BOXES
+   ============================================================ */
+.box{
+  border-radius:var(--radius-sm);
+  padding:.9rem 1.1rem;
+  margin:1.1em 0;
+  border-left:5px solid;
+  background:var(--bg-elev);
+}
+.box .label{
+  display:inline-flex;align-items:center;gap:.4rem;
+  font-weight:700;font-size:.82rem;
+  text-transform:uppercase;letter-spacing:.08em;
+  margin-bottom:.35rem;
+}
+.box p:first-of-type{margin-top:.2em}
+.box p:last-child{margin-bottom:.2em}
+
+.box.def{background:var(--def-bg);border-color:var(--def-bd)}
+.box.def .label{color:var(--def-bd)}
+.box.intu{background:var(--intu-bg);border-color:var(--intu-bd)}
+.box.intu .label{color:var(--intu-bd)}
+.box.imp{background:var(--imp-bg);border-color:var(--imp-bd)}
+.box.imp .label{color:var(--imp-bd)}
+.box.warn{background:var(--warn-bg);border-color:var(--warn-bd)}
+.box.warn .label{color:var(--warn-bd)}
+.box.ex{background:var(--ex-bg);border-color:var(--ex-bd)}
+.box.ex .label{color:var(--ex-bd)}
+.box.impl{background:var(--impl-bg);border-color:var(--impl-bd)}
+.box.impl .label{color:var(--impl-bd)}
+.box.ins{background:var(--ins-bg);border-color:var(--ins-bd)}
+.box.ins .label{color:var(--ins-bd)}
+
+/* ============================================================
+   EQUATIONS
+   ============================================================ */
+.eq{
+  background:var(--bg-soft);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:.9rem 1.1rem;
+  margin:1em 0;
+  overflow-x:auto;
+  text-align:center;
+}
+.eq-caption{
+  font-size:.85rem;color:var(--muted);margin-top:.4rem;text-align:center;
+}
+
+/* ============================================================
+   TABLES
+   ============================================================ */
+.table-wrap{overflow-x:auto;margin:1.1em 0;border-radius:var(--radius-sm);border:1px solid var(--border)}
+table{
+  width:100%;border-collapse:collapse;
+  font-size:.93rem;background:var(--bg-elev);
+}
+th,td{
+  padding:.65rem .85rem;text-align:left;border-bottom:1px solid var(--border);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);font-weight:700;color:var(--text);
+  font-size:.83rem;text-transform:uppercase;letter-spacing:.05em;
+}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:color-mix(in srgb, var(--accent-soft) 40%, transparent)}
+
+/* ============================================================
+   CODE
+   ============================================================ */
+code{
+  font-family:var(--font-mono);font-size:.88em;
+  background:var(--bg-soft);color:var(--text);
+  padding:.15em .4em;border-radius:6px;border:1px solid var(--border);
+}
+pre{
+  background:var(--code-bg);color:var(--code-fg);
+  padding:1rem 1.1rem;border-radius:var(--radius-sm);
+  overflow-x:auto;font-size:.87rem;line-height:1.6;
+  margin:1em 0;border:1px solid var(--border);
+}
+pre code{background:none;border:none;color:inherit;padding:0}
+.kw{color:#ff79c6}.st{color:#f1fa8c}.cm{color:#7d8b9d;font-style:italic}
+.fn{color:#8be9fd}.nm{color:#bd93f9}
+
+/* ============================================================
+   SVG DIAGRAM WRAPPER
+   ============================================================ */
+.fig{
+  margin:1.3em 0;padding:1rem;
+  background:var(--bg-elev);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  box-shadow:var(--shadow);
+}
+.fig svg{display:block;width:100%;height:auto;max-width:100%}
+.fig figcaption{
+  font-size:.85rem;color:var(--muted);
+  text-align:center;margin-top:.6rem;line-height:1.5;
+}
+.svg-text{font-family:var(--font-sans);fill:var(--text)}
+.svg-text-soft{font-family:var(--font-sans);fill:var(--text-soft)}
+.svg-line{stroke:var(--text-soft);stroke-width:1.4;fill:none}
+.svg-node{fill:var(--bg-elev);stroke:var(--accent);stroke-width:1.6}
+.svg-node-2{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.6}
+.svg-label{font-family:var(--font-sans);font-size:12px;fill:var(--text);font-weight:600}
+.svg-label-sm{font-family:var(--font-sans);font-size:11px;fill:var(--text-soft)}
+.svg-axis{stroke:var(--text-soft);stroke-width:1.2}
+.svg-grid{stroke:var(--border);stroke-width:1;stroke-dasharray:3 4}
+
+/* ============================================================
+   SUMMARY BOXES / REVIEW
+   ============================================================ */
+.summary{
+  background:linear-gradient(180deg, var(--accent-soft), transparent 80%);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:1.2rem 1.3rem;
+  margin:2em 0 1em;
+}
+.summary h2{border:none;margin-top:.2em;padding:0}
+
+details.qa{
+  background:var(--bg-elev);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:.7rem 1rem;margin:.55em 0;
+}
+details.qa summary{
+  cursor:pointer;font-weight:600;color:var(--text);
+  list-style:none;display:flex;gap:.6rem;align-items:flex-start;
+}
+details.qa summary::-webkit-details-marker{display:none}
+details.qa summary::before{
+  content:"Q";flex:none;
+  background:var(--accent);color:#fff;font-size:.72rem;font-weight:800;
+  border-radius:6px;padding:.12rem .42rem;line-height:1.4;margin-top:.15rem;
+}
+details.qa[open] summary::before{content:"A";background:var(--intu-bd)}
+details.qa .ans{
+  margin-top:.55rem;padding-top:.55rem;
+  border-top:1px dashed var(--border);
+  color:var(--text-soft);font-size:.95rem;
+}
+
+/* ============================================================
+   NAV FOOTER
+   ============================================================ */
+.navfoot{
+  margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border);
+  display:flex;flex-wrap:wrap;gap:.6rem;justify-content:space-between;align-items:center;
+}
+.navfoot a, .navfoot button{
+  background:var(--bg-elev);border:1px solid var(--border);
+  color:var(--text);border-radius:999px;
+  padding:.5rem .9rem;font-size:.85rem;text-decoration:none;cursor:pointer;
+  font-family:inherit;
+}
+.navfoot a:hover{border-color:var(--accent);color:var(--accent)}
+.navfoot .disabled{opacity:.5;pointer-events:none}
+
+.backtop{
+  position:fixed;right:1rem;bottom:1rem;z-index:90;
+  background:var(--accent);color:#fff;border:none;
+  border-radius:999px;padding:.6rem .9rem;
+  font-size:.85rem;cursor:pointer;box-shadow:var(--shadow);
+  font-family:inherit;
+  opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.backtop.show{opacity:1;pointer-events:auto}
+
+/* ============================================================
+   SEARCH
+   ============================================================ */
+.searchbar{
+  display:flex;gap:.5rem;align-items:center;
+  margin:0 0 1rem;
+}
+.searchbar input{
+  flex:1;background:var(--bg-elev);border:1px solid var(--border);
+  color:var(--text);border-radius:999px;padding:.5rem .9rem;
+  font-family:inherit;font-size:.9rem;outline:none;
+}
+.searchbar input:focus{border-color:var(--accent)}
+.searchbar .clear{
+  background:var(--bg-soft);border:1px solid var(--border);color:var(--text-soft);
+  border-radius:999px;padding:.4rem .8rem;cursor:pointer;font-size:.8rem;font-family:inherit;
+}
+mark.hit{background:#fde68a;color:#1c2330;border-radius:3px;padding:0 .12em}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media(max-width:640px){
+  body{font-size:15.5px}
+  h1{font-size:1.55rem}
+  .hero h1{font-size:1.45rem}
+  h2{font-size:1.22rem}
+  h3{font-size:1.05rem}
+  .wrap{padding:1rem .8rem 4rem}
+  th,td{padding:.5rem .6rem;font-size:.86rem}
+  .box{padding:.75rem .85rem}
+}
+
+@media print{
+  .topbar,.backtop,.navfoot,.searchbar{display:none}
+  body{background:#fff;color:#000}
+  .box,.fig,.toc,.summary{box-shadow:none}
+}
+</style>
+</head>
+
+<body>
+
+<!-- ================= TOP BAR ================= -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#top">Deep Learning Specialization</a>
+    <span class="spacer"></span>
+    <button id="themeBtn" type="button" aria-label="Toggle theme">🌗 Theme</button>
+  </div>
+</header>
+
+<div class="wrap" id="top">
+
+  <!-- ================= HERO ================= -->
+  <section class="hero">
+    <div class="eyebrow">Course 1 · Week 3</div>
+    <h1>Shallow Neural Networks (One Hidden Layer)</h1>
+    <p class="sub">From logistic regression to a real neural network with a hidden layer: representation, forward propagation, activation functions, backpropagation, and random initialization.</p>
+    <div class="meta">
+      <span class="pill">📘 Beginner friendly</span>
+      <span class="pill">🧮 Math explained step by step</span>
+      <span class="pill">💻 NumPy code</span>
+      <span class="pill">⏱ ~90 min read</span>
+    </div>
+  </section>
+
+  <!-- ================= SEARCH ================= -->
+  <div class="searchbar">
+    <input id="searchInput" type="search" placeholder="Search this week's notes… (e.g. tanh, backprop, ReLU)" aria-label="Search notes">
+    <button class="clear" id="searchClear" type="button">Clear</button>
+  </div>
+
+  <!-- ================= TOC ================= -->
+  <nav class="toc" aria-label="Table of contents">
+    <h2>📑 Table of Contents</h2>
+    <ol>
+      <li><span class="num">1.</span><a href="#s1">From Logistic Regression to a Neural Network</a></li>
+      <li><span class="num">2.</span><a href="#s2">Neural Network Representation</a></li>
+      <li><span class="num">3.</span><a href="#s3">Computing a Neural Network's Output</a></li>
+      <li><span class="num">4.</span><a href="#s4">Vectorizing Across Multiple Examples</a></li>
+      <li><span class="num">5.</span><a href="#s5">Why Vectorization Works (Justification)</a></li>
+      <li><span class="num">6.</span><a href="#s6">Activation Functions</a></li>
+      <li><span class="num">7.</span><a href="#s7">Why Non-Linear Activation Functions?</a></li>
+      <li><span class="num">8.</span><a href="#s8">Derivatives of Activation Functions</a></li>
+      <li><span class="num">9.</span><a href="#s9">Gradient Descent for Neural Networks</a></li>
+      <li><span class="num">10.</span><a href="#s10">Backpropagation Intuition</a></li>
+      <li><span class="num">11.</span><a href="#s11">Random Initialization</a></li>
+      <li><span class="num">12.</span><a href="#s12">Common Mistakes &amp; Clarifications</a></li>
+      <li><span class="num">13.</span><a href="#s13">Weekly Summary &amp; Review</a></li>
+    </ol>
+  </nav>
+
+  <!-- ============================================================
+       1. FROM LOGISTIC REGRESSION TO A NEURAL NETWORK
+       ============================================================ -->
+  <h2 id="s1">1. From Logistic Regression to a Neural Network</h2>
+
+  <p>In Week 2, we built <strong>logistic regression</strong>: a single computational unit that takes inputs $x_1, x_2, x_3$, computes $z = w^Tx + b$, applies a sigmoid, and produces $\hat{y} = a = \sigma(z)$. It's a “one-neuron network.”</p>
+
+  <p>This week, we take the natural next step: <strong>stack neurons into layers</strong>. The result is a real neural network with a <em>hidden layer</em> between the input and the output.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 720 340" role="img" aria-label="Comparison of logistic regression and a 2-layer neural network">
+      <!-- LEFT: Logistic regression -->
+      <text class="svg-label" x="30" y="25">Logistic regression (1 neuron)</text>
+      <text class="svg-label-sm" x="30" y="60">x₁</text>
+      <text class="svg-label-sm" x="30" y="90">x₂</text>
+      <text class="svg-label-sm" x="30" y="120">x₃</text>
+      <!-- inputs converging -->
+      <line x1="50" y1="55" x2="115" y2="90" stroke="#6b7280" stroke-width="1.4"/>
+      <line x1="50" y1="85" x2="115" y2="90" stroke="#6b7280" stroke-width="1.4"/>
+      <line x1="50" y1="115" x2="115" y2="90" stroke="#6b7280" stroke-width="1.4"/>
+      <!-- neuron -->
+      <circle class="svg-node" cx="135" cy="90" r="20"/>
+      <text class="svg-label-sm" x="135" y="94" text-anchor="middle">σ</text>
+      <line x1="155" y1="90" x2="205" y2="90" stroke="#6b7280" stroke-width="1.4"/>
+      <text class="svg-label" x="212" y="94">ŷ = a</text>
+
+      <!-- RIGHT: 2-layer NN -->
+      <text class="svg-label" x="370" y="25">2-layer NN (with hidden layer)</text>
+      <text class="svg-label-sm" x="370" y="60">x₁</text>
+      <text class="svg-label-sm" x="370" y="110">x₂</text>
+      <text class="svg-label-sm" x="370" y="160">x₃</text>
+      <!-- hidden layer (4 units) -->
+      <circle class="svg-node-2" cx="490" cy="40" r="14"/>
+      <circle class="svg-node-2" cx="490" cy="85" r="14"/>
+      <circle class="svg-node-2" cx="490" cy="130" r="14"/>
+      <circle class="svg-node-2" cx="490" cy="175" r="14"/>
+      <text class="svg-label-sm" x="512" y="44">a₁⁽¹⁾</text>
+      <text class="svg-label-sm" x="512" y="89">a₂⁽¹⁾</text>
+      <text class="svg-label-sm" x="512" y="134">a₃⁽¹⁾</text>
+      <text class="svg-label-sm" x="512" y="179">a₄⁽¹⁾</text>
+      <!-- output -->
+      <circle class="svg-node" cx="610" cy="108" r="18"/>
+      <text class="svg-label-sm" x="610" y="112" text-anchor="middle">σ</text>
+      <line x1="628" y1="108" x2="685" y2="108" stroke="#6b7280" stroke-width="1.4"/>
+      <text class="svg-label" x="688" y="112">ŷ</text>
+      <!-- connections input → hidden -->
+      <g stroke="#8b95a7" stroke-width="1" opacity="0.65">
+        <line x1="385" y1="55" x2="476" y2="40"/>
+        <line x1="385" y1="55" x2="476" y2="85"/>
+        <line x1="385" y1="55" x2="476" y2="130"/>
+        <line x1="385" y1="55" x2="476" y2="175"/>
+        <line x1="385" y1="105" x2="476" y2="40"/>
+        <line x1="385" y1="105" x2="476" y2="85"/>
+        <line x1="385" y1="105" x2="476" y2="130"/>
+        <line x1="385" y1="105" x2="476" y2="175"/>
+        <line x1="385" y1="155" x2="476" y2="40"/>
+        <line x1="385" y1="155" x2="476" y2="85"/>
+        <line x1="385" y1="155" x2="476" y2="130"/>
+        <line x1="385" y1="155" x2="476" y2="175"/>
+      </g>
+      <!-- hidden → output -->
+      <g stroke="#8b95a7" stroke-width="1" opacity="0.65">
+        <line x1="504" y1="40" x2="592" y2="108"/>
+        <line x1="504" y1="85" x2="592" y2="108"/>
+        <line x1="504" y1="130" x2="592" y2="108"/>
+        <line x1="504" y1="175" x2="592" y2="108"/>
+      </g>
+      <!-- labels -->
+      <text class="svg-label-sm" x="440" y="205" text-anchor="middle">hidden layer [1]</text>
+      <text class="svg-label-sm" x="440" y="222" text-anchor="middle">(4 units)</text>
+      <text class="svg-label-sm" x="610" y="150" text-anchor="middle">output [2]</text>
+    </svg>
+    <figcaption><strong>Left:</strong> logistic regression is a single neuron — inputs go directly into the output. <strong>Right:</strong> a neural network adds a <em>hidden layer</em> of units between input and output. Each hidden unit is itself a small logistic-regression-like neuron. The outputs of the hidden layer feed into the final output neuron.</figcaption>
+  </div>
+
+  <div class="box intu">
+    <div class="label">🟢 Intuition — why add a hidden layer?</div>
+    <p>A single neuron can only learn a limited family of decision boundaries (essentially linear ones, after the sigmoid transform). By stacking neurons into layers, the network can first compute <em>intermediate features</em> (the hidden layer's activations) and then combine them into a final decision. This is what lets neural networks learn much more complex patterns than logistic regression.</p>
+  </div>
+
+  <div class="box imp">
+    <div class="label">⭐ Key Idea</div>
+    <p>A "2-layer neural network" in this course means: <strong>input layer → hidden layer → output layer</strong>. The input layer is not counted as a "layer" because it just passes the raw data through. So a network with one hidden layer is called a "2-layer NN": layer 1 is the hidden layer, layer 2 is the output layer.</p>
+  </div>
+
+  <!-- ============================================================
+       2. NEURAL NETWORK REPRESENTATION
+       ============================================================ -->
+  <h2 id="s2">2. Neural Network Representation</h2>
+
+  <p>Let's formalize the notation for a 2-layer network with 3 inputs and 4 hidden units.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 720 300" role="img" aria-label="2-layer neural network with 3 inputs, 4 hidden units, 1 output">
+      <!-- Input layer -->
+      <text class="svg-label" x="20" y="25">Input layer</text>
+      <text class="svg-label" x="20" y="45">a⁽⁰⁾ = x</text>
+      <circle class="svg-node-2" cx="60" cy="95" r="14"/>
+      <circle class="svg-node-2" cx="60" cy="150" r="14"/>
+      <circle class="svg-node-2" cx="60" cy="205" r="14"/>
+      <text class="svg-label-sm" x="80" y="99">x₁</text>
+      <text class="svg-label-sm" x="80" y="154">x₂</text>
+      <text class="svg-label-sm" x="80" y="209">x₃</text>
+
+      <!-- Hidden layer -->
+      <text class="svg-label" x="220" y="25">Hidden layer [1]</text>
+      <circle class="svg-node" cx="270" cy="65" r="16"/>
+      <circle class="svg-node" cx="270" cy="125" r="16"/>
+      <circle class="svg-node" cx="270" cy="185" r="16"/>
+      <circle class="svg-node" cx="270" cy="245" r="16"/>
+      <text class="svg-label-sm" x="295" y="69">a₁⁽¹⁾</text>
+      <text class="svg-label-sm" x="295" y="129">a₂⁽¹⁾</text>
+      <text class="svg-label-sm" x="295" y="189">a₃⁽¹⁾</text>
+      <text class="svg-label-sm" x="295" y="249">a₄⁽¹⁾</text>
+      <text class="svg-label-sm" x="240" y="285" text-anchor="middle">W⁽¹⁾, b⁽¹⁾</text>
+
+      <!-- Output layer -->
+      <text class="svg-label" x="480" y="25">Output layer [2]</text>
+      <circle class="svg-node" cx="530" cy="150" r="18"/>
+      <text class="svg-label-sm" x="530" y="154" text-anchor="middle">σ</text>
+      <line x1="548" y1="150" x2="610" y2="150" stroke="#6b7280" stroke-width="1.4"/>
+      <text class="svg-label" x="618" y="155">ŷ = a⁽²⁾</text>
+      <text class="svg-label-sm" x="530" y="200" text-anchor="middle">W⁽²⁾, b⁽²⁾</text>
+
+      <!-- connections input → hidden -->
+      <g stroke="#8b95a7" stroke-width="1" opacity="0.7">
+        <line x1="74" y1="95" x2="254" y2="65"/>
+        <line x1="74" y1="95" x2="254" y2="125"/>
+        <line x1="74" y1="95" x2="254" y2="185"/>
+        <line x1="74" y1="95" x2="254" y2="245"/>
+        <line x1="74" y1="150" x2="254" y2="65"/>
+        <line x1="74" y1="150" x2="254" y2="125"/>
+        <line x1="74" y1="150" x2="254" y2="185"/>
+        <line x1="74" y1="150" x2="254" y2="245"/>
+        <line x1="74" y1="205" x2="254" y2="65"/>
+        <line x1="74" y1="205" x2="254" y2="125"/>
+        <line x1="74" y1="205" x2="254" y2="185"/>
+        <line x1="74" y1="205" x2="254" y2="245"/>
+      </g>
+      <!-- hidden → output -->
+      <g stroke="#8b95a7" stroke-width="1" opacity="0.7">
+        <line x1="286" y1="65" x2="512" y2="150"/>
+        <line x1="286" y1="125" x2="512" y2="150"/>
+        <line x1="286" y1="185" x2="512" y2="150"/>
+        <line x1="286" y1="245" x2="512" y2="150"/>
+      </g>
+    </svg>
+    <figcaption>A 2-layer neural network (one hidden layer). The input layer is often called layer 0 (<strong>a⁽⁰⁾ = X</strong>). Layer 1 (hidden) has 4 units with parameters $W^{[1]}, b^{[1]}$. Layer 2 (output) has 1 unit with parameters $W^{[2]}, b^{[2]}$. The output $\hat{y} = a^{[2]}$.</figcaption>
+  </div>
+
+  <h3>2.1 Notation for the 2-layer network</h3>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Symbol</th><th>Meaning</th><th>Shape (for our 3-4-1 network)</th></tr></thead>
+      <tbody>
+        <tr><td>$x$</td><td>Input feature vector</td><td>$(3, 1)$</td></tr>
+        <tr><td>$a^{[0]}$</td><td>Activation of layer 0 (= $x$)</td><td>$(3, 1)$</td></tr>
+        <tr><td>$W^{[1]}$</td><td>Weight matrix, layer 1</td><td>$(4, 3)$ — 4 hidden units × 3 inputs</td></tr>
+        <tr><td>$b^{[1]}$</td><td>Bias vector, layer 1</td><td>$(4, 1)$ — one per hidden unit</td></tr>
+        <tr><td>$z^{[1]}$</td><td>Pre-activation, layer 1</td><td>$(4, 1)$</td></tr>
+        <tr><td>$a^{[1]}$</td><td>Activation (output), layer 1</td><td>$(4, 1)$</td></tr>
+        <tr><td>$W^{[2]}$</td><td>Weight matrix, layer 2</td><td>$(1, 4)$ — 1 output unit × 4 hidden units</td></tr>
+        <tr><td>$b^{[2]}$</td><td>Bias, layer 2</td><td>$(1, 1)$ — a scalar</td></tr>
+        <tr><td>$z^{[2]}$</td><td>Pre-activation, layer 2</td><td>$(1, 1)$</td></tr>
+        <tr><td>$a^{[2]} = \hat{y}$</td><td>Final prediction</td><td>$(1, 1)$</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box ins">
+    <div class="label">💡 Insight — why $W^{[l]}$ has this shape</div>
+    <p>In general, $W^{[l]}$ has shape $(\text{units in layer } l) \times (\text{units in layer } l-1)$. So $W^{[1]}$ is $(4, 3)$ because layer 1 has 4 units and layer 0 (input) has 3. And $W^{[2]}$ is $(1, 4)$ because layer 2 has 1 unit and layer 1 has 4. This shape convention is what makes the forward-pass matrix multiplications work out cleanly.</p>
+  </div>
+
+  <!-- ============================================================
+       3. COMPUTING A NEURAL NETWORK'S OUTPUT
+       ============================================================ -->
+  <h2 id="s3">3. Computing a Neural Network's Output</h2>
+
+  <p>How does a shallow neural network compute its output from an input? By <em>forward propagation</em> — information flows from input to hidden layer to output layer.</p>
+
+  <h3>3.1 A single hidden unit</h3>
+
+  <p>Each hidden unit is essentially a mini logistic regression:</p>
+  <div class="eq">
+    $$z_1^{[1]} = w_1^{[1]T} x + b_1^{[1]}, \quad a_1^{[1]} = \sigma(z_1^{[1]})$$
+  </div>
+  <p>Here $w_1^{[1]}$ is the weight vector for the first hidden unit, and $b_1^{[1]}$ its bias. The superscript $[1]$ means "layer 1."</p>
+
+  <p>Doing this for all 4 hidden units simultaneously (as a matrix-vector product):</p>
+
+  <div class="eq">
+    $$z^{[1]} = W^{[1]} x + b^{[1]}, \quad a^{[1]} = \sigma(z^{[1]})$$
+  </div>
+
+  <p>Then the output layer computes:</p>
+
+  <div class="eq">
+    $$z^{[2]} = W^{[2]} a^{[1]} + b^{[2]}, \quad a^{[2]} = \sigma(z^{[2]}) = \hat{y}$$
+  </div>
+
+  <div class="fig">
+    <svg viewBox="0 0 760 260" role="img" aria-label="Forward propagation through a 2-layer neural network">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/>
+        </marker>
+      </defs>
+      <!-- Input x -->
+      <rect x="20" y="100" width="60" height="60" rx="8" fill="#e0ebff" stroke="#2563eb" stroke-width="1.5"/>
+      <text class="svg-label" x="50" y="135" text-anchor="middle">x</text>
+
+      <line x1="80" y1="130" x2="135" y2="130" stroke="#6b7280" stroke-width="1.4" marker-end="url(#arr)"/>
+
+      <!-- z1 -->
+      <rect x="140" y="100" width="100" height="60" rx="8" fill="#e9f9ef" stroke="#16a34a" stroke-width="1.5"/>
+      <text class="svg-label" x="190" y="124" text-anchor="middle">z⁽¹⁾ = W⁽¹⁾x</text>
+      <text class="svg-label" x="190" y="142" text-anchor="middle">+ b⁽¹⁾</text>
+
+      <line x1="240" y1="130" x2="295" y2="130" stroke="#6b7280" stroke-width="1.4" marker-end="url(#arr)"/>
+
+      <!-- a1 -->
+      <rect x="300" y="100" width="100" height="60" rx="8" fill="#f4ecff" stroke="#7c3aed" stroke-width="1.5"/>
+      <text class="svg-label" x="350" y="124" text-anchor="middle">a⁽¹⁾ =</text>
+      <text class="svg-label" x="350" y="142" text-anchor="middle">σ(z⁽¹⁾)</text>
+
+      <line x1="400" y1="130" x2="455" y2="130" stroke="#6b7280" stroke-width="1.4" marker-end="url(#arr)"/>
+
+      <!-- z2 -->
+      <rect x="460" y="100" width="110" height="60" rx="8" fill="#e9f9ef" stroke="#16a34a" stroke-width="1.5"/>
+      <text class="svg-label" x="515" y="124" text-anchor="middle">z⁽²⁾ = W⁽²⁾a⁽¹⁾</text>
+      <text class="svg-label" x="515" y="142" text-anchor="middle">+ b⁽²⁾</text>
+
+      <line x1="570" y1="130" x2="625" y2="130" stroke="#6b7280" stroke-width="1.4" marker-end="url(#arr)"/>
+
+      <!-- a2 -->
+      <rect x="630" y="100" width="110" height="60" rx="8" fill="#f4ecff" stroke="#7c3aed" stroke-width="1.5"/>
+      <text class="svg-label" x="685" y="124" text-anchor="middle">a⁽²⁾ =</text>
+      <text class="svg-label" x="685" y="142" text-anchor="middle">σ(z⁽²⁾) = ŷ</text>
+
+      <!-- labels -->
+      <text class="svg-label-sm" x="50" y="185" text-anchor="middle">input</text>
+      <text class="svg-label-sm" x="350" y="185" text-anchor="middle">hidden activations</text>
+      <text class="svg-label-sm" x="685" y="185" text-anchor="middle">output</text>
+    </svg>
+    <figcaption>Forward propagation flow. Each box performs one affine transform followed by an activation. Values flow left to right.</figcaption>
+  </div>
+
+  <div class="box ins">
+    <div class="label">💡 Insight — deep learning is composition</div>
+    <p>Notice the structure: a neural network is just a <em>composition</em> of linear transforms ($W x + b$) and element-wise non-linearities ($\sigma$). Stacking layers means stacking these compositions. That's the entire idea.</p>
+  </div>
+
+  <!-- ============================================================
+       4. VECTORIZING ACROSS MULTIPLE EXAMPLES
+       ============================================================ -->
+  <h2 id="s4">4. Vectorizing Across Multiple Examples</h2>
+
+  <p>So far we've computed forward propagation for <em>one</em> training example. We need to do this for all $m$ examples efficiently.</p>
+
+  <h3>4.1 The naive approach (loop)</h3>
+
+  <pre><code><span class="cm"># Non-vectorized — one example at a time</span>
+<span class="kw">for</span> i = <span class="nm">1</span> to m:
+    z[<span class="nm">1</span>][i] = W[<span class="nm">1</span>] @ x[i] + b[<span class="nm">1</span>]
+    a[<span class="nm">1</span>][i] = sigma(z[<span class="nm">1</span>][i])
+    z[<span class="nm">2</span>][i] = W[<span class="nm">2</span>] @ a[<span class="nm">1</span>][i] + b[<span class="nm">2</span>]
+    a[<span class="nm">2</span>][i] = sigma(z[<span class="nm">2</span>][i])</code></pre>
+
+  <h3>4.2 The vectorized approach</h3>
+
+  <p>Stack all training examples as columns of the matrix $X$ (as we learned in Week 2):</p>
+  <div class="eq">
+    $$X = \begin{bmatrix} \vert & \vert & & \vert \\ x^{(1)} & x^{(2)} & \cdots & x^{(m)} \\ \vert & \vert & & \vert \end{bmatrix}$$
+  </div>
+
+  <p>Then compute the whole forward pass in one shot:</p>
+
+  <div class="eq">
+    $$Z^{[1]} = W^{[1]} X + b^{[1]}, \quad A^{[1]} = \sigma(Z^{[1]})$$
+    $$Z^{[2]} = W^{[2]} A^{[1]} + b^{[2]}, \quad A^{[2]} = \sigma(Z^{[2]})$$
+  </div>
+
+  <p>The shapes now become:</p>
+  <ul>
+    <li>$X$: $(n_x, m)$ — $n_x$ features × $m$ examples</li>
+    <li>$Z^{[1]}, A^{[1]}$: $(n_h^{[1]}, m)$ — hidden units × examples</li>
+    <li>$Z^{[2]}, A^{[2]}$: $(n_y, m)$ — output units × examples</li>
+  </ul>
+
+  <div class="fig">
+    <svg viewBox="0 0 640 340" role="img" aria-label="Vectorized matrices A and Z have examples as columns and units as rows">
+      <!-- Z1 matrix -->
+      <rect x="40" y="50" width="220" height="200" fill="#e9f9ef" stroke="#16a34a" stroke-width="2"/>
+      <line x1="95" y1="50" x2="95" y2="250" stroke="#16a34a" stroke-width="1"/>
+      <line x1="150" y1="50" x2="150" y2="250" stroke="#16a34a" stroke-width="1"/>
+      <line x1="195" y1="50" x2="195" y2="250" stroke="#16a34a" stroke-width="1"/>
+      <text class="svg-label-sm" x="67" y="155">z⁽¹⁾⁽¹⁾</text>
+      <text class="svg-label-sm" x="122" y="155">z⁽¹⁾⁽²⁾</text>
+      <text class="svg-label-sm" x="172" y="155">⋯</text>
+      <text class="svg-label-sm" x="220" y="155">z⁽¹⁾⁽ᵐ⁾</text>
+      <!-- row labels -->
+      <text class="svg-label-sm" x="20" y="80">unit 1</text>
+      <text class="svg-label-sm" x="20" y="140">unit 2</text>
+      <text class="svg-label-sm" x="20" y="220">⋯</text>
+      <text class="svg-label-sm" x="20" y="245">unit nh</text>
+      <text class="svg-label" x="150" y="35" text-anchor="middle">Z⁽¹⁾ shape (n_h, m)</text>
+      <text class="svg-label-sm" x="150" y="275" text-anchor="middle">columns = examples</text>
+      <text class="svg-label-sm" x="150" y="292" text-anchor="middle">rows = hidden units</text>
+
+      <!-- A1 matrix -->
+      <rect x="380" y="50" width="220" height="200" fill="#f4ecff" stroke="#7c3aed" stroke-width="2"/>
+      <line x1="435" y1="50" x2="435" y2="250" stroke="#7c3aed" stroke-width="1"/>
+      <line x1="490" y1="50" x2="490" y2="250" stroke="#7c3aed" stroke-width="1"/>
+      <line x1="535" y1="50" x2="535" y2="250" stroke="#7c3aed" stroke-width="1"/>
+      <text class="svg-label-sm" x="407" y="155">a⁽¹⁾⁽¹⁾</text>
+      <text class="svg-label-sm" x="462" y="155">a⁽¹⁾⁽²⁾</text>
+      <text class="svg-label-sm" x="512" y="155">⋯</text>
+      <text class="svg-label-sm" x="560" y="155">a⁽¹⁾⁽ᵐ⁾</text>
+      <text class="svg-label" x="490" y="35" text-anchor="middle">A⁽¹⁾ shape (n_h, m)</text>
+      <text class="svg-label-sm" x="490" y="275" text-anchor="middle">same layout as Z⁽¹⁾</text>
+    </svg>
+    <figcaption>Vectorized matrices. Each column is one training example; each row is one unit. When we write $A^{[1]} = \sigma(Z^{[1]})$, we are applying sigmoid element-wise to the whole matrix.</figcaption>
+  </div>
+
+  <div class="box impl">
+    <div class="label">⚙️ Implementation — vectorized forward pass</div>
+    <pre><code><span class="kw">def</span> <span class="fn">forward</span>(X, W1, b1, W2, b2):
+    Z1 = np.dot(W1, X) + b1          <span class="cm"># shape (n_h, m)</span>
+    A1 = sigmoid(Z1)                 <span class="cm"># element-wise</span>
+    Z2 = np.dot(W2, A1) + b2         <span class="cm"># shape (n_y, m)</span>
+    A2 = sigmoid(Z2)
+    <span class="kw">return</span> A2, (Z1, A1, Z2, A2)</code></pre>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Warning — bias broadcasting</div>
+    <p>The bias $b^{[1]}$ has shape $(n_h, 1)$, and $W^{[1]}X$ has shape $(n_h, m)$. NumPy broadcasting automatically stretches $b^{[1]}$ to $(n_h, m)$ when adding. This is exactly what we want: the same bias is added to every column (every example).</p>
+  </div>
+
+  <!-- ============================================================
+       5. JUSTIFICATION
+       ============================================================ -->
+  <h2 id="s5">5. Why Vectorization Works (Justification)</h2>
+
+  <p>Let's verify that the vectorized forward pass really gives the same result as the loop.</p>
+
+  <p>For one example $x^{(i)}$:</p>
+  <div class="eq">
+    $$z^{[1](i)} = W^{[1]} x^{(i)} + b^{[1]}$$
+  </div>
+
+  <p>Now consider the matrix product $W^{[1]} X$. Since $X$ has columns $x^{(1)}, x^{(2)}, \ldots, x^{(m)}$:</p>
+  <div class="eq">
+    $$W^{[1]} X = W^{[1]} \begin{bmatrix} \vert & \vert & & \vert \\ x^{(1)} & x^{(2)} & \cdots & x^{(m)} \\ \vert & \vert & & \vert \end{bmatrix} = \begin{bmatrix} \vert & \vert & & \vert \\ W^{[1]}x^{(1)} & W^{[1]}x^{(2)} & \cdots & W^{[1]}x^{(m)} \\ \vert & \vert & & \vert \end{bmatrix}$$
+  </div>
+
+  <p>That's exactly the pre-activations $z^{[1](1)}, z^{[1](2)}, \ldots, z^{[1](m)}$ stacked as columns. Adding $b^{[1]}$ (a vector of shape $(n_h, 1)$) broadcasts it across columns. Hence:</p>
+
+  <div class="eq">
+    $$Z^{[1]} = W^{[1]} X + b^{[1]} \quad \text{where column } i \text{ is } z^{[1](i)}$$
+  </div>
+
+  <p>Applying sigmoid element-wise gives $A^{[1]}$ whose column $i$ is $a^{[1](i)}$ — exactly what the loop would produce.</p>
+
+  <div class="box ins">
+    <div class="label">💡 Insight</div>
+    <p>Vectorization is possible <em>because</em> each example is processed independently through the network. If examples were coupled to each other, we couldn't do this in one matrix multiply. This independence is a crucial property of the standard feedforward architecture.</p>
+  </div>
+
+  <!-- ============================================================
+       6. ACTIVATION FUNCTIONS
+       ============================================================ -->
+  <h2 id="s6">6. Activation Functions</h2>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — Activation Function</div>
+    <p>An <strong>activation function</strong> $g(z)$ is a non-linear function applied to each neuron's pre-activation $z$. It determines the neuron's output $a = g(z)$.</p>
+  </div>
+
+  <p>So far we've used only the sigmoid. But sigmoid is not the only choice — and in practice, other functions often work much better.</p>
+
+  <h3>6.1 Sigmoid</h3>
+  <div class="eq">
+    $$g(z) = \sigma(z) = \frac{1}{1 + e^{-z}}$$
+  </div>
+  <ul>
+    <li>Output range: $(0, 1)$.</li>
+    <li>Used mostly in the <em>output layer</em> for binary classification.</li>
+    <li>Problem: gradients saturate (become tiny) when $z$ is far from 0.</li>
+  </ul>
+
+  <h3>6.2 Tanh (hyperbolic tangent)</h3>
+  <div class="eq">
+    $$g(z) = \tanh(z) = \frac{e^{z} - e^{-z}}{e^{z} + e^{-z}}$$
+  </div>
+  <ul>
+    <li>Output range: $(-1, 1)$.</li>
+    <li>Almost always works better than sigmoid in <em>hidden layers</em> — because its output is centered at 0, making optimization easier.</li>
+    <li>Still saturates for large $|z|$.</li>
+  </ul>
+
+  <h3>6.3 ReLU (Rectified Linear Unit)</h3>
+  <div class="eq">
+    $$g(z) = \max(0, z)$$
+  </div>
+  <ul>
+    <li>Output range: $[0, \infty)$.</li>
+    <li><strong>Default choice for hidden layers</strong> in modern deep learning.</li>
+    <li>Fast to compute, doesn't saturate for positive $z$ (gradient = 1).</li>
+    <li>Gradient is 0 for $z < 0$ — this can cause "dead neurons" if a unit gets stuck there.</li>
+  </ul>
+
+  <h3>6.4 Leaky ReLU</h3>
+  <div class="eq">
+    $$g(z) = \max(0.01\,z, z)$$
+  </div>
+  <ul>
+    <li>Same as ReLU for $z > 0$, but has a small positive slope ($0.01$) for $z < 0$.</li>
+    <li>Avoids the "dead neuron" problem — gradients can still flow through negative regions.</li>
+  </ul>
+
+  <div class="fig">
+    <svg viewBox="0 0 720 260" role="img" aria-label="Four activation functions: sigmoid, tanh, ReLU, Leaky ReLU">
+      <!-- Sigmoid -->
+      <text class="svg-label" x="90" y="20" text-anchor="middle">Sigmoid</text>
+      <line class="svg-axis" x1="20" y1="200" x2="170" y2="200"/>
+      <line class="svg-axis" x1="95" y1="30" x2="95" y2="220"/>
+      <path d="M25,198 C50,197 70,192 85,175 C90,165 92,150 95,130 C98,110 100,95 105,80 C120,60 140,52 165,50"
+            fill="none" stroke="#2563eb" stroke-width="2.4"/>
+      <text class="svg-label-sm" x="160" y="45" text-anchor="end">1</text>
+      <text class="svg-label-sm" x="10" y="205">0</text>
+      <text class="svg-label-sm" x="165" y="215">z</text>
+
+      <!-- Tanh -->
+      <text class="svg-label" x="270" y="20" text-anchor="middle">Tanh</text>
+      <line class="svg-axis" x1="200" y1="130" x2="350" y2="130"/>
+      <line class="svg-axis" x1="275" y1="30" x2="275" y2="220"/>
+      <path d="M205,215 C225,213 245,200 260,170 C265,160 268,150 275,130 C282,110 285,100 290,90 C305,60 325,47 345,45"
+            fill="none" stroke="#16a34a" stroke-width="2.4"/>
+      <text class="svg-label-sm" x="345" y="40" text-anchor="end">1</text>
+      <text class="svg-label-sm" x="205" y="220">-1</text>
+      <text class="svg-label-sm" x="345" y="145">z</text>
+
+      <!-- ReLU -->
+      <text class="svg-label" x="450" y="20" text-anchor="middle">ReLU</text>
+      <line class="svg-axis" x1="380" y1="200" x2="540" y2="200"/>
+      <line class="svg-axis" x1="450" y1="30" x2="450" y2="220"/>
+      <line x1="385" y1="200" x2="448" y2="200" stroke="#d97706" stroke-width="2.4"/>
+      <line x1="452" y1="198" x2="535" y2="50" stroke="#d97706" stroke-width="2.4"/>
+      <text class="svg-label-sm" x="535" y="215">z</text>
+
+      <!-- Leaky ReLU -->
+      <text class="svg-label" x="630" y="20" text-anchor="middle">Leaky ReLU</text>
+      <line class="svg-axis" x1="560" y1="200" x2="720" y2="200"/>
+      <line class="svg-axis" x1="630" y1="30" x2="630" y2="220"/>
+      <line x1="565" y1="205" x2="628" y2="200" stroke="#7c3aed" stroke-width="2.4"/>
+      <line x1="632" y1="198" x2="715" y2="50" stroke="#7c3aed" stroke-width="2.4"/>
+      <text class="svg-label-sm" x="715" y="215">z</text>
+    </svg>
+    <figcaption>The four activation functions. <strong>Sigmoid</strong> outputs $(0,1)$. <strong>Tanh</strong> outputs $(-1,1)$ and is centered at 0. <strong>ReLU</strong> is linear for positive $z$ and 0 for negative $z$. <strong>Leaky ReLU</strong> adds a small positive slope for negative $z$.</figcaption>
+  </div>
+
+  <h3>6.5 Which activation to use? A practical guide</h3>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Activation</th><th>Typical use</th><th>Pros</th><th>Cons</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Sigmoid</td>
+          <td>Output layer (binary classification)</td>
+          <td>Output is a probability in $(0,1)$</td>
+          <td>Saturates → vanishing gradients</td>
+        </tr>
+        <tr>
+          <td>Tanh</td>
+          <td>Hidden layers (older models)</td>
+          <td>Zero-centered → better than sigmoid</td>
+          <td>Still saturates</td>
+        </tr>
+        <tr>
+          <td>ReLU</td>
+          <td><strong>Default for hidden layers</strong></td>
+          <td>Fast; no saturation for $z>0$</td>
+          <td>"Dead neurons" for $z<0$</td>
+        </tr>
+        <tr>
+          <td>Leaky ReLU</td>
+          <td>Hidden layers (alternative to ReLU)</td>
+          <td>Avoids dead neurons</td>
+          <td>Extra hyperparameter (slope)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box ins">
+    <div class="label">💡 Insight — Andrew's practical recommendation</div>
+    <p>In practice: <strong>ReLU is the default for hidden layers</strong>. If you're unsure, try ReLU first. Tanh is sometimes used in specialized architectures (RNNs), and sigmoid is standard for binary classification outputs. There's no universal "best" — you need to try on your specific problem.</p>
+  </div>
+
+  <!-- ============================================================
+       7. WHY NON-LINEAR ACTIVATIONS
+       ============================================================ -->
+  <h2 id="s7">7. Why Non-Linear Activation Functions?</h2>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — Linear activation</div>
+    <p>A <strong>linear activation</strong> is $g(z) = z$. It just passes the input through unchanged.</p>
+  </div>
+
+  <p>Why not use linear activations everywhere? Because the network would collapse to a linear model.</p>
+
+  <h3>7.1 The proof by construction</h3>
+
+  <p>Suppose all activations are linear: $g(z) = z$. Then:</p>
+  <div class="eq">
+    $$a^{[1]} = W^{[1]} x + b^{[1]}$$
+    $$a^{[2]} = W^{[2]} a^{[1]} + b^{[2]} = W^{[2]} (W^{[1]} x + b^{[1]}) + b^{[2]}$$
+  </div>
+  <p>Expanding:</p>
+  <div class="eq">
+    $$a^{[2]} = (W^{[2]} W^{[1]}) x + (W^{[2]} b^{[1]} + b^{[2]})$$
+  </div>
+
+  <p>This is just another linear function: $a^{[2]} = W' x + b'$ where $W' = W^{[2]} W^{[1]}$ and $b' = W^{[2]} b^{[1]} + b^{[2]}$.</p>
+
+  <div class="box imp">
+    <div class="label">⭐ Key Idea</div>
+    <p>If you stack linear layers, you get another linear layer. No matter how many layers you stack, a fully linear network is equivalent to a single linear transformation. <strong>Non-linear activations are what give depth its expressive power.</strong></p>
+  </div>
+
+  <div class="box intu">
+    <div class="label">🟢 Intuition — why we want non-linearity</div>
+    <p>Real-world data relationships (image → cat, sentence → sentiment) are highly non-linear. A linear model can only carve out straight-line decision boundaries. Non-linear activations allow the network to carve out complex, curvy boundaries — the kind needed for real problems.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Warning — one common exception</div>
+    <p>In the <strong>output layer</strong> for <em>regression</em> problems (predicting a real number, like housing price), we often use a linear activation — because we want an unconstrained output. But the hidden layers should still be non-linear.</p>
+  </div>
+
+  <!-- ============================================================
+       8. DERIVATIVES OF ACTIVATION FUNCTIONS
+       ============================================================ -->
+  <h2 id="s8">8. Derivatives of Activation Functions</h2>
+
+  <p>Backpropagation needs the derivatives of the activation functions. Let's compute them.</p>
+
+  <h3>8.1 Sigmoid derivative</h3>
+
+  <div class="eq">
+    $$g(z) = \sigma(z) = \frac{1}{1 + e^{-z}} \quad\Longrightarrow\quad g'(z) = g(z)(1 - g(z)) = a(1 - a)$$
+  </div>
+
+  <p>Let's verify this. Write $\sigma(z) = (1 + e^{-z})^{-1}$. Using the chain rule:</p>
+  <div class="eq">
+    $$\frac{d\sigma}{dz} = -(1 + e^{-z})^{-2} \cdot (-e^{-z}) = \frac{e^{-z}}{(1 + e^{-z})^2}$$
+  </div>
+  <p>Now $\sigma(z) = \frac{1}{1+e^{-z}}$ and $1 - \sigma(z) = \frac{e^{-z}}{1+e^{-z}}$. Multiplying: $\sigma(z)(1-\sigma(z)) = \frac{e^{-z}}{(1+e^{-z})^2}$, which matches. ✓</p>
+
+  <div class="box ex">
+    <div class="label">🟣 Example</div>
+    <ul>
+      <li>At $z = 10$: $\sigma(z) \approx 1$, so $g'(z) \approx 1 \cdot 0 = 0$. <em>Saturated.</em></li>
+      <li>At $z = -10$: $\sigma(z) \approx 0$, so $g'(z) \approx 0 \cdot 1 = 0$. <em>Saturated.</em></li>
+      <li>At $z = 0$: $\sigma(z) = 0.5$, so $g'(z) = 0.5 \cdot 0.5 = 0.25$. <em>Maximum slope.</em></li>
+    </ul>
+  </div>
+
+  <h3>8.2 Tanh derivative</h3>
+
+  <div class="eq">
+    $$g(z) = \tanh(z) \quad\Longrightarrow\quad g'(z) = 1 - \tanh^2(z) = 1 - a^2$$
+  </div>
+
+  <div class="box ex">
+    <div class="label">🟣 Example</div>
+    <ul>
+      <li>At $z = 0$: $\tanh(0) = 0$, so $g'(z) = 1 - 0 = 1$. <em>Maximum slope.</em></li>
+      <li>At large $|z|$: $\tanh(z) \to \pm 1$, so $g'(z) \to 0$. <em>Saturated.</em></li>
+    </ul>
+  </div>
+
+  <h3>8.3 ReLU derivative</h3>
+
+  <div class="eq">
+    $$g(z) = \max(0, z) \quad\Longrightarrow\quad g'(z) = \begin{cases} 0 & \text{if } z < 0 \\ 1 & \text{if } z > 0 \end{cases}$$
+  </div>
+
+  <p>Strictly speaking, ReLU is not differentiable at $z = 0$. In practice, we just define the derivative as 1 at that point (or 0 — it rarely matters since exactly 0 is a measure-zero event).</p>
+
+  <h3>8.4 Leaky ReLU derivative</h3>
+
+  <div class="eq">
+    $$g(z) = \max(0.01\,z, z) \quad\Longrightarrow\quad g'(z) = \begin{cases} 0.01 & \text{if } z < 0 \\ 1 & \text{if } z > 0 \end{cases}$$
+  </div>
+
+  <div class="box impl">
+    <div class="label">⚙️ Implementation — activation and its derivative</div>
+    <pre><code><span class="kw">def</span> <span class="fn">sigmoid</span>(z):
+    <span class="kw">return</span> <span class="nm">1</span> / (<span class="nm">1</span> + np.exp(-z))
+
+<span class="kw">def</span> <span class="fn">sigmoid_derivative</span>(a):
+    <span class="cm"># a is the sigmoid output, not z</span>
+    <span class="kw">return</span> a * (<span class="nm">1</span> - a)
+
+<span class="kw">def</span> <span class="fn">tanh_derivative</span>(a):
+    <span class="cm"># a is the tanh output, not z</span>
+    <span class="kw">return</span> <span class="nm">1</span> - a**<span class="nm">2</span>
+
+<span class="kw">def</span> <span class="fn">relu</span>(z):
+    <span class="kw">return</span> np.maximum(<span class="nm">0</span>, z)
+
+<span class="kw">def</span> <span class="fn">relu_derivative</span>(z):
+    <span class="kw">return</span> (z > <span class="nm">0</span>).astype(<span class="kw">float</span>)</code></pre>
+  </div>
+
+  <div class="box ins">
+    <div class="label">💡 Insight — why sigmoid and tanh saturate</div>
+    <p>For large positive or negative $z$, the sigmoid and tanh curves flatten out. Their derivatives approach 0, which means gradients flowing backward through such a unit become tiny. In a deep network, these tiny gradients multiply together and shrink to nothing — the <strong>vanishing gradient problem</strong>. ReLU largely solves this: for $z > 0$, its derivative is exactly 1, so gradients pass through unchanged.</p>
+  </div>
+
+  <!-- ============================================================
+       9. GRADIENT DESCENT FOR NEURAL NETWORKS
+       ============================================================ -->
+  <h2 id="s9">9. Gradient Descent for Neural Networks</h2>
+
+  <p>Now we derive the gradient-descent update rules for a 2-layer neural network. This is the heart of backpropagation.</p>
+
+  <h3>9.1 Parameters and cost function</h3>
+
+  <p>Parameters: $W^{[1]}, b^{[1]}, W^{[2]}, b^{[2]}$. Cost function:</p>
+  <div class="eq">
+    $$J(W^{[1]}, b^{[1]}, W^{[2]}, b^{[2]}) = \frac{1}{m} \sum_{i=1}^{m} L\!\left(\hat{y}^{(i)}, y^{(i)}\right)$$
+  </div>
+  <p>where $L$ is the binary cross-entropy loss from Week 2.</p>
+
+  <h3>9.2 The algorithm outline</h3>
+
+  <p>Gradient descent repeats the following steps:</p>
+  <ol>
+    <li>Forward propagate to compute predictions $\hat{y}^{(i)}$ for all $i$.</li>
+    <li>Backward propagate to compute gradients $dW^{[1]}, db^{[1]}, dW^{[2]}, db^{[2]}$.</li>
+    <li>Update each parameter: $W := W - \alpha \cdot dW$.</li>
+  </ol>
+
+  <h3>9.3 The gradient equations (vectorized)</h3>
+
+  <p>Forward propagation (recap):</p>
+  <div class="eq">
+    $$Z^{[1]} = W^{[1]} X + b^{[1]}, \quad A^{[1]} = g^{[1]}(Z^{[1]})$$
+    $$Z^{[2]} = W^{[2]} A^{[1]} + b^{[2]}, \quad A^{[2]} = g^{[2]}(Z^{[2]})$$
+  </div>
+
+  <p>Backward propagation:</p>
+
+  <div class="eq">
+    $$dZ^{[2]} = A^{[2]} - Y$$
+  </div>
+  <div class="eq">
+    $$dW^{[2]} = \frac{1}{m} dZ^{[2]} A^{[1]T}$$
+  </div>
+  <div class="eq">
+    $$db^{[2]} = \frac{1}{m} \texttt{np.sum}(dZ^{[2]}, \text{axis}=1, \text{keepdims=True})$$
+  </div>
+  <div class="eq">
+    $$dZ^{[1]} = W^{[2]T} dZ^{[2]} \; * \; g^{[1]\prime}(Z^{[1]})$$
+  </div>
+  <div class="eq">
+    $$dW^{[1]} = \frac{1}{m} dZ^{[1]} X^T$$
+  </div>
+  <div class="eq">
+    $$db^{[1]} = \frac{1}{m} \texttt{np.sum}(dZ^{[1]}, \text{axis}=1, \text{keepdims=True})$$
+  </div>
+
+  <p>where $*$ denotes element-wise multiplication.</p>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — Element-wise product ($*$)</div>
+    <p>The operation $A * B$ multiplies corresponding elements of two same-shaped matrices: $(A * B)_{ij} = A_{ij} \cdot B_{ij}$. In NumPy this is <code>A * B</code>, distinct from matrix multiplication <code>np.dot(A, B)</code>.</p>
+  </div>
+
+  <h3>9.4 Understanding each gradient equation</h3>
+
+  <div class="box ex">
+    <div class="label">🟣 $dZ^{[2]} = A^{[2]} - Y$</div>
+    <p>This is the same simplification from Week 2: the gradient of the loss w.r.t. the output pre-activation is prediction minus target. It works because we paired sigmoid with cross-entropy loss.</p>
+  </div>
+
+  <div class="box ex">
+    <div class="label">🟣 $dW^{[2]} = \frac{1}{m} dZ^{[2]} A^{[1]T}$</div>
+    <p>The gradient w.r.t. layer-2 weights is the product of two things: the error signal at the output ($dZ^{[2]}$) and the activations that fed into it ($A^{[1]}$). The $\frac{1}{m}$ averages over examples.</p>
+  </div>
+
+  <div class="box ex">
+    <div class="label">🟣 $dZ^{[1]} = W^{[2]T} dZ^{[2]} * g^{[1]\prime}(Z^{[1]})$</div>
+    <p>This is the <strong>chain rule</strong> at work. The error signal flows backward from layer 2 through $W^{[2]T}$ (which transports errors from output units to hidden units), then gets multiplied by the local derivative of the hidden activation $g^{[1]\prime}(Z^{[1]})$ — the "slope gate" through the activation function.</p>
+  </div>
+
+  <div class="box ins">
+    <div class="label">💡 Insight — the general backward pattern</div>
+    <p>Every layer's backward pass follows the same pattern: (1) receive error signal from the next layer, (2) multiply by the local activation derivative, (3) compute weight and bias gradients using the layer's inputs. This is why deep networks can be trained layer by layer — errors propagate systematically.</p>
+  </div>
+
+  <div class="box impl">
+    <div class="label">⚙️ Implementation — the full training loop</div>
+    <pre><code><span class="kw">for</span> i <span class="kw">in</span> range(num_iterations):
+    <span class="cm"># Forward</span>
+    Z1 = np.dot(W1, X) + b1
+    A1 = np.tanh(Z1)                     <span class="cm"># or ReLU, sigmoid, ...</span>
+    Z2 = np.dot(W2, A1) + b2
+    A2 = sigmoid(Z2)
+    
+    <span class="cm"># Backward</span>
+    dZ2 = A2 - Y
+    dW2 = (<span class="nm">1</span>/m) * np.dot(dZ2, A1.T)
+    db2 = (<span class="nm">1</span>/m) * np.sum(dZ2, axis=<span class="nm">1</span>, keepdims=<span class="kw">True</span>)
+    
+    dZ1 = np.dot(W2.T, dZ2) * (<span class="nm">1</span> - np.power(A1, <span class="nm">2</span>))  <span class="cm"># tanh derivative</span>
+    dW1 = (<span class="nm">1</span>/m) * np.dot(dZ1, X.T)
+    db1 = (<span class="nm">1</span>/m) * np.sum(dZ1, axis=<span class="nm">1</span>, keepdims=<span class="kw">True</span>)
+    
+    <span class="cm"># Update</span>
+    W1 -= alpha * dW1
+    b1 -= alpha * db1
+    W2 -= alpha * dW2
+    b2 -= alpha * db2</code></pre>
+  </div>
+
+  <!-- ============================================================
+       10. BACKPROPAGATION INTUITION
+       ============================================================ -->
+  <h2 id="s10">10. Backpropagation Intuition</h2>
+
+  <p>Backpropagation looks complicated, but it's just the chain rule organized systematically from right (output) to left (input).</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 760 320" role="img" aria-label="Forward and backward propagation through a 2-layer network">
+      <defs>
+        <marker id="fwd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="#16a34a"/>
+        </marker>
+        <marker id="bwd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="#dc2626"/>
+        </marker>
+      </defs>
+      <!-- boxes -->
+      <rect x="20" y="110" width="100" height="60" rx="8" fill="#e0ebff" stroke="#2563eb" stroke-width="1.5"/>
+      <text class="svg-label" x="70" y="145" text-anchor="middle">x, W⁽¹⁾, b⁽¹⁾</text>
+
+      <rect x="160" y="110" width="100" height="60" rx="8" fill="#e9f9ef" stroke="#16a34a" stroke-width="1.5"/>
+      <text class="svg-label" x="210" y="135" text-anchor="middle">z⁽¹⁾ = W⁽¹⁾x</text>
+      <text class="svg-label" x="210" y="153" text-anchor="middle">+ b⁽¹⁾</text>
+
+      <rect x="300" y="110" width="100" height="60" rx="8" fill="#f4ecff" stroke="#7c3aed" stroke-width="1.5"/>
+      <text class="svg-label" x="350" y="135" text-anchor="middle">a⁽¹⁾ =</text>
+      <text class="svg-label" x="350" y="153" text-anchor="middle">g⁽¹⁾(z⁽¹⁾)</text>
+
+      <rect x="440" y="110" width="120" height="60" rx="8" fill="#e9f9ef" stroke="#16a34a" stroke-width="1.5"/>
+      <text class="svg-label" x="500" y="135" text-anchor="middle">z⁽²⁾ = W⁽²⁾a⁽¹⁾</text>
+      <text class="svg-label" x="500" y="153" text-anchor="middle">+ b⁽²⁾</text>
+
+      <rect x="600" y="110" width="140" height="60" rx="8" fill="#f4ecff" stroke="#7c3aed" stroke-width="1.5"/>
+      <text class="svg-label" x="670" y="135" text-anchor="middle">a⁽²⁾ = g⁽²⁾(z⁽²⁾)</text>
+      <text class="svg-label" x="670" y="153" text-anchor="middle">= ŷ</text>
+
+      <!-- forward arrows -->
+      <line x1="120" y1="140" x2="155" y2="140" stroke="#16a34a" stroke-width="1.6" marker-end="url(#fwd)"/>
+      <line x1="260" y1="140" x2="295" y2="140" stroke="#16a34a" stroke-width="1.6" marker-end="url(#fwd)"/>
+      <line x1="400" y1="140" x2="435" y2="140" stroke="#16a34a" stroke-width="1.6" marker-end="url(#fwd)"/>
+      <line x1="560" y1="140" x2="595" y2="140" stroke="#16a34a" stroke-width="1.6" marker-end="url(#fwd)"/>
+
+      <text class="svg-label-sm" x="380" y="95" text-anchor="middle" fill="#16a34a">forward propagation (green)</text>
+
+      <!-- backward arrows -->
+      <line x1="660" y1="220" x2="560" y2="220" stroke="#dc2626" stroke-width="1.6" marker-end="url(#bwd)"/>
+      <line x1="540" y1="220" x2="410" y2="220" stroke="#dc2626" stroke-width="1.6" marker-end="url(#bwd)"/>
+      <line x1="390" y1="220" x2="270" y2="220" stroke="#dc2626" stroke-width="1.6" marker-end="url(#bwd)"/>
+      <line x1="250" y1="220" x2="130" y2="220" stroke="#dc2626" stroke-width="1.6" marker-end="url(#bwd)"/>
+
+      <text class="svg-label-sm" x="380" y="260" text-anchor="middle" fill="#dc2626">backward propagation (red): compute gradients layer by layer</text>
+
+      <!-- gradient labels -->
+      <text class="svg-label-sm" x="670" y="205" text-anchor="middle" fill="#dc2626">dZ⁽²⁾ = A⁽²⁾ - Y</text>
+      <text class="svg-label-sm" x="500" y="205" text-anchor="middle" fill="#dc2626">dW⁽²⁾, db⁽²⁾</text>
+      <text class="svg-label-sm" x="350" y="205" text-anchor="middle" fill="#dc2626">dZ⁽¹⁾ = W⁽²⁾ᵀdZ⁽²⁾ * g⁽¹⁾'</text>
+      <text class="svg-label-sm" x="210" y="205" text-anchor="middle" fill="#dc2626">dW⁽¹⁾, db⁽¹⁾</text>
+    </svg>
+    <figcaption>Forward pass (green) computes values left to right. Backward pass (red) computes gradients right to left using the chain rule. Each layer's gradient depends on the next layer's gradient and the local activation derivative.</figcaption>
+  </div>
+
+  <div class="box intu">
+    <div class="label">🟢 Intuition — the "error signal"</div>
+    <p>Imagine $dZ^{[2]}$ as an “error message” from the output layer: it says how wrong each output is. This message flows backward through $W^{[2]T}$ to become an error signal for the hidden layer, and then gets scaled by the activation derivative $g^{[1]\prime}$. Each weight's gradient is then computed by pairing the error signal with the activation that fed into it.</p>
+  </div>
+
+  <div class="box imp">
+    <div class="label">⭐ Key Idea — the symmetry of forward and backward</div>
+    <p>Notice the beautiful symmetry: the forward pass goes $x \to z \to a \to \hat{y}$, and the backward pass goes $\hat{y} \to da \to dz \to dW, db$. The formulas mirror each other. This is not a coincidence — it reflects the structure of the chain rule.</p>
+  </div>
+
+  <!-- ============================================================
+       11. RANDOM INITIALIZATION
+       ============================================================ -->
+  <h2 id="s11">11. Random Initialization</h2>
+
+  <p>One more crucial topic: how should we initialize the weights $W$ and biases $b$ before training?</p>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — Weight initialization</div>
+    <p><strong>Weight initialization</strong> is the procedure for setting the initial values of $W$ and $b$ before gradient descent begins.</p>
+  </div>
+
+  <h3>11.1 Why not zeros?</h3>
+
+  <p>Suppose we set all weights to 0: $W^{[1]} = \begin{bmatrix} 0 & 0 \\ 0 & 0 \end{bmatrix}$. Then every hidden unit computes the same thing:</p>
+  <div class="eq">
+    $$a_1^{[1]} = a_2^{[1]}$$
+  </div>
+
+  <p>This is because each hidden unit receives the same input, has the same (zero) weights, and adds the same (zero) bias. So all hidden units are identical.</p>
+
+  <p>When we backpropagate, all hidden units get the <em>same</em> gradient, and after updating they remain identical. They never differentiate from each other.</p>
+
+  <div class="box warn">
+    <div class="label">🔴 Warning — the symmetry problem</div>
+    <p>This is called the <strong>symmetry problem</strong>: zero-initialized hidden units never break symmetry, so having many hidden units is no better than having just one. The network can't learn rich representations.</p>
+  </div>
+
+  <div class="fig">
+    <svg viewBox="0 0 500 260" role="img" aria-label="Left: zero initialization leads to identical hidden units. Right: random initialization breaks symmetry.">
+      <!-- Left -->
+      <text class="svg-label" x="120" y="25" text-anchor="middle">Zero init → symmetric</text>
+      <circle class="svg-node" cx="120" cy="90" r="18"/>
+      <circle class="svg-node" cx="120" cy="160" r="18"/>
+      <text class="svg-label-sm" x="120" y="95" text-anchor="middle">a⁽¹⁾₁</text>
+      <text class="svg-label-sm" x="120" y="165" text-anchor="middle">a⁽¹⁾₂</text>
+      <text class="svg-label-sm" x="180" y="120" fill="#dc2626">a₁ = a₂</text>
+      <text class="svg-label-sm" x="180" y="140" fill="#dc2626">(identical!)</text>
+      <text class="svg-label-sm" x="120" y="225" text-anchor="middle">Both units learn the same</text>
+      <text class="svg-label-sm" x="120" y="242" text-anchor="middle">→ wastes capacity</text>
+
+      <!-- Right -->
+      <text class="svg-label" x="360" y="25" text-anchor="middle">Random init → asymmetric</text>
+      <circle class="svg-node-2" cx="360" cy="90" r="18"/>
+      <circle class="svg-node-2" cx="360" cy="160" r="18"/>
+      <text class="svg-label-sm" x="360" y="95" text-anchor="middle">a⁽¹⁾₁</text>
+      <text class="svg-label-sm" x="360" y="165" text-anchor="middle">a⁽¹⁾₂</text>
+      <text class="svg-label-sm" x="420" y="120" fill="#16a34a">a₁ ≠ a₂</text>
+      <text class="svg-label-sm" x="420" y="140" fill="#16a34a">(different!)</text>
+      <text class="svg-label-sm" x="360" y="225" text-anchor="middle">Each unit learns something</text>
+      <text class="svg-label-sm" x="360" y="242" text-anchor="middle">different → full capacity</text>
+    </svg>
+    <figcaption>Zero initialization makes all hidden units identical. Random initialization breaks the symmetry so each unit can specialize.</figcaption>
+  </div>
+
+  <h3>11.2 What about biases?</h3>
+
+  <p>Interestingly, setting biases to zero is fine. It's only the <em>weights</em> that must be random — because they're what break the symmetry between units.</p>
+
+  <h3>11.3 The recommended approach</h3>
+
+  <p>Initialize weights randomly with <em>small</em> values, typically scaled down by a factor like 0.01:</p>
+
+  <div class="box impl">
+    <div class="label">⚙️ Implementation — random initialization</div>
+    <pre><code><span class="cm"># Initialize weights with small random values, biases with zeros</span>
+W1 = np.random.randn(n_h, n_x) * <span class="nm">0.01</span>
+b1 = np.zeros((n_h, <span class="nm">1</span>))
+W2 = np.random.randn(n_y, n_h) * <span class="nm">0.01</span>
+b2 = np.zeros((n_y, <span class="nm">1</span>))</code></pre>
+  </div>
+
+  <h3>11.4 Why small random values?</h3>
+
+  <p>If weights are <em>too large</em>, the pre-activations $z$ become large in magnitude. For sigmoid and tanh, this means the neuron is deep in the saturated region where the gradient is near 0. The network then learns very slowly.</p>
+
+  <div class="box intu">
+    <div class="label">🟢 Intuition — keeping activations in the "sweet spot"</div>
+    <p>The gradient of sigmoid/tanh is largest near $z = 0$. By using small random weights, we ensure that $z$ starts near 0, so gradients are healthy and learning proceeds quickly. As training progresses, the network adjusts weights to where they're most useful.</p>
+  </div>
+
+  <div class="box ins">
+    <div class="label">💡 Insight — the 0.01 is not sacred</div>
+    <p>The multiplier 0.01 is a common default, but for very deep networks, more sophisticated schemes like <strong>Xavier initialization</strong> (which scales by $1/\sqrt{n^{[l-1]}}$) or <strong>He initialization</strong> (scales by $\sqrt{2/n^{[l-1]}}$) work better. These are covered in Course 2.</p>
+  </div>
+
+  <!-- ============================================================
+       12. COMMON MISTAKES
+       ============================================================ -->
+  <h2 id="s12">12. Common Mistakes &amp; Clarifications</h2>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 1 — Calling a 1-hidden-layer net a "1-layer NN"</div>
+    <p>A network with one hidden layer is a <strong>2-layer NN</strong> in this course's convention. The input layer doesn't count because it just passes data through. Layer 1 = hidden, Layer 2 = output.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 2 — Confusing element-wise product with matrix multiplication</div>
+    <p>In $dZ^{[1]} = W^{[2]T} dZ^{[2]} * g^{[1]\prime}(Z^{[1]})$, the $*$ is <em>element-wise</em> multiplication (NumPy <code>*</code>), not matrix multiplication (<code>np.dot</code>). Mixing these up silently produces wrong shapes or wrong math.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 3 — Using linear activation in hidden layers</div>
+    <p>Stacking linear layers gives another linear layer. Hidden layers <em>must</em> have non-linear activations (ReLU, tanh, etc.) for the network to have any expressive power beyond a single linear model.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 4 — Initializing all weights to zero</div>
+    <p>Zero initialization makes all hidden units symmetric and prevents the network from learning diverse features. Always initialize weights randomly (small values). Biases can be zero.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 5 — Using too-large random weights</div>
+    <p>If weights are too large, sigmoid/tanh saturate and gradients vanish. Use <code>* 0.01</code> (or more sophisticated schemes for deep nets) as a starting point.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 6 — Forgetting keepdims in sum</div>
+    <p>When computing $db^{[1]}$ or $db^{[2]}$ via <code>np.sum(..., axis=1)</code>, forgetting <code>keepdims=True</code> produces a 1-D array instead of a column vector, causing broadcasting bugs downstream. Always specify <code>keepdims=True</code>.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 7 — Using sigmoid everywhere</div>
+    <p>Sigmoid is fine for the output of binary classification, but for hidden layers, tanh or ReLU usually trains faster and to a better solution. Default to ReLU unless you have a reason not to.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 8 — Confusing $g^{[1]\prime}(Z^{[1]})$ with $g^{[1]}(Z^{[1]})$</div>
+    <p>The activation is $g(z)$; its derivative is $g'(z)$. In backprop we need the <em>derivative</em>. In NumPy, for sigmoid you compute $a(1-a)$, not $a$ itself.</p>
+  </div>
+
+  <!-- ============================================================
+       13. SUMMARY & REVIEW
+       ============================================================ -->
+  <h2 id="s13">13. Weekly Summary &amp; Review</h2>
+
+  <section class="summary">
+    <h2 style="border:none">📌 Weekly Summary</h2>
+
+    <p><strong>1. From logistic regression to a neural network.</strong> A 2-layer NN adds a hidden layer between input and output. Hidden units are small logistic-regression-like neurons; their outputs feed the final output neuron.</p>
+
+    <p><strong>2. Notation.</strong> $a^{[0]} = x$, hidden layer 1 has $W^{[1]}, b^{[1]}$, output layer 2 has $W^{[2]}, b^{[2]}$, and $\hat{y} = a^{[2]}$. $W^{[l]}$ has shape (units in layer $l$, units in layer $l-1$).</p>
+
+    <p><strong>3. Forward propagation.</strong> $z^{[1]} = W^{[1]}x + b^{[1]}$, $a^{[1]} = g^{[1]}(z^{[1]})$, $z^{[2]} = W^{[2]}a^{[1]} + b^{[2]}$, $a^{[2]} = g^{[2]}(z^{[2]})$.</p>
+
+    <p><strong>4. Vectorization.</strong> Stack examples as columns of $X$. Forward pass becomes $Z^{[1]} = W^{[1]}X + b^{[1]}$, etc. The bias broadcasts across columns.</p>
+
+    <p><strong>5. Activation functions.</strong> Sigmoid (output layers, binary), Tanh (hidden layers, older), ReLU (default hidden), Leaky ReLU (alternative hidden). Choice matters.</p>
+
+    <p><strong>6. Why non-linearity.</strong> Stacking linear layers produces another linear layer. Non-linear activations give depth its expressive power.</p>
+
+    <p><strong>7. Derivatives.</strong> $\sigma'(z) = a(1-a)$; $\tanh'(z) = 1 - a^2$; ReLU$'(z) = 0$ or $1$ depending on sign.</p>
+
+    <p><strong>8. Backpropagation.</strong> Using chain rule from output to input: $dZ^{[2]} = A^{[2]} - Y$, $dW^{[2]} = \frac{1}{m}dZ^{[2]}A^{[1]T}$, $dZ^{[1]} = W^{[2]T}dZ^{[2]} * g^{[1]\prime}(Z^{[1]})$, $dW^{[1]} = \frac{1}{m}dZ^{[1]}X^T$.</p>
+
+    <p><strong>9. Random initialization.</strong> Weights must be random (small) to break symmetry. Biases can be zero. Too-large weights saturate sigmoid/tanh and cause vanishing gradients.</p>
+  </section>
+
+  <h3>✅ Must-Know Concepts</h3>
+  <ul>
+    <li>Difference between logistic regression and a 2-layer NN.</li>
+    <li>Meaning of $a^{[0]}, a^{[1]}, a^{[2]}$, and how the layers connect.</li>
+    <li>Shape conventions for $W^{[l]}$ and $b^{[l]}$.</li>
+    <li>Forward propagation equations (both per-example and vectorized).</li>
+    <li>Sigmoid, tanh, ReLU, Leaky ReLU — formulas, ranges, and use cases.</li>
+    <li>Why non-linear activations are essential (proof by composition).</li>
+    <li>Derivatives of all four activation functions.</li>
+    <li>Vectorized gradient formulas for a 2-layer NN.</li>
+    <li>The role of element-wise products vs matrix products in backprop.</li>
+    <li>Why zero initialization fails (symmetry) and how random initialization fixes it.</li>
+    <li>Why small initial weights are preferred.</li>
+  </ul>
+
+  <h3>🧮 Important Equations (Week 3)</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Equation</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>$z^{[1]} = W^{[1]}x + b^{[1]}$</td><td>Pre-activation, layer 1 (single example)</td></tr>
+        <tr><td>$a^{[1]} = g^{[1]}(z^{[1]})$</td><td>Activation, layer 1</td></tr>
+        <tr><td>$z^{[2]} = W^{[2]}a^{[1]} + b^{[2]}$</td><td>Pre-activation, layer 2</td></tr>
+        <tr><td>$a^{[2]} = g^{[2]}(z^{[2]}) = \hat{y}$</td><td>Output prediction</td></tr>
+        <tr><td>$Z^{[1]} = W^{[1]}X + b^{[1]}$</td><td>Vectorized pre-activation, layer 1 (all $m$ examples)</td></tr>
+        <tr><td>$A^{[1]} = g^{[1]}(Z^{[1]})$</td><td>Vectorized activation, layer 1</td></tr>
+        <tr><td>$\sigma(z) = \dfrac{1}{1+e^{-z}}$</td><td>Sigmoid activation</td></tr>
+        <tr><td>$\tanh(z) = \dfrac{e^z - e^{-z}}{e^z + e^{-z}}$</td><td>Tanh activation</td></tr>
+        <tr><td>$\text{ReLU}(z) = \max(0, z)$</td><td>ReLU activation</td></tr>
+        <tr><td>$\text{Leaky ReLU}(z) = \max(0.01z, z)$</td><td>Leaky ReLU activation</td></tr>
+        <tr><td>$\sigma'(z) = a(1 - a)$</td><td>Sigmoid derivative</td></tr>
+        <tr><td>$\tanh'(z) = 1 - a^2$</td><td>Tanh derivative</td></tr>
+        <tr><td>$dZ^{[2]} = A^{[2]} - Y$</td><td>Gradient of loss w.r.t. layer-2 pre-activation</td></tr>
+        <tr><td>$dW^{[2]} = \frac{1}{m} dZ^{[2]} A^{[1]T}$</td><td>Gradient w.r.t. layer-2 weights</td></tr>
+        <tr><td>$db^{[2]} = \frac{1}{m} \texttt{np.sum}(dZ^{[2]}, \text{axis}=1, \text{keepdims=True})$</td><td>Gradient w.r.t. layer-2 bias</td></tr>
+        <tr><td>$dZ^{[1]} = W^{[2]T} dZ^{[2]} * g^{[1]\prime}(Z^{[1]})$</td><td>Gradient propagated back to layer 1</td></tr>
+        <tr><td>$dW^{[1]} = \frac{1}{m} dZ^{[1]} X^T$</td><td>Gradient w.r.t. layer-1 weights</td></tr>
+        <tr><td>$db^{[1]} = \frac{1}{m} \texttt{np.sum}(dZ^{[1]}, \text{axis}=1, \text{keepdims=True})$</td><td>Gradient w.r.t. layer-1 bias</td></tr>
+        <tr><td>$W^{[l]} \sim \mathcal{N}(0, 0.01^2)$</td><td>Small random initialization</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>⚠️ Common Confusions Recap</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Confusion</th><th>Resolution</th></tr></thead>
+      <tbody>
+        <tr><td>"1-layer" vs "2-layer" NN</td><td>This course counts only the hidden and output layers. A 1-hidden-layer NN is a "2-layer NN."</td></tr>
+        <tr><td>Sigmoid vs tanh</td><td>Sigmoid outputs $(0, 1)$; tanh outputs $(-1, 1)$ and is zero-centered. Tanh usually trains faster for hidden layers.</td></tr>
+        <tr><td>ReLU vs Leaky ReLU</td><td>ReLU has 0 slope for $z < 0$ (dead neuron risk); Leaky ReLU has a small positive slope (0.01) so gradients still flow.</td></tr>
+        <tr><td>$g(z)$ vs $g'(z)$</td><td>The activation value vs its derivative. In backprop we need the derivative.</td></tr>
+        <tr><td>$*$ vs <code>np.dot</code></td><td>$*$ is element-wise multiplication; <code>np.dot</code> is matrix multiplication. Both appear in backprop.</td></tr>
+        <tr><td>W vs b initialization</td><td>W must be random (small); b can be zero. Only W needs to break symmetry.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>📝 Quick Review (Click to Reveal Answers)</h3>
+
+  <details class="qa">
+    <summary>Why is a network with one hidden layer called a "2-layer NN"?</summary>
+    <div class="ans">Because the input layer doesn't count (it just passes data through). We count the hidden layer (layer 1) and the output layer (layer 2).</div>
+  </details>
+
+  <details class="qa">
+    <summary>What is the shape of $W^{[1]}$ for a network with 3 inputs and 4 hidden units?</summary>
+    <div class="ans">$(4, 3)$ — (units in layer 1) × (units in layer 0).</div>
+  </details>
+
+  <details class="qa">
+    <summary>Write the forward propagation equations for a 2-layer NN (single example).</summary>
+    <div class="ans">$z^{[1]} = W^{[1]}x + b^{[1]}$; $a^{[1]} = g^{[1]}(z^{[1]})$; $z^{[2]} = W^{[2]}a^{[1]} + b^{[2]}$; $a^{[2]} = g^{[2]}(z^{[2]})$.</div>
+  </details>
+
+  <details class="qa">
+    <summary>How do you vectorize forward propagation across $m$ examples?</summary>
+    <div class="ans">Stack examples as columns of $X$. Then $Z^{[1]} = W^{[1]}X + b^{[1]}$, $A^{[1]} = g^{[1]}(Z^{[1]})$, $Z^{[2]} = W^{[2]}A^{[1]} + b^{[2]}$, $A^{[2]} = g^{[2]}(Z^{[2]})$. Shapes: $Z^{[1]}, A^{[1]}$ are $(n_h, m)$, $Z^{[2]}, A^{[2]}$ are $(n_y, m)$.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What is the range of the tanh function, and how does it differ from sigmoid?</summary>
+    <div class="ans">Tanh outputs $(-1, 1)$; sigmoid outputs $(0, 1)$. Tanh is zero-centered, which usually makes optimization more efficient for hidden layers.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What is the formula for ReLU?</summary>
+    <div class="ans">$\text{ReLU}(z) = \max(0, z)$.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Why is it bad to use a linear activation in hidden layers?</summary>
+    <div class="ans">Because composing linear functions gives another linear function. A deep network with only linear activations is equivalent to a single-layer linear model — depth gives no additional expressive power. Non-linear activations are essential.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What is the derivative of sigmoid in terms of its output $a$?</summary>
+    <div class="ans">$\sigma'(z) = a(1-a)$.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What is the derivative of tanh in terms of its output $a$?</summary>
+    <div class="ans">$\tanh'(z) = 1 - a^2$.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Write the vectorized formula for $dZ^{[2]}$.</summary>
+    <div class="ans">$dZ^{[2]} = A^{[2]} - Y$.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Write the formula for $dW^{[2]}$.</summary>
+    <div class="ans">$dW^{[2]} = \frac{1}{m} dZ^{[2]} A^{[1]T}$.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Write the formula for $dZ^{[1]}$.</summary>
+    <div class="ans">$dZ^{[1]} = W^{[2]T} dZ^{[2]} * g^{[1]\prime}(Z^{[1]})$, where $*$ is element-wise multiplication.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Why is the element-wise product used in $dZ^{[1]}$ instead of matrix multiplication?</summary>
+    <div class="ans">Because the chain rule requires the local derivative $g^{[1]\prime}(Z^{[1]})$ to be applied element-wise to each pre-activation. Matrix multiplication is used to <em>propagate</em> the error back ($W^{[2]T}dZ^{[2]}$), but the activation derivative is applied element-wise.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What happens if you initialize all weights to zero?</summary>
+    <div class="ans">All hidden units compute the same output and receive the same gradient, so they stay identical throughout training. The network can't learn diverse features — this is the symmetry problem.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Why must weights be initialized randomly?</summary>
+    <div class="ans">To break symmetry between hidden units, so each unit can learn to detect different features.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Why small random values (e.g., ×0.01) rather than large ones?</summary>
+    <div class="ans">Large weights cause sigmoid/tanh pre-activations to be far from 0, where the derivatives are tiny — leading to vanishing gradients and slow training. Small weights keep activations near the "sweet spot" where gradients are healthy.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Can biases be initialized to zero?</summary>
+    <div class="ans">Yes. Biases don't cause the symmetry problem — only weights do. So $b^{[1]} = 0$ and $b^{[2]} = 0$ are standard.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Why does ReLU help avoid the vanishing gradient problem?</summary>
+    <div class="ans">For $z > 0$, the ReLU derivative is exactly 1, so gradients pass through unchanged. Sigmoid and tanh saturate (derivative → 0) for large $|z|$, causing gradients to shrink as they propagate backward.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What does <code>keepdims=True</code> do in <code>np.sum</code>?</summary>
+    <div class="ans">It preserves the reduced dimension as size 1, so <code>np.sum(dZ, axis=1, keepdims=True)</code> returns a column vector of shape (n, 1) rather than a flat array of shape (n,). This preserves the shape convention needed for broadcasting.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Sketch the backward pass for a 2-layer NN in words.</summary>
+    <div class="ans">(1) Compute the output error $dZ^{[2]} = A^{[2]} - Y$. (2) Compute $dW^{[2]}, db^{[2]}$. (3) Propagate the error back through $W^{[2]T}$, multiply element-wise by $g^{[1]\prime}(Z^{[1]})$ to get $dZ^{[1]}$. (4) Compute $dW^{[1]}, db^{[1]}$. (5) Update all parameters.</div>
+  </details>
+
+  <h3>🧠 Self-Test (Conceptual)</h3>
+
+  <details class="qa">
+    <summary>You have a 2-layer NN with 100 input features, 50 hidden units, and 1 output unit. What are the shapes of $W^{[1]}, b^{[1]}, W^{[2]}, b^{[2]}$?</summary>
+    <div class="ans">$W^{[1]}$: $(50, 100)$; $b^{[1]}$: $(50, 1)$; $W^{[2]}$: $(1, 50)$; $b^{[2]}$: $(1, 1)$.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Your 2-layer NN achieves the same performance as logistic regression. What might be wrong?</summary>
+    <div class="ans">Likely the hidden layer is using a <em>linear</em> activation. If $g^{[1]}(z) = z$, the whole network collapses to a linear model. Change the hidden activation to ReLU or tanh.</div>
+  </details>
+
+  <details class="qa">
+    <summary>During training, the loss stops decreasing very early. What might cause this?</summary>
+    <div class="ans">Several possibilities: (1) weights initialized too large → saturated activations → tiny gradients; (2) learning rate too small; (3) all weights initialized to zero → symmetry problem; (4) wrong activation derivative used in backprop.</div>
+  </details>
+
+  <details class="qa">
+    <summary>You notice $db^{[1]}$ has shape $(50,)$ instead of $(50, 1)$. What did you likely forget?</summary>
+    <div class="ans">You forgot <code>keepdims=True</code> in <code>np.sum(dZ1, axis=1)</code>. Without it, NumPy drops the reduced dimension, giving a 1-D array instead of a column vector.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Why does the choice of activation function have a bigger impact in hidden layers than in output layers?</summary>
+    <div class="ans">The output layer's activation is largely determined by the task: probability for binary classification (sigmoid), a real value for regression (linear). Hidden layers, however, benefit from non-linearities that avoid saturation (ReLU) and keep activations centered (tanh). The hidden activation choice affects how gradients flow through the whole network, so it has a much larger effect on training dynamics.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Someone says: "Since my network has 4 hidden units and only 3 inputs, it must be overfitting." Is this a valid conclusion?</summary>
+    <div class="ans">No. Network size alone doesn't determine overfitting. What matters is the relationship between total parameter count, training set size, and regularization. A small network with 4 hidden units may underfit rather than overfit — you'd need to check train vs dev error to diagnose.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Explain in one sentence why backpropagation is efficient.</summary>
+    <div class="ans">Because it computes all parameter gradients in a single backward sweep using the chain rule, reusing intermediate quantities rather than recomputing them per parameter.</div>
+  </details>
+
+</div><!-- /wrap -->
+
+<!-- ================= FOOTER NAV ================= -->
+<nav class="navfoot" aria-label="Week navigation">
+  <a href="C1_W2.html" class="nav-btn">← Previous Week</a>
+  <a href="#top">↑ Back to Top</a>
+  <a href="#">Back to Course 1</a>
+  <a href="#">Back to Specialization</a>
+  <a href="C1_W4.html" class="nav-btn">Next Week →</a>
+</nav>
+
+<button class="backtop" id="backtop" type="button" aria-label="Back to top">↑ Top</button>
+
+<script>
+/* ============================================================
+   THEME TOGGLE
+   ============================================================ */
+(function(){
+  const root = document.documentElement;
+  const stored = localStorage.getItem('dl-theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if (stored === 'dark' || (!stored && prefersDark)) root.setAttribute('data-theme','dark');
+
+  const btn = document.getElementById('themeBtn');
+  btn.addEventListener('click', () => {
+    const cur = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', cur);
+    localStorage.setItem('dl-theme', cur);
+  });
+})();
+
+/* ============================================================
+   BACK TO TOP
+   ============================================================ */
+(function(){
+  const b = document.getElementById('backtop');
+  const onScroll = () => {
+    if (window.scrollY > 500) b.classList.add('show');
+    else b.classList.remove('show');
+  };
+  window.addEventListener('scroll', onScroll, {passive:true});
+  b.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+})();
+
+/* ============================================================
+   CLIENT-SIDE SEARCH
+   ============================================================ */
+(function(){
+  const input = document.getElementById('searchInput');
+  const clear = document.getElementById('searchClear');
+  const wrap = document.querySelector('.wrap');
+  let originalBody = null;
+
+  function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+  function doSearch(q){
+    if (originalBody === null){
+      originalBody = wrap.innerHTML;
+    } else {
+      wrap.innerHTML = originalBody;
+    }
+
+    if (!q || q.trim().length < 2) return;
+
+    const term = q.trim();
+    const re = new RegExp('(' + escapeRegExp(term) + ')', 'gi');
+
+    const walker = document.createTreeWalker(wrap, NodeFilter.SHOW_TEXT, {
+      acceptNode(node){
+        if (!node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        const p = node.parentElement;
+        if (!p) return NodeFilter.FILTER_REJECT;
+        const tag = p.tagName;
+        if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'PRE' || tag === 'CODE') return NodeFilter.FILTER_REJECT;
+        if (!re.test(node.nodeValue)) { re.lastIndex = 0; return NodeFilter.FILTER_REJECT; }
+        re.lastIndex = 0;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+
+    const targets = [];
+    while (walker.nextNode()) targets.push(walker.currentNode);
+
+    targets.forEach(node => {
+      const span = document.createElement('span');
+      span.innerHTML = node.nodeValue.replace(re, '<mark class="hit">$1</mark>');
+      node.parentNode.replaceChild(span, node);
+    });
+  }
+
+  let t = null;
+  input.addEventListener('input', (e) => {
+    clearTimeout(t);
+    t = setTimeout(() => doSearch(e.target.value), 180);
+  });
+
+  clear.addEventListener('click', () => {
+    input.value = '';
+    doSearch('');
+  });
+})();
+
+if (window.MathJax && window.MathJax.typesetPromise){
+  window.MathJax.typesetPromise();
+}
+</script>
+
+</body>
+</html>

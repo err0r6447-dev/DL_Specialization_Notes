@@ -1,0 +1,2247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Course 4 · Week 1 — Foundations of Convolutional Neural Networks</title>
+
+<!-- MathJax -->
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$','$'], ['\\(','\\)']], displayMath: [['$$','$$'], ['\\[','\\]']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+  :root{
+    --bg:#f7f8fb;
+    --bg-alt:#ffffff;
+    --text:#1c2230;
+    --muted:#5b6478;
+    --border:#e3e6ee;
+    --accent:#3a63d8;
+    --accent-soft:#eaefff;
+    --def:#e8f1ff;
+    --def-b: #3a63d8;
+    --int:#e8fbf0;
+    --int-b:#1f9d55;
+    --imp:#fff6e0;
+    --imp-b:#d99a00;
+    --warn:#ffe9e9;
+    --warn-b:#d64545;
+    --exam:#f3e9ff;
+    --exam-b:#7a3ad6;
+    --code-bg:#0f172a;
+    --code-text:#e6edf7;
+    --shadow:0 1px 3px rgba(20,30,60,.06),0 8px 24px rgba(20,30,60,.06);
+  }
+  html[data-theme="dark"]{
+    --bg:#0e1116;
+    --bg-alt:#161b23;
+    --text:#e6ecf5;
+    --muted:#a1abc0;
+    --border:#2a3242;
+    --accent:#7d9cff;
+    --accent-soft:#1b2440;
+    --def:#132347;
+    --def-b:#7d9cff;
+    --int:#0f2b1d;
+    --int-b:#4bd18a;
+    --imp:#2c2410;
+    --imp-b:#f0b73f;
+    --warn:#2e1414;
+    --warn-b:#ff7b7b;
+    --exam:#20143a;
+    --exam-b:#b48cff;
+    --code-bg:#05080f;
+    --code-text:#d7e3f4;
+    --shadow:0 1px 3px rgba(0,0,0,.5),0 8px 24px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    line-height:1.65;-webkit-font-smoothing:antialiased;font-size:16.5px;}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{font-family:"JetBrains Mono",Menlo,Consolas,monospace;font-size:.9em;
+    background:rgba(127,127,127,.14);padding:2px 5px;border-radius:4px}
+  pre{background:var(--code-bg);color:var(--code-text);padding:16px 18px;border-radius:10px;
+    overflow-x:auto;font-size:13.5px;line-height:1.55;box-shadow:var(--shadow)}
+  pre code{background:transparent;color:inherit;padding:0;font-size:inherit}
+
+  /* ---------- Top bar ---------- */
+  .topbar{position:sticky;top:0;z-index:50;background:var(--bg-alt);
+    border-bottom:1px solid var(--border);padding:10px 16px;
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;box-shadow:var(--shadow)}
+  .topbar .brand{font-weight:700;font-size:15px;letter-spacing:.2px}
+  .topbar .brand small{display:block;color:var(--muted);font-weight:400;font-size:11.5px}
+  .topbar .spacer{flex:1}
+  .topbar button,.topbar a.btn{
+    background:var(--accent-soft);color:var(--accent);border:1px solid transparent;
+    padding:7px 11px;border-radius:8px;font-size:13.5px;cursor:pointer;font-weight:600}
+  .topbar button:hover,.topbar a.btn:hover{filter:brightness(.97);text-decoration:none}
+  .search-wrap{position:relative}
+  .search-wrap input{
+    padding:8px 12px 8px 30px;border-radius:8px;border:1px solid var(--border);
+    background:var(--bg);color:var(--text);font-size:13.5px;min-width:190px;outline:none}
+  .search-wrap::before{content:"🔍";position:absolute;left:9px;top:50%;transform:translateY(-50%);
+    font-size:12px;opacity:.7}
+
+  /* ---------- Layout ---------- */
+  .layout{display:grid;grid-template-columns:290px minmax(0,1fr);gap:24px;
+    max-width:1400px;margin:0 auto;padding:24px 18px 80px}
+  @media(max-width:960px){.layout{grid-template-columns:1fr;padding:16px 12px 60px}}
+
+  /* ---------- TOC ---------- */
+  aside.toc{position:sticky;top:74px;align-self:start;max-height:calc(100vh - 90px);
+    overflow-y:auto;background:var(--bg-alt);border:1px solid var(--border);
+    border-radius:12px;padding:14px 14px 18px;box-shadow:var(--shadow);font-size:14px}
+  aside.toc h3{margin:0 0 8px;font-size:13px;text-transform:uppercase;
+    letter-spacing:.6px;color:var(--muted)}
+  aside.toc ol{margin:0;padding-left:18px}
+  aside.toc ol li{margin:5px 0}
+  aside.toc a{color:var(--text)}
+  aside.toc a:hover{color:var(--accent)}
+  @media(max-width:960px){aside.toc{position:static;max-height:none}}
+
+  main{min-width:0}
+  h1{font-size:clamp(22px,3.4vw,30px);margin:0 0 6px}
+  h2{font-size:clamp(19px,2.6vw,24px);margin:44px 0 12px;padding-bottom:6px;
+    border-bottom:2px solid var(--border)}
+  h3{font-size:clamp(17px,2.1vw,20px);margin:28px 0 8px}
+  h4{font-size:16px;margin:20px 0 6px}
+  p{margin:9px 0}
+  ul,ol{padding-left:22px}
+  li{margin:5px 0}
+  .lead{color:var(--muted);font-size:15.5px}
+
+  /* ---------- Callouts ---------- */
+  .box{border-left:5px solid var(--accent);background:var(--bg-alt);
+    padding:14px 16px;border-radius:10px;margin:16px 0;box-shadow:var(--shadow)}
+  .box .label{display:inline-block;font-size:11.5px;font-weight:800;
+    letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px}
+  .box.def{border-color:var(--def-b);background:var(--def)}
+  .box.def .label{color:var(--def-b)}
+  .box.int{border-color:var(--int-b);background:var(--int)}
+  .box.int .label{color:var(--int-b)}
+  .box.imp{border-color:var(--imp-b);background:var(--imp)}
+  .box.imp .label{color:var(--imp-b)}
+  .box.warn{border-color:var(--warn-b);background:var(--warn)}
+  .box.warn .label{color:var(--warn-b)}
+  .box.exam{border-color:var(--exam-b);background:var(--exam)}
+  .box.exam .label{color:var(--exam-b)}
+  .box.extra{border-color:var(--muted);background:var(--bg-alt)}
+  .box.extra .label{color:var(--muted)}
+
+  /* ---------- Math ---------- */
+  .eq{background:var(--bg-alt);border:1px solid var(--border);border-radius:10px;
+    padding:10px 16px;margin:14px 0;overflow-x:auto;box-shadow:var(--shadow)}
+  .eq .eq-label{font-size:12px;color:var(--muted);margin-bottom:4px}
+
+  /* ---------- Tables ---------- */
+  .table-wrap{overflow-x:auto;margin:14px 0}
+  table{border-collapse:collapse;width:100%;min-width:480px;font-size:14.5px;
+    background:var(--bg-alt);border-radius:10px;overflow:hidden;box-shadow:var(--shadow)}
+  th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+  th{background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:13.5px}
+  tr:last-child td{border-bottom:none}
+
+  /* ---------- Diagrams ---------- */
+  .diagram{background:var(--bg-alt);border:1px solid var(--border);border-radius:12px;
+    padding:16px;margin:18px 0;box-shadow:var(--shadow);text-align:center;overflow-x:auto}
+  .diagram svg{max-width:100%;height:auto}
+  .diagram .caption{font-size:13px;color:var(--muted);margin-top:10px;text-align:left}
+
+  /* ---------- Code ---------- */
+  .code-block{position:relative;margin:14px 0}
+  .code-block .lang{position:absolute;top:8px;right:12px;font-size:11px;color:#9db0d0;
+    background:rgba(255,255,255,.06);padding:2px 8px;border-radius:6px}
+
+  /* ---------- Collapsible ---------- */
+  details{background:var(--bg-alt);border:1px solid var(--border);border-radius:10px;
+    padding:10px 14px;margin:10px 0;box-shadow:var(--shadow)}
+  details summary{cursor:pointer;font-weight:600;color:var(--accent);outline:none}
+  details[open] summary{margin-bottom:8px}
+  details .answer{color:var(--text);font-size:15px}
+
+  /* ---------- Week nav ---------- */
+  .weeknav{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;
+    margin:44px 0 10px;padding:16px;background:var(--bg-alt);border:1px solid var(--border);
+    border-radius:12px;box-shadow:var(--shadow)}
+  .weeknav a{flex:1 1 auto;text-align:center;padding:10px 14px;border-radius:8px;
+    background:var(--accent-soft);color:var(--accent);font-weight:600;font-size:14px}
+  .weeknav a:hover{text-decoration:none;filter:brightness(.97)}
+
+  /* ---------- Back to top ---------- */
+  #backTop{position:fixed;right:16px;bottom:16px;z-index:60;background:var(--accent);
+    color:#fff;border:none;width:44px;height:44px;border-radius:50%;font-size:18px;
+    cursor:pointer;box-shadow:0 6px 18px rgba(58,99,216,.4);display:none}
+  #backTop.show{display:block}
+
+  mark.hit{background:#ffe066;color:#000;border-radius:3px;padding:0 2px}
+
+  /* ---------- Footer ---------- */
+  footer{max-width:1400px;margin:0 auto;padding:10px 18px 60px;
+    color:var(--muted);font-size:13px;text-align:center}
+</style>
+</head>
+<body>
+
+<!-- ======================== TOP BAR ======================== -->
+<div class="topbar">
+  <div class="brand">Course 4 · Week 1 <small>Foundations of Convolutional Neural Networks</small></div>
+  <div class="spacer"></div>
+  <div class="search-wrap">
+    <input id="searchInput" type="text" placeholder="Search in notes…" />
+  </div>
+  <button id="themeBtn" title="Toggle light/dark">🌗 Theme</button>
+</div>
+
+<!-- ======================== LAYOUT ======================== -->
+<div class="layout">
+
+  <!-- ============ TOC ============ -->
+  <aside class="toc">
+    <h3>Table of Contents</h3>
+    <ol>
+      <li><a href="#overview">Week Overview</a></li>
+      <li><a href="#cv-problems">Computer Vision Problems</a></li>
+      <li><a href="#large-images">Why Standard NNs Fail on Images</a></li>
+      <li><a href="#convolution">The Convolution Operation</a></li>
+      <li><a href="#edge">Vertical &amp; Horizontal Edge Detection</a></li>
+      <li><a href="#learning-edges">Learning to Detect Edges</a></li>
+      <li><a href="#padding">Padding</a></li>
+      <li><a href="#strided">Strided Convolutions</a></li>
+      <li><a href="#output-size">Summary Formula (Output Size)</a></li>
+      <li><a href="#cross-corr">Cross-Correlation vs Convolution</a></li>
+      <li><a href="#volumes">Convolutions over Volumes (RGB)</a></li>
+      <li><a href="#one-layer">One Layer of a ConvNet</a></li>
+      <li><a href="#params">Number of Parameters</a></li>
+      <li><a href="#notation">Notation Summary</a></li>
+      <li><a href="#simple-cnn">A Simple ConvNet Example</a></li>
+      <li><a href="#pooling">Pooling Layers</a></li>
+      <li><a href="#lenet">Full CNN Example (LeNet‑5)</a></li>
+      <li><a href="#why-conv">Why Convolutions Work</a></li>
+      <li><a href="#putting-together">Putting It All Together</a></li>
+      <li><a href="#summary">Weekly Summary</a></li>
+      <li><a href="#equations">Important Equations</a></li>
+      <li><a href="#confusions">Common Confusions</a></li>
+      <li><a href="#review">Review Questions</a></li>
+      <li><a href="#selftest">Self‑Test</a></li>
+    </ol>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main id="main">
+
+  <h1 id="overview">Week 1 — Foundations of Convolutional Neural Networks</h1>
+  <p class="lead">Course 4 (Convolutional Neural Networks) · Deep Learning Specialization · Andrew Ng</p>
+
+  <div class="box def">
+    <span class="label">🔵 What This Week Is About</span>
+    <p>This week introduces <strong>Convolutional Neural Networks (CNNs)</strong> — a family of neural networks specialised for
+    processing data that has a <em>grid-like structure</em>, most famously images. You will learn the core operation
+    (<strong>convolution</strong>), the two hyperparameters that control it (<strong>padding</strong> and <strong>stride</strong>),
+    how convolutions work on 3‑channel colour images, how a full convolutional <em>layer</em> is built, and how <strong>pooling</strong>
+    layers help reduce spatial size. We finish by building a complete CNN (LeNet‑5 style) and understanding why convolutions
+    are so effective — through the two principles of <strong>parameter sharing</strong> and <strong>sparsity of connections</strong>.</p>
+  </div>
+
+  <!-- ==================== 1. CV PROBLEMS ==================== -->
+  <h2 id="cv-problems">1. Computer Vision Problems</h2>
+
+  <p>Computer vision is the field of making computers "see" — interpret and understand images and videos. The course lists
+  three driving problems:</p>
+
+  <ul>
+    <li><strong>Image Classification</strong> — given a picture, output a label (e.g., "cat" vs "not cat", or one of 1000 classes).</li>
+    <li><strong>Object Detection</strong> — locate <em>where</em> objects are in an image (e.g., drawing bounding boxes around cars and pedestrians).</li>
+    <li><strong>Neural Style Transfer</strong> — take the content of one image (a photo) and the artistic style of another (a painting)
+      and generate a new image blending the two.</li>
+  </ul>
+
+  <div class="diagram">
+    <svg viewBox="0 0 720 220" role="img" aria-label="Three computer vision problems">
+      <rect x="10" y="20" width="220" height="180" rx="12" fill="#eaefff" stroke="#3a63d8"/>
+      <text x="120" y="50" text-anchor="middle" font-weight="700" fill="#3a63d8">Image Classification</text>
+      <text x="120" y="80" text-anchor="middle" font-size="13">input image → label</text>
+      <text x="120" y="110" text-anchor="middle" font-size="30">🐱</text>
+      <text x="120" y="145" text-anchor="middle" font-size="13">"cat" (0/1)</text>
+
+      <rect x="250" y="20" width="220" height="180" rx="12" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="360" y="50" text-anchor="middle" font-weight="700" fill="#1f9d55">Object Detection</text>
+      <text x="360" y="80" text-anchor="middle" font-size="13">where are the objects?</text>
+      <text x="360" y="110" text-anchor="middle" font-size="30">🚗 🚶</text>
+      <text x="360" y="145" text-anchor="middle" font-size="13">bounding boxes</text>
+
+      <rect x="490" y="20" width="220" height="180" rx="12" fill="#f3e9ff" stroke="#7a3ad6"/>
+      <text x="600" y="50" text-anchor="middle" font-weight="700" fill="#7a3ad6">Neural Style Transfer</text>
+      <text x="600" y="80" text-anchor="middle" font-size="13">content + style</text>
+      <text x="600" y="110" text-anchor="middle" font-size="30">🖼️ + 🎨</text>
+      <text x="600" y="145" text-anchor="middle" font-size="13">stylised image</text>
+    </svg>
+    <div class="caption">Figure 1.1 — Three foundational computer vision problems. CNNs became the dominant approach for all three
+    once enough data and compute became available.</div>
+  </div>
+
+  <div class="box int">
+    <span class="label">🟢 Intuition</span>
+    <p>Standard deep networks already work reasonably well on <em>small</em> images (e.g., 64×64). The problems in this course get
+    hard when images are <em>large</em> — 1000×1000 pixels, video frames, etc. A plain fully-connected network simply cannot cope:
+    the number of parameters explodes. That is precisely the problem convolutional networks solve.</p>
+  </div>
+
+  <!-- ==================== 2. LARGE IMAGES ==================== -->
+  <h2 id="large-images">2. Why Standard Neural Networks Fail on Large Images</h2>
+
+  <p>Recall from Course 1: in a fully connected layer, <em>every</em> input unit is connected to <em>every</em> output unit.
+  The weight matrix has shape \((\text{n}^{[l]}_{\text{out}}, \text{n}^{[l-1]}_{\text{in}})\), and every one of those entries is
+  a learnable parameter.</p>
+
+  <p>Now consider a modest colour image of size \(64 \times 64 \times 3\) (height × width × colour channels = Red, Green, Blue).
+  Flattening it gives an input vector of length</p>
+
+  <div class="eq">
+    $$ 64 \times 64 \times 3 = 12{,}288 \text{ numbers}. $$
+  </div>
+
+  <p>That is already non-trivial. But realistic images are far bigger:</p>
+
+  <div class="eq">
+    $$ 1000 \times 1000 \times 3 = 3{,}000{,}000 \;=\; 3 \text{ million numbers}. $$
+  </div>
+
+  <p>If the first hidden layer has, say, 1000 units and is fully connected to the input, the weight matrix \(W^{[1]}\)
+  has shape \((1000,\,3{,}000{,}000)\) — that is <strong>3 billion parameters</strong> in the first layer alone.
+  Training such a network would require astronomically large amounts of memory and data, and it would almost certainly
+  overfit.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 760 320" role="img" aria-label="Parameter explosion when feeding large images to a fully connected network">
+      <text x="20" y="30" font-weight="700" font-size="15">Fully connected network on a 1000×1000×3 image</text>
+      <!-- input nodes -->
+      <line x1="70" y1="90" x2="70" y2="260" stroke="#3a63d8" stroke-width="2"/>
+      <circle cx="70" cy="100" r="6" fill="#3a63d8"/>
+      <circle cx="70" cy="140" r="6" fill="#3a63d8"/>
+      <circle cx="70" cy="180" r="6" fill="#3a63d8"/>
+      <text x="60" y="220" font-size="12" fill="#3a63d8">⋮</text>
+      <circle cx="70" cy="255" r="6" fill="#3a63d8"/>
+      <text x="30" y="285" font-size="12" fill="#3a63d8">3,000,000 inputs</text>
+
+      <!-- hidden nodes -->
+      <line x1="330" y1="90" x2="330" y2="260" stroke="#1f9d55" stroke-width="2"/>
+      <circle cx="330" cy="100" r="7" fill="#1f9d55"/>
+      <circle cx="330" cy="135" r="7" fill="#1f9d55"/>
+      <circle cx="330" cy="170" r="7" fill="#1f9d55"/>
+      <text x="322" y="210" font-size="12" fill="#1f9d55">⋮</text>
+      <circle cx="330" cy="255" r="7" fill="#1f9d55"/>
+      <text x="290" y="285" font-size="12" fill="#1f9d55">1000 hidden units</text>
+
+      <!-- output -->
+      <circle cx="600" cy="175" r="10" fill="#d64545"/>
+      <text x="590" y="212" font-size="12" fill="#d64545">ŷ</text>
+
+      <!-- lines: just show a few -->
+      <g stroke="#999" stroke-opacity=".35">
+        <line x1="76" y1="100" x2="323" y2="100"/>
+        <line x1="76" y1="100" x2="323" y2="135"/>
+        <line x1="76" y1="100" x2="323" y2="170"/>
+        <line x1="76" y1="140" x2="323" y2="100"/>
+        <line x1="76" y1="140" x2="323" y2="135"/>
+        <line x1="76" y1="180" x2="323" y2="170"/>
+        <line x1="76" y1="255" x2="323" y2="255"/>
+        <line x1="76" y1="100" x2="323" y2="255"/>
+      </g>
+
+      <!-- annotations -->
+      <text x="120" y="60" font-size="13" fill="#d64545">W⁽¹⁾ shape: (1000, 3,000,000)</text>
+      <text x="120" y="78" font-size="13" fill="#d64545">⇒ 3 billion parameters in one layer 😱</text>
+
+      <line x1="345" y1="175" x2="585" y2="175" stroke="#666"/>
+    </svg>
+    <div class="caption">Figure 2.1 — Feeding a large image into a fully connected network causes a catastrophic blow-up in the
+    number of parameters. Convolutional layers avoid this entirely.</div>
+  </div>
+
+  <div class="box imp">
+    <span class="label">🟡 Important</span>
+    <p>The problem is not only parameter count. With billions of parameters you would need an enormous dataset to train without
+    overfitting, plus huge memory and time. Convolutions cut the parameter count by <em>orders of magnitude</em> while still
+    being able to learn powerful visual features.</p>
+  </div>
+
+  <!-- ==================== 3. CONVOLUTION ==================== -->
+  <h2 id="convolution">3. The Convolution Operation</h2>
+
+  <p>The core of a CNN is the <strong>convolution operation</strong>. It is a small, localised computation that slides a
+  small matrix (called a <em>filter</em> or <em>kernel</em>) across the input and produces an output feature map.</p>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — Convolution (for our purposes)</span>
+    <p>Given an input matrix (e.g., a grayscale image) and a smaller filter matrix, the <strong>convolution</strong> is computed by
+    sliding the filter over the input; at each position you multiply the filter element-wise with the patch of the input it
+    covers, then sum the products. The result is a single number. Collecting all these numbers as the filter slides gives the
+    <strong>output</strong> (also called the <em>feature map</em> or <em>activation map</em>).</p>
+  </div>
+
+  <div class="box int">
+    <span class="label">🟢 Intuition — The Flashlight Analogy</span>
+    <p>Imagine you have a small flashlight that illuminates a 3×3 patch of a photo. You slide the flashlight across the photo,
+    one patch at a time, and at each spot you record a summary number. The filter is what you're looking for in each patch
+    (for example, "a vertical edge"). The output tells you <em>where</em> in the image that pattern occurs and how strongly.</p>
+  </div>
+
+  <h3>3.1 A first numerical example</h3>
+
+  <p>Take this \(6\times 6\) input image (numbers = pixel brightness):</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 340 260" role="img" aria-label="6x6 input image grid">
+      <g font-size="14" text-anchor="middle">
+        <!-- 6x6 grid -->
+        <g stroke="#555" fill="none">
+          <!-- vertical lines -->
+          <line x1="30" y1="30" x2="30" y2="210"/>
+          <line x1="60" y1="30" x2="60" y2="210"/>
+          <line x1="90" y1="30" x2="90" y2="210"/>
+          <line x1="120" y1="30" x2="120" y2="210"/>
+          <line x1="150" y1="30" x2="150" y2="210"/>
+          <line x1="180" y1="30" x2="180" y2="210"/>
+          <!-- horizontal lines -->
+          <line x1="30" y1="30" x2="180" y2="30"/>
+          <line x1="30" y1="60" x2="180" y2="60"/>
+          <line x1="30" y1="90" x2="180" y2="90"/>
+          <line x1="30" y1="120" x2="180" y2="120"/>
+          <line x1="30" y1="150" x2="180" y2="150"/>
+          <line x1="30" y1="180" x2="180" y2="180"/>
+          <line x1="30" y1="210" x2="180" y2="210"/>
+        </g>
+        <!-- values -->
+        <g fill="#1c2230">
+          <text x="45" y="52">3</text><text x="75" y="52">0</text><text x="105" y="52">1</text><text x="135" y="52">2</text><text x="165" y="52">7</text><text x="195" y="52">4</text>
+          <text x="45" y="82">1</text><text x="75" y="82">5</text><text x="105" y="82">8</text><text x="135" y="82">9</text><text x="165" y="82">3</text><text x="195" y="82">1</text>
+          <text x="45" y="112">2</text><text x="75" y="112">7</text><text x="105" y="112">2</text><text x="135" y="112">5</text><text x="165" y="112">1</text><text x="195" y="112">3</text>
+          <text x="45" y="142">0</text><text x="75" y="142">1</text><text x="105" y="142">3</text><text x="135" y="142">1</text><text x="165" y="142">7</text><text x="195" y="142">8</text>
+          <text x="45" y="172">4</text><text x="75" y="172">2</text><text x="105" y="172">1</text><text x="135" y="172">6</text><text x="165" y="172">2</text><text x="195" y="172">8</text>
+          <text x="45" y="202">2</text><text x="75" y="202">4</text><text x="105" y="202">5</text><text x="135" y="202">2</text><text x="165" y="202">3</text><text x="195" y="202">9</text>
+        </g>
+      </g>
+      <text x="110" y="245" text-anchor="middle" font-size="13" fill="#5b6478">6 × 6 input</text>
+    </svg>
+
+    <svg viewBox="0 0 220 200" role="img" aria-label="3x3 filter">
+      <g stroke="#3a63d8" fill="none">
+        <line x1="30" y1="30" x2="30" y2="120"/>
+        <line x1="60" y1="30" x2="60" y2="120"/>
+        <line x1="90" y1="30" x2="90" y2="120"/>
+        <line x1="120" y1="30" x2="120" y2="120"/>
+        <line x1="30" y1="30" x2="120" y2="30"/>
+        <line x1="30" y1="60" x2="120" y2="60"/>
+        <line x1="30" y1="90" x2="120" y2="90"/>
+        <line x1="30" y1="120" x2="120" y2="120"/>
+      </g>
+      <g font-size="14" text-anchor="middle" fill="#3a63d8">
+        <text x="45" y="52">1</text><text x="75" y="52">0</text><text x="105" y="52">-1</text>
+        <text x="45" y="82">1</text><text x="75" y="82">0</text><text x="105" y="82">-1</text>
+        <text x="45" y="112">1</text><text x="75" y="112">0</text><text x="105" y="112">-1</text>
+      </g>
+      <text x="75" y="150" text-anchor="middle" font-size="13" fill="#3a63d8">3 × 3 filter</text>
+      <text x="75" y="172" text-anchor="middle" font-size="12" fill="#5b6478">("vertical edge detector")</text>
+    </svg>
+
+    <div class="caption">Figure 3.1 — A 6×6 input and a 3×3 filter. The filter is what will slide across the input.</div>
+  </div>
+
+  <p>At the top-left corner, the filter overlays the patch</p>
+
+  <div class="eq">
+    $$
+    \begin{bmatrix}
+    3 & 0 & 1 \\
+    1 & 5 & 8 \\
+    2 & 7 & 2
+    \end{bmatrix}
+    $$
+  </div>
+
+  <p>Element-wise multiply by the filter and sum:</p>
+
+  <div class="eq">
+    $$
+    (3)(1) + (0)(0) + (1)(-1) + (1)(1) + (5)(0) + (8)(-1) + (2)(1) + (7)(0) + (2)(-1)
+    $$
+    $$
+    = 3 + 0 - 1 + 1 + 0 - 8 + 2 + 0 - 2 = -5.
+    $$
+  </div>
+
+  <p>So the first output value is \(-5\). Then we slide the filter one pixel to the right and repeat.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 600 260" role="img" aria-label="Sliding window produces 4x4 output">
+      <!-- input 6x6 -->
+      <g font-size="13" text-anchor="middle" fill="#1c2230">
+        <g stroke="#555" fill="none">
+          <line x1="20" y1="20" x2="20" y2="200"/><line x1="50" y1="20" x2="50" y2="200"/>
+          <line x1="80" y1="20" x2="80" y2="200"/><line x1="110" y1="20" x2="110" y2="200"/>
+          <line x1="140" y1="20" x2="140" y2="200"/><line x1="170" y1="20" x2="170" y2="200"/>
+          <line x1="20" y1="20" x2="170" y2="20"/><line x1="20" y1="50" x2="170" y2="50"/>
+          <line x1="20" y1="80" x2="170" y2="80"/><line x1="20" y1="110" x2="170" y2="110"/>
+          <line x1="20" y1="140" x2="170" y2="140"/><line x1="20" y1="170" x2="170" y2="170"/>
+          <line x1="20" y1="200" x2="170" y2="200"/>
+        </g>
+        <!-- highlight 3x3 -->
+        <rect x="20" y="20" width="90" height="90" fill="#3a63d8" fill-opacity=".15" stroke="#3a63d8" stroke-width="2"/>
+        <text x="35" y="42">3</text><text x="65" y="42">0</text><text x="95" y="42">1</text><text x="125" y="42">2</text><text x="155" y="42">7</text><text x="185" y="42">4</text>
+        <text x="35" y="72">1</text><text x="65" y="72">5</text><text x="95" y="72">8</text><text x="125" y="72">9</text><text x="155" y="72">3</text><text x="185" y="72">1</text>
+        <text x="35" y="102">2</text><text x="65" y="102">7</text><text x="95" y="102">2</text><text x="125" y="102">5</text><text x="155" y="102">1</text><text x="185" y="102">3</text>
+        <text x="35" y="132">0</text><text x="65" y="132">1</text><text x="95" y="132">3</text><text x="125" y="132">1</text><text x="155" y="132">7</text><text x="185" y="132">8</text>
+        <text x="35" y="162">4</text><text x="65" y="162">2</text><text x="95" y="162">1</text><text x="125" y="162">6</text><text x="155" y="162">2</text><text x="185" y="162">8</text>
+        <text x="35" y="192">2</text><text x="65" y="192">4</text><text x="95" y="192">5</text><text x="125" y="192">2</text><text x="155" y="192">3</text><text x="185" y="192">9</text>
+      </g>
+      <text x="100" y="230" text-anchor="middle" font-size="12" fill="#5b6478">6 × 6 input</text>
+
+      <!-- arrow -->
+      <text x="230" y="120" font-size="28">→</text>
+      <text x="230" y="150" font-size="12" fill="#5b6478">slide filter</text>
+
+      <!-- output 4x4 -->
+      <g font-size="13" text-anchor="middle" fill="#1c2230">
+        <g stroke="#555" fill="none">
+          <line x1="300" y1="40" x2="300" y2="180"/><line x1="340" y1="40" x2="340" y2="180"/>
+          <line x1="380" y1="40" x2="380" y2="180"/><line x1="420" y1="40" x2="420" y2="180"/>
+          <line x1="460" y1="40" x2="460" y2="180"/>
+          <line x1="300" y1="40" x2="460" y2="40"/><line x1="300" y1="75" x2="460" y2="75"/>
+          <line x1="300" y1="110" x2="460" y2="110"/><line x1="300" y1="145" x2="460" y2="145"/>
+          <line x1="300" y1="180" x2="460" y2="180"/>
+        </g>
+        <text x="320" y="62">-5</text><text x="360" y="62">-4</text><text x="400" y="62">0</text><text x="440" y="62">8</text>
+        <text x="320" y="97">-10</text><text x="360" y="97">-2</text><text x="400" y="97">2</text><text x="440" y="97">3</text>
+        <text x="320" y="132">0</text><text x="360" y="132">-2</text><text x="400" y="132">-4</text><text x="440" y="132">-7</text>
+        <text x="320" y="167">-3</text><text x="360" y="167">-2</text><text x="400" y="167">-3</text><text x="440" y="167">-16</text>
+      </g>
+      <text x="380" y="210" text-anchor="middle" font-size="12" fill="#5b6478">4 × 4 output</text>
+    </svg>
+    <div class="caption">Figure 3.2 — The 3×3 filter slides across every valid position of the 6×6 input, producing a 4×4 output.
+    Because \(6 - 3 + 1 = 4\), there are 4×4 = 16 possible positions for the top-left corner of the filter.</div>
+  </div>
+
+  <div class="box exam">
+    <span class="label">🟣 Example — Full first row of the output</span>
+    <p><strong>Position (1,1):</strong> use top-left 3×3 patch → \(-5\).</p>
+    <p><strong>Position (1,2):</strong> shift right by 1:</p>
+    $$
+    \begin{bmatrix}0&1&2\\5&8&9\\7&2&5\end{bmatrix}
+    \;\Rightarrow\; 0+0-2+5+0-9+7+0-5 = -4.
+    $$
+    <p><strong>Position (1,3):</strong> → \(0\). &nbsp; <strong>Position (1,4):</strong> → \(8\).</p>
+    <p>The first output row is therefore \([-5,\,-4,\,0,\,8]\). Repeating for every row gives the 4×4 matrix shown above.</p>
+  </div>
+
+  <h3>3.2 Terminology</h3>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Term</th><th>Meaning</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Filter</strong> / <strong>Kernel</strong></td><td>The small matrix that slides across the input (e.g., 3×3). Its entries are <em>learnable parameters</em>.</td></tr>
+        <tr><td><strong>Convolution</strong></td><td>The operation of sliding the filter and computing dot products at each position. Denoted \(*\).</td></tr>
+        <tr><td><strong>Feature map</strong> / <strong>Activation map</strong></td><td>The output grid produced by convolving one filter with the input.</td></tr>
+        <tr><td><strong>Padding</strong></td><td>Adding a border of zeros around the input before convolving (Section 7).</td></tr>
+        <tr><td><strong>Stride</strong></td><td>How many pixels the filter moves per step (Section 8).</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== 4. EDGE DETECTION ==================== -->
+  <h2 id="edge">4. Vertical &amp; Horizontal Edge Detection</h2>
+
+  <p>Why is a filter like \(\begin{bmatrix}1&0&-1\\1&0&-1\\1&0&-1\end{bmatrix}\) called a "vertical edge detector"? Let's see why
+  with two extreme examples.</p>
+
+  <h3>4.1 Detecting a vertical edge</h3>
+
+  <p>Suppose the input is a 6×6 image where the left half is bright (value 10) and the right half is dark (value 0). There is a
+  clear <em>vertical boundary</em> in the middle.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 640 260" role="img" aria-label="Vertical edge image convolved with vertical edge filter">
+      <!-- input -->
+      <g font-size="13" text-anchor="middle" fill="#1c2230">
+        <g stroke="#555" fill="none">
+          <line x1="20" y1="20" x2="20" y2="200"/><line x1="50" y1="20" x2="50" y2="200"/>
+          <line x1="80" y1="20" x2="80" y2="200"/><line x1="110" y1="20" x2="110" y2="200"/>
+          <line x1="140" y1="20" x2="140" y2="200"/><line x1="170" y1="20" x2="170" y2="200"/>
+          <line x1="20" y1="20" x2="170" y2="20"/><line x1="20" y1="50" x2="170" y2="50"/>
+          <line x1="20" y1="80" x2="170" y2="80"/><line x1="20" y1="110" x2="170" y2="110"/>
+          <line x1="20" y1="140" x2="170" y2="140"/><line x1="20" y1="170" x2="170" y2="170"/>
+          <line x1="20" y1="200" x2="170" y2="200"/>
+        </g>
+        <rect x="20" y="20" width="90" height="180" fill="#ffe9b0" stroke="none"/>
+        <rect x="110" y="20" width="60" height="180" fill="#a0a6b8" stroke="none"/>
+        <text x="35" y="42">10</text><text x="65" y="42">10</text><text x="95" y="42">10</text>
+        <text x="125" y="42">0</text><text x="155" y="42">0</text><text x="185" y="42">0</text>
+        <text x="35" y="72">10</text><text x="65" y="72">10</text><text x="95" y="72">10</text>
+        <text x="125" y="72">0</text><text x="155" y="72">0</text><text x="185" y="72">0</text>
+        <text x="35" y="102">10</text><text x="65" y="102">10</text><text x="95" y="102">10</text>
+        <text x="125" y="102">0</text><text x="155" y="102">0</text><text x="185" y="102">0</text>
+        <text x="35" y="132">10</text><text x="65" y="132">10</text><text x="95" y="132">10</text>
+        <text x="125" y="132">0</text><text x="155" y="132">0</text><text x="185" y="132">0</text>
+        <text x="35" y="162">10</text><text x="65" y="162">10</text><text x="95" y="162">10</text>
+        <text x="125" y="162">0</text><text x="155" y="162">0</text><text x="185" y="162">0</text>
+        <text x="35" y="192">10</text><text x="65" y="192">10</text><text x="95" y="192">10</text>
+        <text x="125" y="192">0</text><text x="155" y="192">0</text><text x="185" y="192">0</text>
+      </g>
+      <text x="100" y="230" text-anchor="middle" font-size="12" fill="#5b6478">input: bright | dark</text>
+
+      <!-- conv symbol -->
+      <text x="230" y="115" font-size="26">*</text>
+      <text x="230" y="145" font-size="12" fill="#5b6478">conv</text>
+
+      <!-- filter -->
+      <g stroke="#3a63d8" fill="none">
+        <line x1="265" y1="50" x2="265" y2="140"/><line x1="295" y1="50" x2="295" y2="140"/>
+        <line x1="325" y1="50" x2="325" y2="140"/><line x1="355" y1="50" x2="355" y2="140"/>
+        <line x1="265" y1="50" x2="355" y2="50"/><line x1="265" y1="80" x2="355" y2="80"/>
+        <line x1="265" y1="110" x2="355" y2="110"/><line x1="265" y1="140" x2="355" y2="140"/>
+      </g>
+      <g font-size="13" text-anchor="middle" fill="#3a63d8">
+        <text x="280" y="72">1</text><text x="310" y="72">0</text><text x="340" y="72">-1</text>
+        <text x="280" y="102">1</text><text x="310" y="102">0</text><text x="340" y="102">-1</text>
+        <text x="280" y="132">1</text><text x="310" y="132">0</text><text x="340" y="132">-1</text>
+      </g>
+      <text x="310" y="170" text-anchor="middle" font-size="12" fill="#3a63d8">filter</text>
+
+      <text x="410" y="115" font-size="22">=</text>
+
+      <!-- output -->
+      <g font-size="13" text-anchor="middle" fill="#1c2230">
+        <g stroke="#555" fill="none">
+          <line x1="440" y1="60" x2="440" y2="160"/><line x1="470" y1="60" x2="470" y2="160"/>
+          <line x1="500" y1="60" x2="500" y2="160"/><line x1="530" y1="60" x2="530" y2="160"/>
+          <line x1="440" y1="60" x2="530" y2="60"/><line x1="440" y1="85" x2="530" y2="85"/>
+          <line x1="440" y1="110" x2="530" y2="110"/><line x1="440" y1="135" x2="530" y2="135"/>
+          <line x1="440" y1="160" x2="530" y2="160"/>
+        </g>
+        <text x="455" y="80">0</text><text x="485" y="80">30</text><text x="515" y="80">30</text><text x="545" y="80">0</text>
+        <text x="455" y="105">0</text><text x="485" y="105">30</text><text x="515" y="105">30</text><text x="545" y="105">0</text>
+        <text x="455" y="130">0</text><text x="485" y="130">30</text><text x="515" y="130">30</text><text x="545" y="130">0</text>
+        <text x="455" y="155">0</text><text x="485" y="155">30</text><text x="515" y="155">30</text><text x="545" y="155">0</text>
+      </g>
+      <text x="490" y="190" text-anchor="middle" font-size="12" fill="#5b6478">output: bright column = the edge</text>
+    </svg>
+    <div class="caption">Figure 4.1 — A vertical boundary in the input produces a bright column of "30" values in the output. The
+    output is bright exactly where the vertical edge was — hence the filter detects vertical edges.</div>
+  </div>
+
+  <p>Why? Look at one position of the filter aligned with the boundary:</p>
+
+  <div class="eq">
+    $$
+    (10)(1) + (10)(0) + (0)(-1) + (10)(1) + (10)(0) + (0)(-1) + (10)(1) + (10)(0) + (0)(-1)
+    = 30.
+    $$
+  </div>
+
+  <p>Conversely, when the filter sits entirely inside a uniform region (all bright or all dark), the positive and negative
+  columns cancel out to <strong>0</strong>. So the filter lights up only at the boundary.</p>
+
+  <div class="box int">
+    <span class="label">🟢 Intuition — Why Does This Detect Edges?</span>
+    <p>The filter computes (right column of patch) − (left column of patch). At a vertical boundary where the left side is bright
+    and right side is dark, this difference is large and positive. Inside a uniform region, it's zero. So the filter is essentially
+    a "change detector" — it measures a horizontal change in pixel brightness.</p>
+  </div>
+
+  <h3>4.2 Detecting a horizontal edge</h3>
+
+  <p>If we transpose the filter:</p>
+
+  <div class="eq">
+    $$
+    \begin{bmatrix}1 & 1 & 1\\0 & 0 & 0\\-1 & -1 & -1\end{bmatrix}
+    $$
+  </div>
+
+  <p>it now computes (bottom row) − (top row), so it detects a <em>horizontal</em> boundary — e.g., a transition from light on
+  top to dark on bottom.</p>
+
+  <div class="box imp">
+    <span class="label">🟡 Important</span>
+    <p>Vertical and horizontal filters are just the <em>starting points</em>. The magic of CNNs is that the filter values
+    (\(w_1, \dots, w_9\) in a 3×3 filter) are <strong>learned</strong> by backpropagation. The network discovers which filters
+    are useful — it might learn to detect 45° edges, corners, textures, eyes, fur patterns, etc.</p>
+  </div>
+
+  <h3>4.3 Different orientations</h3>
+
+  <p>Rotating the filter produces detectors for other edge orientations:</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Filter</th><th>Detects</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>\(\begin{bmatrix}1&0&-1\\1&0&-1\\1&0&-1\end{bmatrix}\)</td>
+          <td>Vertical edges (bright → dark going left→right)</td>
+        </tr>
+        <tr>
+          <td>\(\begin{bmatrix}-1&0&1\\-1&0&1\\-1&0&1\end{bmatrix}\)</td>
+          <td>Vertical edges (dark → bright going left→right)</td>
+        </tr>
+        <tr>
+          <td>\(\begin{bmatrix}1&1&1\\0&0&0\\-1&-1&-1\end{bmatrix}\)</td>
+          <td>Horizontal edges (bright top → dark bottom)</td>
+        </tr>
+        <tr>
+          <td>\(\begin{bmatrix}1&0&-1\\2&0&-2\\1&0&-1\end{bmatrix}\)</td>
+          <td>Vertical edges (Sobel filter — smoother, more robust)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== 5. LEARNING EDGES ==================== -->
+  <h2 id="learning-edges">5. Learning to Detect Edges</h2>
+
+  <p>The filters above were hand-crafted. In a real CNN we let gradient descent <em>learn</em> them. Treat the filter entries
+  as parameters \(w_1, \dots, w_9\) and initialise them randomly:</p>
+
+  <div class="eq">
+    $$
+    \begin{bmatrix} w_1 & w_2 & w_3 \\ w_4 & w_5 & w_6 \\ w_7 & w_8 & w_9 \end{bmatrix}
+    $$
+  </div>
+
+  <p>Backpropagation then adjusts them so that whatever helps the final loss gets strengthened. If your task is face detection,
+  early filters might converge to something close to an edge detector. If your task is distinguishing textures, they may converge
+  to something more complex.</p>
+
+  <div class="box int">
+    <span class="label">🟢 Intuition — Hierarchy of Features</span>
+    <p>In deep CNNs, early layers learn <em>simple</em> features (edges, colour blobs). Middle layers combine them into
+    <em>parts</em> (eyes, noses, wheels). Later layers combine those into <em>objects</em> (faces, cars). This hierarchy emerges
+    automatically from training.</p>
+  </div>
+
+  <!-- ==================== 6. PADDING ==================== -->
+  <h2 id="padding">6. Padding</h2>
+
+  <p>Two problems appear if we always convolve without padding:</p>
+
+  <ol>
+    <li><strong>Shrinking output.</strong> Each convolution reduces the spatial size. A 6×6 image with a 3×3 filter gives 4×4.
+    After many layers the image disappears (\(1\times 1\) or smaller).</li>
+    <li><strong>Loss of border information.</strong> Corner and edge pixels participate in far fewer convolutions than centre
+    pixels, so their contribution is underweighted.</li>
+  </ol>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — Padding</span>
+    <p><strong>Padding</strong> means adding \(p\) layers of zeros around the border of the input before convolving. With padding
+    \(p\), the output is the same size as the input (if \(f\) is odd and stride is 1).</p>
+  </div>
+
+  <p>Types of padding:</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Name</th><th>Formula / Meaning</th><th>Output size</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Valid</strong> convolution</td>
+          <td>no padding, \(p = 0\)</td>
+          <td>\((n - f + 1) \times (n - f + 1)\)</td>
+        </tr>
+        <tr>
+          <td><strong>Same</strong> convolution</td>
+          <td>\(p = \dfrac{f-1}{2}\) (choose so output size = input size)</td>
+          <td>\(n \times n\)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 640 260" role="img" aria-label="Padding a 6x6 image with p=1 gives an 8x8 padded input, then convolution with 3x3 gives 6x6 output">
+      <!-- original 6x6 -->
+      <g font-size="12" text-anchor="middle">
+        <rect x="20" y="40" width="150" height="150" fill="#eaefff" stroke="#3a63d8"/>
+        <g stroke="#8a9bc8" fill="none">
+          <line x1="20" y1="65" x2="170" y2="65"/><line x1="20" y1="90" x2="170" y2="90"/>
+          <line x1="20" y1="115" x2="170" y2="115"/><line x1="20" y1="140" x2="170" y2="140"/>
+          <line x1="20" y1="165" x2="170" y2="165"/>
+          <line x1="45" y1="40" x2="45" y2="190"/><line x1="70" y1="40" x2="70" y2="190"/>
+          <line x1="95" y1="40" x2="95" y2="190"/><line x1="120" y1="40" x2="120" y2="190"/>
+          <line x1="145" y1="40" x2="145" y2="190"/>
+        </g>
+      </g>
+      <text x="95" y="215" text-anchor="middle" font-size="12" fill="#3a63d8">6 × 6 input</text>
+
+      <text x="220" y="120" font-size="20">→</text>
+      <text x="220" y="145" font-size="12" fill="#5b6478">pad p=1</text>
+
+      <!-- padded 8x8 -->
+      <g font-size="11" text-anchor="middle">
+        <rect x="260" y="30" width="200" height="200" fill="#fff6e0" stroke="#d99a00" stroke-dasharray="4 3"/>
+        <rect x="285" y="55" width="150" height="150" fill="#eaefff" stroke="#3a63d8"/>
+        <!-- zero border label -->
+        <text x="270" y="47" fill="#d99a00">0</text>
+        <text x="295" y="47" fill="#d99a00">0</text>
+        <text x="320" y="47" fill="#d99a00">0</text>
+        <text x="345" y="47" fill="#d99a00">0</text>
+        <text x="370" y="47" fill="#d99a00">0</text>
+        <text x="395" y="47" fill="#d99a00">0</text>
+        <text x="420" y="47" fill="#d99a00">0</text>
+        <text x="445" y="47" fill="#d99a00">0</text>
+        <text x="270" y="220" fill="#d99a00">0</text>
+        <text x="295" y="220" fill="#d99a00">0</text>
+        <text x="320" y="220" fill="#d99a00">0</text>
+        <text x="345" y="220" fill="#d99a00">0</text>
+        <text x="370" y="220" fill="#d99a00">0</text>
+        <text x="395" y="220" fill="#d99a00">0</text>
+        <text x="420" y="220" fill="#d99a00">0</text>
+        <text x="445" y="220" fill="#d99a00">0</text>
+      </g>
+      <text x="360" y="250" text-anchor="middle" font-size="12" fill="#d99a00">8 × 8 (padded)</text>
+
+      <text x="490" y="120" font-size="20">→</text>
+      <text x="490" y="145" font-size="12" fill="#5b6478">conv 3×3</text>
+
+      <!-- output 6x6 -->
+      <g font-size="12" text-anchor="middle">
+        <rect x="530" y="40" width="90" height="90" fill="#eaefff" stroke="#3a63d8"/>
+        <text x="575" y="90" font-size="14" fill="#3a63d8">6 × 6</text>
+      </g>
+      <text x="575" y="150" text-anchor="middle" font-size="12" fill="#3a63d8">same as input!</text>
+    </svg>
+    <div class="caption">Figure 6.1 — Padding an \(n \times n\) image with \(p=1\) adds a ring of zeros, making it
+    \((n+2p)\times(n+2p)\). After convolving with an \(f \times f\) filter (stride 1), the output is
+    \((n+2p-f+1)\times(n+2p-f+1) = n \times n\).</div>
+  </div>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — Why \(f\) is Usually Odd</span>
+    <p>Convolutional filters are conventionally chosen with odd side length (3, 5, 7, …) for two reasons:</p>
+    <ul>
+      <li>With \(f\) odd, \(p = (f-1)/2\) is an integer, so "same" convolution works cleanly.</li>
+      <li>The filter has a well-defined <em>central pixel</em>, which makes the geometry easier to reason about.</li>
+    </ul>
+  </div>
+
+  <!-- ==================== 7. STRIDED ==================== -->
+  <h2 id="strided">7. Strided Convolutions</h2>
+
+  <p>So far the filter has moved by 1 pixel per step — that's stride \(s=1\). If we move it by \(s\) pixels per step, the
+  output becomes smaller.</p>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — Stride</span>
+    <p><strong>Stride</strong> is the step size (in pixels) the filter moves between positions. Common values are 1 and 2.
+    A larger stride downsamples the output, reducing computation and spatial resolution.</p>
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 720 260" role="img" aria-label="Stride 2 convolution on 7x7 input with 3x3 filter gives 3x3 output">
+      <!-- input 7x7 -->
+      <g font-size="12" text-anchor="middle" fill="#1c2230">
+        <g stroke="#555" fill="none">
+          <line x1="20" y1="30" x2="20" y2="240"/><line x1="50" y1="30" x2="50" y2="240"/>
+          <line x1="80" y1="30" x2="80" y2="240"/><line x1="110" y1="30" x2="110" y2="240"/>
+          <line x1="140" y1="30" x2="140" y2="240"/><line x1="170" y1="30" x2="170" y2="240"/>
+          <line x1="200" y1="30" x2="200" y2="240"/>
+          <line x1="20" y1="30" x2="200" y2="30"/><line x1="20" y1="60" x2="200" y2="60"/>
+          <line x1="20" y1="90" x2="200" y2="90"/><line x1="20" y1="120" x2="200" y2="120"/>
+          <line x1="20" y1="150" x2="200" y2="150"/><line x1="20" y1="180" x2="200" y2="180"/>
+          <line x1="20" y1="210" x2="200" y2="210"/><line x1="20" y1="240" x2="200" y2="240"/>
+        </g>
+        <text x="35" y="52">2</text><text x="65" y="52">3</text><text x="95" y="52">3</text><text x="125" y="52">4</text><text x="155" y="52">7</text><text x="185" y="52">3</text><text x="215" y="52">4</text>
+        <text x="35" y="82">4</text><text x="65" y="82">6</text><text x="95" y="82">3</text><text x="125" y="82">2</text><text x="155" y="82">4</text><text x="185" y="82">9</text><text x="215" y="82">6</text>
+        <text x="35" y="112">1</text><text x="65" y="112">6</text><text x="95" y="112">0</text><text x="125" y="112">9</text><text x="155" y="112">1</text><text x="185" y="112">8</text><text x="215" y="112">0</text>
+        <text x="35" y="142">7</text><text x="65" y="142">1</text><text x="95" y="142">4</text><text x="125" y="142">0</text><text x="155" y="142">3</text><text x="185" y="142">2</text><text x="215" y="142">3</text>
+        <text x="35" y="172">3</text><text x="65" y="172">4</text><text x="95" y="172">4</text><text x="125" y="172">3</text><text x="155" y="172">3</text><text x="185" y="172">4</text><text x="215" y="172">3</text>
+        <text x="35" y="202">9</text><text x="65" y="202">4</text><text x="95" y="202">7</text><text x="125" y="202">4</text><text x="155" y="202">7</text><text x="185" y="202">1</text><text x="215" y="202">8</text>
+        <text x="35" y="232">0</text><text x="65" y="232">3</text><text x="95" y="232">1</text><text x="125" y="232">6</text><text x="155" y="232">0</text><text x="185" y="232">6</text><text x="215" y="232">1</text>
+      </g>
+      <text x="110" y="258" text-anchor="middle" font-size="12" fill="#3a63d8">7 × 7 input (s = 2)</text>
+
+      <text x="260" y="140" font-size="24">*</text>
+
+      <!-- filter -->
+      <g stroke="#3a63d8" fill="none">
+        <line x1="300" y1="90" x2="300" y2="180"/><line x1="330" y1="90" x2="330" y2="180"/>
+        <line x1="360" y1="90" x2="360" y2="180"/><line x1="390" y1="90" x2="390" y2="180"/>
+        <line x1="300" y1="90" x2="390" y2="90"/><line x1="300" y1="120" x2="390" y2="120"/>
+        <line x1="300" y1="150" x2="390" y2="150"/><line x1="300" y1="180" x2="390" y2="180"/>
+      </g>
+      <g font-size="12" text-anchor="middle" fill="#3a63d8">
+        <text x="315" y="112">3</text><text x="345" y="112">4</text><text x="375" y="112">5</text>
+        <text x="315" y="142">1</text><text x="345" y="142">0</text><text x="375" y="142">2</text>
+        <text x="315" y="172">-1</text><text x="345" y="172">9</text><text x="375" y="172">7</text>
+      </g>
+      <text x="345" y="205" text-anchor="middle" font-size="12" fill="#3a63d8">3 × 3 filter</text>
+
+      <text x="420" y="140" font-size="24">=</text>
+
+      <!-- output 3x3 -->
+      <g font-size="13" text-anchor="middle" fill="#1c2230">
+        <g stroke="#555" fill="none">
+          <line x1="460" y1="70" x2="460" y2="160"/><line x1="500" y1="70" x2="500" y2="160"/>
+          <line x1="540" y1="70" x2="540" y2="160"/><line x1="580" y1="70" x2="580" y2="160"/>
+          <line x1="460" y1="70" x2="580" y2="70"/><line x1="460" y1="100" x2="580" y2="100"/>
+          <line x1="460" y1="130" x2="580" y2="130"/><line x1="460" y1="160" x2="580" y2="160"/>
+        </g>
+        <text x="480" y="92">91</text><text x="520" y="92">100</text><text x="560" y="92">83</text>
+        <text x="480" y="122">69</text><text x="520" y="122">91</text><text x="560" y="122">127</text>
+        <text x="480" y="152">40</text><text x="520" y="152">72</text><text x="560" y="152">80</text>
+      </g>
+      <text x="520" y="200" text-anchor="middle" font-size="12" fill="#3a63d8">3 × 3 output</text>
+    </svg>
+    <div class="caption">Figure 7.1 — With stride 2 and a 3×3 filter on a 7×7 input, the filter lands at positions
+    (1,1), (1,3), (1,5), (3,1), … , (5,5), producing a 3×3 output. Formula:
+    \(\lfloor (7 - 3)/2 \rfloor + 1 = 3\).</div>
+  </div>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — The Floor Function</span>
+    <p>If the filter would extend past the edge of the input, we simply <em>don't place it there</em>. The floor symbol
+    \(\lfloor \cdot \rfloor\) handles this. For example, with \(n=7\), \(f=3\), \(s=3\):
+    \(\lfloor (7-3)/3 \rfloor + 1 = \lfloor 1.33 \rfloor + 1 = 2\). Only 2 positions fit per dimension.</p>
+  </div>
+
+  <!-- ==================== 8. OUTPUT SIZE ==================== -->
+  <h2 id="output-size">8. Summary Formula — Convolution Output Size</h2>
+
+  <div class="box def">
+    <span class="label">🔵 The Master Formula</span>
+    <p>For an \(n \times n\) input convolved with an \(f \times f\) filter, using padding \(p\) and stride \(s\), the output
+    side length is:</p>
+    <div class="eq">
+      $$ \text{Output side} = \left\lfloor \frac{n + 2p - f}{s} \right\rfloor + 1. $$
+    </div>
+  </div>
+
+  <h3>Where each symbol comes from</h3>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Symbol</th><th>Meaning</th><th>Typical value</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>\(n\)</td><td>Input side length (assuming square input)</td><td>6, 32, 64, 224…</td></tr>
+        <tr><td>\(p\)</td><td>Padding (number of zero-rows/cols added on each side)</td><td>0, 1, 2, 3…</td></tr>
+        <tr><td>\(f\)</td><td>Filter side length</td><td>3, 5, 7 (usually odd)</td></tr>
+        <tr><td>\(s\)</td><td>Stride (step size in pixels)</td><td>1, 2</td></tr>
+        <tr><td>\(\lfloor \cdot \rfloor\)</td><td>Floor (round down)</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box exam">
+    <span class="label">🟣 Worked Examples</span>
+    <ul>
+      <li>\(n=6, f=3, p=0, s=1\): \((6+0-3)/1 + 1 = 4\) → \(4\times 4\) output.</li>
+      <li>\(n=6, f=3, p=1, s=1\): \((6+2-3)/1 + 1 = 6\) → \(6\times 6\) ("same").</li>
+      <li>\(n=7, f=3, p=0, s=2\): \(\lfloor(7-3)/2\rfloor + 1 = 3\) → \(3\times 3\).</li>
+      <li>\(n=32, f=5, p=0, s=1\): \((32-5)+1 = 28\) → \(28\times 28\).</li>
+    </ul>
+  </div>
+
+  <!-- ==================== 9. CROSS-CORRELATION ==================== -->
+  <h2 id="cross-corr">9. A Technical Note — Cross-Correlation vs Convolution</h2>
+
+  <p>Deep learning libraries (TensorFlow, PyTorch, etc.) call this operation "convolution", but mathematically they are usually
+  computing <strong>cross-correlation</strong>. The difference:</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th></th><th>True Convolution (math)</th><th>Cross-Correlation (DL "convolution")</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Filter</td>
+          <td>Flipped both horizontally and vertically before sliding</td>
+          <td>Used as-is</td>
+        </tr>
+        <tr>
+          <td>Commutative?</td>
+          <td>Yes: \((A * B) * C = A * (B * C)\)</td>
+          <td>Yes for many cases, but flip matters</td>
+        </tr>
+        <tr>
+          <td>Associative?</td>
+          <td>Yes</td>
+          <td>Not needed in DL</td>
+        </tr>
+        <tr>
+          <td>Why does DL use it?</td>
+          <td>—</td>
+          <td>Filter values are <em>learned</em>, so flipping doesn't change what the network can represent. Skipping the flip is just simpler and faster.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — Practical Takeaway</span>
+    <p>In Andrew Ng's course (and in practice) the term "convolution" always refers to the <em>flip-free</em> version — the
+    cross-correlation. Don't let the math-textbook definition confuse you. The learned filters automatically adapt to whichever
+    convention you use.</p>
+  </div>
+
+  <!-- ==================== 10. VOLUMES ==================== -->
+  <h2 id="volumes">10. Convolutions over Volumes (RGB Images)</h2>
+
+  <p>Real colour images have <em>three</em> channels: Red, Green, Blue. So the input is a 3D volume, e.g.
+  \(6 \times 6 \times 3\). The filter must then also have 3 channels to match, e.g. \(3 \times 3 \times 3\).</p>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — Channel</span>
+    <p>A <strong>channel</strong> (or <em>depth</em>) is one 2D grid of numbers. A grayscale image has 1 channel; an RGB image
+    has 3 channels; a deeper layer's activation may have 32, 64, 128… channels. The filter's channel count must always match
+    the input's channel count.</p>
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 720 240" role="img" aria-label="6x6x3 input convolved with 3x3x3 filter to give 4x4x1 output">
+      <!-- input volume -->
+      <g>
+        <rect x="40" y="50" width="120" height="120" fill="#ff9c9c" stroke="#333"/>
+        <rect x="55" y="35" width="120" height="120" fill="#9cffa8" stroke="#333"/>
+        <rect x="70" y="20" width="120" height="120" fill="#9cc4ff" stroke="#333"/>
+      </g>
+      <text x="130" y="200" text-anchor="middle" font-size="13" fill="#1c2230">6 × 6 × 3</text>
+      <text x="130" y="220" text-anchor="middle" font-size="11" fill="#5b6478">(H × W × C)</text>
+
+      <text x="240" y="100" font-size="24">*</text>
+
+      <!-- filter volume -->
+      <g>
+        <rect x="285" y="70" width="70" height="70" fill="#ffe14d" stroke="#333"/>
+        <rect x="295" y="60" width="70" height="70" fill="#ffe14d" stroke="#333"/>
+        <rect x="305" y="50" width="70" height="70" fill="#ffe14d" stroke="#333"/>
+      </g>
+      <text x="325" y="200" text-anchor="middle" font-size="13" fill="#1c2230">3 × 3 × 3</text>
+      <text x="325" y="220" text-anchor="middle" font-size="11" fill="#5b6478">(same depth as input)</text>
+
+      <text x="420" y="100" font-size="24">=</text>
+
+      <!-- output -->
+      <rect x="470" y="50" width="90" height="90" fill="#f6f6ff" stroke="#3a63d8" stroke-width="2"/>
+      <text x="515" y="100" text-anchor="middle" font-size="14" fill="#3a63d8">4 × 4 × 1</text>
+      <text x="515" y="200" text-anchor="middle" font-size="12" fill="#5b6478">one 2D feature map</text>
+      <text x="515" y="220" text-anchor="middle" font-size="12" fill="#5b6478">(summed across channels)</text>
+    </svg>
+    <div class="caption">Figure 10.1 — Convolution on volumes. The filter spans all input channels. The 3D element-wise products are
+    summed into a single number, so one filter produces a 2D (single-channel) feature map.</div>
+  </div>
+
+  <h3>How the 3D convolution is computed</h3>
+
+  <p>For each position of the filter, you multiply each channel of the filter by the corresponding channel of the input, sum
+  <em>all</em> the products (across all 3 channels <em>and</em> all \(3 \times 3\) positions), and add the bias. Concretely, if</p>
+
+  <div class="eq">
+    $$
+    \text{Input patch (3×3×3)}, \quad \text{Filter (3×3×3)}
+    $$
+  </div>
+
+  <p>then the output at that position is the sum of 27 products:</p>
+
+  <div class="eq">
+    $$ y = \sum_{c=1}^{3} \sum_{i=1}^{3} \sum_{j=1}^{3} x_{ijc} \cdot w_{ijc} + b. $$
+  </div>
+
+  <p>Where \(x_{ijc}\) is the input pixel at row \(i\), column \(j\), channel \(c\), and \(w_{ijc}\) is the corresponding filter
+  weight.</p>
+
+  <h3>Multiple filters → multiple output channels</h3>
+
+  <p>If you want to detect more than one type of feature (say vertical edges <em>and</em> horizontal edges <em>and</em> colour
+  blobs), use multiple filters. Each filter produces its own 2D feature map, and you stack them:</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 760 260" role="img" aria-label="Two filters produce two feature maps that stack into a 4x4x2 volume">
+      <g>
+        <rect x="20" y="60" width="120" height="120" fill="#ff9c9c" stroke="#333"/>
+        <rect x="32" y="48" width="120" height="120" fill="#9cffa8" stroke="#333"/>
+        <rect x="44" y="36" width="120" height="120" fill="#9cc4ff" stroke="#333"/>
+      </g>
+      <text x="92" y="210" text-anchor="middle" font-size="13">6 × 6 × 3 input</text>
+
+      <!-- filter 1 -->
+      <g>
+        <rect x="200" y="50" width="60" height="60" fill="#ffe14d" stroke="#333"/>
+        <rect x="208" y="42" width="60" height="60" fill="#ffe14d" stroke="#333"/>
+        <rect x="216" y="34" width="60" height="60" fill="#ffe14d" stroke="#333"/>
+      </g>
+      <text x="238" y="140" text-anchor="middle" font-size="11">filter 1</text>
+      <text x="238" y="155" text-anchor="middle" font-size="11">(vertical edge)</text>
+
+      <!-- filter 2 -->
+      <g>
+        <rect x="200" y="170" width="60" height="60" fill="#ffe14d" stroke="#333"/>
+        <rect x="208" y="162" width="60" height="60" fill="#ffe14d" stroke="#333"/>
+        <rect x="216" y="154" width="60" height="60" fill="#ffe14d" stroke="#333"/>
+      </g>
+      <text x="238" y="255" text-anchor="middle" font-size="11">filter 2</text>
+
+      <text x="320" y="130" font-size="22">=</text>
+
+      <!-- feature maps -->
+      <rect x="360" y="50" width="80" height="80" fill="#f6f6ff" stroke="#3a63d8" stroke-width="2"/>
+      <text x="400" y="95" text-anchor="middle" font-size="12" fill="#3a63d8">4 × 4</text>
+      <text x="400" y="140" text-anchor="middle" font-size="11" fill="#3a63d8">map 1</text>
+
+      <rect x="360" y="160" width="80" height="80" fill="#f6f6ff" stroke="#3a63d8" stroke-width="2"/>
+      <text x="400" y="205" text-anchor="middle" font-size="12" fill="#3a63d8">4 × 4</text>
+      <text x="400" y="255" text-anchor="middle" font-size="11" fill="#3a63d8">map 2</text>
+
+      <text x="490" y="140" font-size="22">→</text>
+
+      <!-- stacked output -->
+      <g>
+        <rect x="560" y="60" width="100" height="100" fill="#d3d9ff" stroke="#3a63d8" stroke-width="2"/>
+        <rect x="572" y="48" width="100" height="100" fill="#e6eaff" stroke="#3a63d8" stroke-width="2"/>
+      </g>
+      <text x="620" y="120" text-anchor="middle" font-size="13" fill="#3a63d8">4 × 4 × 2</text>
+      <text x="620" y="190" text-anchor="middle" font-size="12" fill="#5b6478">output volume</text>
+    </svg>
+    <div class="caption">Figure 10.2 — Two \(3\times3\times3\) filters produce two \(4\times4\) feature maps, stacked into a
+    \(4\times4\times2\) output volume. In general, \(n_c\) filters give an output with \(n_c\) channels.</div>
+  </div>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — Two Rules of Thumb</span>
+    <ul>
+      <li>The <strong>number of channels</strong> of each filter must equal the number of channels of the input.</li>
+      <li>The <strong>number of filters</strong> determines the number of output channels.</li>
+    </ul>
+  </div>
+
+  <h3>Notation for multi-channel convolution</h3>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Symbol</th><th>Meaning</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>\(n_H^{[l-1]},\,n_W^{[l-1]}\)</td><td>Height, width of the input to layer \(l\)</td></tr>
+        <tr><td>\(n_C^{[l-1]}\)</td><td>Number of channels (depth) of the input to layer \(l\)</td></tr>
+        <tr><td>\(f^{[l]}\)</td><td>Filter side length used in layer \(l\)</td></tr>
+        <tr><td>\(p^{[l]}\)</td><td>Padding used in layer \(l\)</td></tr>
+        <tr><td>\(s^{[l]}\)</td><td>Stride used in layer \(l\)</td></tr>
+        <tr><td>\(n_C^{[l]}\)</td><td>Number of filters (= output channels) in layer \(l\)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== 11. ONE LAYER ==================== -->
+  <h2 id="one-layer">11. One Layer of a Convolutional Network</h2>
+
+  <p>A single convolutional layer does two things:</p>
+
+  <ol>
+    <li><strong>Convolve</strong> the input with several filters.</li>
+    <li><strong>Add a bias</strong> to each feature map and pass it through a <strong>non-linear activation</strong> (usually ReLU).</li>
+  </ol>
+
+  <p>Here is the full operation for layer \(l\) with \(n_C^{[l]}\) filters:</p>
+
+  <div class="eq">
+    <div class="eq-label">Forward pass of one conv layer</div>
+    $$
+    z^{[l]} = a^{[l-1]} * W^{[l]} + b^{[l]}, \qquad a^{[l]} = g^{[l]}\!\left(z^{[l]}\right)
+    $$
+  </div>
+
+  <ul>
+    <li>\(a^{[l-1]}\) — activations from the previous layer (for \(l=1\), this is the input image).</li>
+    <li>\(W^{[l]}\) — the set of filters (each \(f^{[l]} \times f^{[l]} \times n_C^{[l-1]}\)).</li>
+    <li>\(b^{[l]}\) — a bias vector, one scalar per filter.</li>
+    <li>\(g^{[l]}\) — the activation function (ReLU in hidden layers, sigmoid/softmax at the output).</li>
+    <li>\(a^{[l]}\) — the output activation volume of shape
+      \(n_H^{[l]} \times n_W^{[l]} \times n_C^{[l]}\), where
+      \(n_H^{[l]} = \lfloor (n_H^{[l-1]} + 2p - f)/s \rfloor + 1\), and similarly for \(n_W^{[l]}\).</li>
+  </ul>
+
+  <div class="diagram">
+    <svg viewBox="0 0 820 320" role="img" aria-label="One conv layer: 6x6x3 input to 4x4x2 output via two filters, bias add, then ReLU">
+      <!-- input -->
+      <g>
+        <rect x="10" y="100" width="90" height="90" fill="#ff9c9c" stroke="#333"/>
+        <rect x="20" y="90" width="90" height="90" fill="#9cffa8" stroke="#333"/>
+        <rect x="30" y="80" width="90" height="90" fill="#9cc4ff" stroke="#333"/>
+      </g>
+      <text x="60" y="220" text-anchor="middle" font-size="12" fill="#3a63d8">6 × 6 × 3</text>
+      <text x="60" y="238" text-anchor="middle" font-size="11" fill="#5b6478">a[0]</text>
+
+      <!-- filter 1 -->
+      <g>
+        <rect x="150" y="70" width="55" height="55" fill="#ffe14d" stroke="#333"/>
+        <rect x="158" y="62" width="55" height="55" fill="#ffe14d" stroke="#333"/>
+        <rect x="166" y="54" width="55" height="55" fill="#ffe14d" stroke="#333"/>
+      </g>
+      <text x="178" y="140" text-anchor="middle" font-size="11">W1 (3×3×3)</text>
+      <!-- filter 2 -->
+      <g>
+        <rect x="150" y="180" width="55" height="55" fill="#ffe14d" stroke="#333"/>
+        <rect x="158" y="172" width="55" height="55" fill="#ffe14d" stroke="#333"/>
+        <rect x="166" y="164" width="55" height="55" fill="#ffe14d" stroke="#333"/>
+      </g>
+      <text x="178" y="252" text-anchor="middle" font-size="11">W2 (3×3×3)</text>
+
+      <text x="250" y="140" font-size="22">→</text>
+
+      <!-- z with bias and relu -->
+      <rect x="290" y="60" width="80" height="80" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="330" y="105" text-anchor="middle" font-size="12">+ b1</text>
+      <text x="330" y="160" text-anchor="middle" font-size="11" fill="#5b6478">z1</text>
+
+      <rect x="290" y="180" width="80" height="80" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="330" y="225" text-anchor="middle" font-size="12">+ b2</text>
+      <text x="330" y="280" text-anchor="middle" font-size="11" fill="#5b6478">z2</text>
+
+      <text x="400" y="140" font-size="22">→</text>
+
+      <!-- relu -->
+      <rect x="440" y="60" width="80" height="80" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="480" y="105" text-anchor="middle" font-size="12" fill="#1f9d55">ReLU</text>
+      <text x="480" y="160" text-anchor="middle" font-size="11" fill="#5b6478">a1</text>
+
+      <rect x="440" y="180" width="80" height="80" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="480" y="225" text-anchor="middle" font-size="12" fill="#1f9d55">ReLU</text>
+      <text x="480" y="280" text-anchor="middle" font-size="11" fill="#5b6478">a2</text>
+
+      <text x="550" y="140" font-size="22">→</text>
+
+      <!-- stacked output -->
+      <g>
+        <rect x="600" y="90" width="80" height="80" fill="#d3d9ff" stroke="#3a63d8" stroke-width="2"/>
+        <rect x="612" y="78" width="80" height="80" fill="#e6eaff" stroke="#3a63d8" stroke-width="2"/>
+      </g>
+      <text x="650" y="130" text-anchor="middle" font-size="12" fill="#3a63d8">4 × 4 × 2</text>
+      <text x="650" y="200" text-anchor="middle" font-size="11" fill="#5b6478">a[1]</text>
+    </svg>
+    <div class="caption">Figure 11.1 — One conv layer: input volume → multiple filters → add bias → ReLU → stack feature maps into
+    a new volume.</div>
+  </div>
+
+  <!-- ==================== 12. PARAMETERS ==================== -->
+  <h2 id="params">12. Number of Parameters in a Conv Layer</h2>
+
+  <p>This is where convolutions shine. Suppose one layer uses <strong>10 filters</strong>, each of size
+  \(3 \times 3 \times 3\) (matching a 3-channel input).</p>
+
+  <p>Each filter has \(3 \times 3 \times 3 = 27\) weights, plus 1 bias. So each filter has 28 parameters. Ten filters give
+  \(28 \times 10 = \mathbf{280}\) parameters.</p>
+
+  <div class="eq">
+    $$
+    \#\text{params} = \underbrace{f \cdot f \cdot n_C^{[l-1]}}_{\text{weights per filter}} \cdot n_C^{[l]} \;+\; \underbrace{n_C^{[l]}}_{\text{one bias per filter}}
+    = (3\cdot 3\cdot 3)\cdot 10 + 10 = 280.
+    $$
+  </div>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — Parameter Independence from Input Size</span>
+    <p>Notice that the number of parameters depends <em>only</em> on the filter size \(f\) and the number of channels/filters —
+    <strong>not</strong> on the input dimensions \(n_H, n_W\). This is what makes CNNs so efficient on huge images.</p>
+  </div>
+
+  <div class="box warn">
+    <span class="label">🔴 Warning — Filter Channel Mismatch</span>
+    <p>A common bug: creating a \(3\times3\times3\) filter for a 1-channel input (or vice versa). The filter's depth
+    must always equal the input's channel count, or the element-wise product is undefined. Many library errors trace back to
+    this mismatch.</p>
+  </div>
+
+  <!-- ==================== 13. NOTATION ==================== -->
+  <h2 id="notation">13. Notation Summary for Layer \(l\)</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Symbol</th><th>Meaning</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>\(f^{[l]}\)</td><td>Filter size (assumed square: \(f \times f\))</td></tr>
+        <tr><td>\(p^{[l]}\)</td><td>Padding</td></tr>
+        <tr><td>\(s^{[l]}\)</td><td>Stride</td></tr>
+        <tr><td>\(n_C^{[l]}\)</td><td>Number of filters (= output channels)</td></tr>
+        <tr><td>\(n_H^{[l-1]} \times n_W^{[l-1]} \times n_C^{[l-1]}\)</td><td>Input volume shape</td></tr>
+        <tr><td>\(n_H^{[l]} \times n_W^{[l]} \times n_C^{[l]}\)</td><td>Output volume shape, where
+          \(n_H^{[l]} = \lfloor (n_H^{[l-1]} + 2p^{[l]} - f^{[l]})/s^{[l]} \rfloor + 1\)</td></tr>
+        <tr><td>Filter shape</td><td>\(f^{[l]} \times f^{[l]} \times n_C^{[l-1]}\)</td></tr>
+        <tr><td>Weights \(W^{[l]}\)</td><td>\(f^{[l]} \times f^{[l]} \times n_C^{[l-1]} \times n_C^{[l]}\)</td></tr>
+        <tr><td>Bias \(b^{[l]}\)</td><td>\(1 \times 1 \times 1 \times n_C^{[l]}\) (one per filter)</td></tr>
+        <tr><td>Activations \(a^{[l]}\)</td><td>\(m \times n_H^{[l]} \times n_W^{[l]} \times n_C^{[l]}\) (with \(m\) = batch size)</td></tr>
+        <tr><td>\(A^{[l]}\)</td><td>Same as \(a^{[l]}\) but collectively for the whole mini-batch</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== 14. SIMPLE CNN ==================== -->
+  <h2 id="simple-cnn">14. A Simple ConvNet Example</h2>
+
+  <p>Let's trace through a tiny ConvNet that takes a \(39\times39\times3\) RGB image and produces a single output \(\hat{y}\)
+  for binary classification (e.g., "is this a cat?").</p>
+
+  <div class="eq">
+    $$
+    \underbrace{39\!\times\!39\!\times\!3}_{a^{[0]}}
+    \xrightarrow{f=3,\,s=1,\,p=0,\,n_C=10}
+    \underbrace{37\!\times\!37\!\times\!10}_{a^{[1]}}
+    \xrightarrow{f=5,\,s=2,\,p=0,\,n_C=20}
+    \underbrace{17\!\times\!17\!\times\!20}_{a^{[2]}}
+    \xrightarrow{f=5,\,s=2,\,p=0,\,n_C=40}
+    \underbrace{7\!\times\!7\!\times\!40}_{a^{[3]}}
+    \to \text{flatten} \to 1960
+    \to \text{logistic / softmax}.
+    $$
+  </div>
+
+  <div class="box exam">
+    <span class="label">🟣 Verify each shape</span>
+    <ul>
+      <li><strong>Layer 1:</strong> \((39 - 3)/1 + 1 = 37\), with 10 filters → \(37 \times 37 \times 10\).</li>
+      <li><strong>Layer 2:</strong> \(\lfloor (37 - 5)/2 \rfloor + 1 = 17\), with 20 filters → \(17 \times 17 \times 20\).</li>
+      <li><strong>Layer 3:</strong> \(\lfloor (17 - 5)/2 \rfloor + 1 = 7\), with 40 filters → \(7 \times 7 \times 40\).</li>
+    </ul>
+  </div>
+
+  <p>Then we <strong>flatten</strong> the volume into a vector of length \(7 \times 7 \times 40 = 1960\), and feed it into a
+  standard fully-connected layer followed by a sigmoid or softmax output.</p>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — The Big Idea</span>
+    <p>The convolutional layers act as <em>feature extractors</em>. As we go deeper, \(n_H\) and \(n_W\) shrink while
+    \(n_C\) grows. The final flattened vector is a compact, learned representation of the input image, which a standard
+    classifier can use.</p>
+  </div>
+
+  <p>Types of layer in a ConvNet:</p>
+  <ul>
+    <li><strong>Convolution (CONV)</strong> — the operation described above.</li>
+    <li><strong>Pooling (POOL)</strong> — reduces spatial size (Section 15).</li>
+    <li><strong>Fully connected (FC)</strong> — the familiar dense layer from Course 1.</li>
+  </ul>
+
+  <!-- ==================== 15. POOLING ==================== -->
+  <h2 id="pooling">15. Pooling Layers</h2>
+
+  <p>After convolution, we often insert a <strong>pooling layer</strong> to shrink the spatial dimensions (height and width) while
+  keeping the number of channels unchanged. Pooling has <strong>no learnable parameters</strong> — it's a fixed computation.</p>
+
+  <h3>15.1 Max pooling</h3>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — Max Pooling</span>
+    <p>Max pooling slides a window of size \(f \times f\) (with stride \(s\)) across the input and outputs the <em>maximum</em>
+    value inside each window.</p>
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 720 240" role="img" aria-label="Max pooling 2x2 with stride 2 on a 4x4 input produces a 2x2 output">
+      <!-- input 4x4 -->
+      <g font-size="14" text-anchor="middle" fill="#1c2230">
+        <g stroke="#555" fill="none">
+          <line x1="20" y1="30" x2="20" y2="190"/><line x1="60" y1="30" x2="60" y2="190"/>
+          <line x1="100" y1="30" x2="100" y2="190"/><line x1="140" y1="30" x2="140" y2="190"/>
+          <line x1="180" y1="30" x2="180" y2="190"/>
+          <line x1="20" y1="30" x2="180" y2="30"/><line x1="20" y1="70" x2="180" y2="70"/>
+          <line x1="20" y1="110" x2="180" y2="110"/><line x1="20" y1="150" x2="180" y2="150"/>
+          <line x1="20" y1="190" x2="180" y2="190"/>
+        </g>
+        <!-- color quadrants -->
+        <rect x="20" y="30" width="80" height="80" fill="#d3d9ff" opacity=".4"/>
+        <rect x="100" y="30" width="80" height="80" fill="#bdeaff" opacity=".4"/>
+        <rect x="20" y="110" width="80" height="80" fill="#bdeacb" opacity=".5"/>
+        <rect x="100" y="110" width="80" height="80" fill="#ffc9c9" opacity=".5"/>
+        <text x="40" y="52">1</text><text x="80" y="52">3</text><text x="120" y="52">2</text><text x="160" y="52">1</text>
+        <text x="40" y="92">2</text><text x="80" y="92">9</text><text x="120" y="92">1</text><text x="160" y="92">1</text>
+        <text x="40" y="132">1</text><text x="80" y="132">3</text><text x="120" y="132">2</text><text x="160" y="132">3</text>
+        <text x="40" y="172">5</text><text x="80" y="172">6</text><text x="120" y="172">1</text><text x="160" y="172">2</text>
+      </g>
+      <text x="100" y="215" text-anchor="middle" font-size="12" fill="#3a63d8">4 × 4 input, f = 2, s = 2</text>
+
+      <text x="230" y="120" font-size="22">→</text>
+
+      <!-- output 2x2 -->
+      <g font-size="16" text-anchor="middle" fill="#1c2230">
+        <g stroke="#555" fill="none">
+          <line x1="280" y1="70" x2="280" y2="150"/><line x1="330" y1="70" x2="330" y2="150"/>
+          <line x1="380" y1="70" x2="380" y2="150"/>
+          <line x1="280" y1="70" x2="380" y2="70"/><line x1="280" y1="110" x2="380" y2="110"/>
+          <line x1="280" y1="150" x2="380" y2="150"/>
+        </g>
+        <rect x="280" y="70" width="50" height="40" fill="#d3d9ff" opacity=".5"/>
+        <rect x="330" y="70" width="50" height="40" fill="#bdeaff" opacity=".5"/>
+        <rect x="280" y="110" width="50" height="40" fill="#bdeacb" opacity=".5"/>
+        <rect x="330" y="110" width="50" height="40" fill="#ffc9c9" opacity=".5"/>
+        <text x="305" y="97">9</text><text x="355" y="97">2</text>
+        <text x="305" y="137">6</text><text x="355" y="137">3</text>
+      </g>
+      <text x="330" y="180" text-anchor="middle" font-size="12" fill="#3a63d8">2 × 2 output</text>
+      <text x="330" y="215" text-anchor="middle" font-size="12" fill="#5b6478">max of each 2×2 window</text>
+    </svg>
+    <div class="caption">Figure 15.1 — Max pooling with a \(2\times2\) window and stride 2. Each output is the maximum of the
+    corresponding \(2\times2\) input window.</div>
+  </div>
+
+  <h3>15.2 Average pooling</h3>
+
+  <p>Instead of taking the maximum, <strong>average pooling</strong> takes the <em>mean</em> of each window.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 720 240" role="img" aria-label="Average pooling 2x2 with stride 2 on a 4x4 input produces a 2x2 output">
+      <!-- same layout -->
+      <g font-size="14" text-anchor="middle" fill="#1c2230">
+        <g stroke="#555" fill="none">
+          <line x1="20" y1="30" x2="20" y2="190"/><line x1="60" y1="30" x2="60" y2="190"/>
+          <line x1="100" y1="30" x2="100" y2="190"/><line x1="140" y1="30" x2="140" y2="190"/>
+          <line x1="180" y1="30" x2="180" y2="190"/>
+          <line x1="20" y1="30" x2="180" y2="30"/><line x1="20" y1="70" x2="180" y2="70"/>
+          <line x1="20" y1="110" x2="180" y2="110"/><line x1="20" y1="150" x2="180" y2="150"/>
+          <line x1="20" y1="190" x2="180" y2="190"/>
+        </g>
+        <text x="40" y="52">1</text><text x="80" y="52">3</text><text x="120" y="52">2</text><text x="160" y="52">1</text>
+        <text x="40" y="92">2</text><text x="80" y="92">9</text><text x="120" y="92">1</text><text x="160" y="92">1</text>
+        <text x="40" y="132">1</text><text x="80" y="132">4</text><text x="120" y="132">2</text><text x="160" y="132">3</text>
+        <text x="40" y="172">5</text><text x="80" y="172">6</text><text x="120" y="172">1</text><text x="160" y="172">2</text>
+      </g>
+      <text x="100" y="215" text-anchor="middle" font-size="12" fill="#3a63d8">4 × 4 input</text>
+      <text x="230" y="120" font-size="22">→</text>
+
+      <g font-size="14" text-anchor="middle" fill="#1c2230">
+        <g stroke="#555" fill="none">
+          <line x1="280" y1="70" x2="280" y2="150"/><line x1="330" y1="70" x2="330" y2="150"/>
+          <line x1="380" y1="70" x2="380" y2="150"/>
+          <line x1="280" y1="70" x2="380" y2="70"/><line x1="280" y1="110" x2="380" y2="110"/>
+          <line x1="280" y1="150" x2="380" y2="150"/>
+        </g>
+        <text x="305" y="97">3.75</text><text x="355" y="97">1.25</text>
+        <text x="305" y="137">4</text><text x="355" y="137">2</text>
+      </g>
+      <text x="330" y="180" text-anchor="middle" font-size="12" fill="#3a63d8">2 × 2 output</text>
+      <text x="330" y="215" text-anchor="middle" font-size="12" fill="#5b6478">avg of each 2×2 window</text>
+    </svg>
+    <div class="caption">Figure 15.2 — Average pooling with \(2\times2\) windows. Values: \((1+3+2+9)/4 = 3.75\),
+    \((2+1+1+1)/4 = 1.25\), \((1+3+5+6)/4 = 3.75\) (rounded), \((2+3+1+2)/4 = 2\).</div>
+  </div>
+
+  <h3>15.3 Pooling — summary</h3>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Hyperparameter</th><th>Meaning</th><th>Typical values</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>\(f\)</td><td>Window size</td><td>2, 3</td></tr>
+        <tr><td>\(s\)</td><td>Stride</td><td>2</td></tr>
+        <tr><td>type</td><td>Max or Average</td><td>Max (more common)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Output size follows the same master formula (with \(p=0\) usually):</p>
+
+  <div class="eq">
+    $$ n_H^{[l]} = \left\lfloor \frac{n_H^{[l-1]} - f}{s} \right\rfloor + 1, \qquad n_C^{[l]} = n_C^{[l-1]}. $$
+  </div>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — Pooling Has No Parameters</span>
+    <p>Unlike convolution, pooling has <strong>no learnable parameters</strong>. It is a fixed, deterministic operation.
+    It also does not change the number of channels.</p>
+  </div>
+
+  <div class="box warn">
+    <span class="label">🔴 Warning — Pooling and Gradient Flow</span>
+    <p>During backprop, max pooling propagates the gradient only to the position that produced the max; average pooling
+    distributes the gradient equally. Modern architectures often replace pooling with strided convolutions because they
+    keep a learnable parameter (the filter) while downsampling.</p>
+  </div>
+
+  <!-- ==================== 16. LENET ==================== -->
+  <h2 id="lenet">16. Full CNN Example — LeNet‑5 Style Network</h2>
+
+  <p>Let's build a slightly expanded version of LeNet‑5 that classifies \(32\times32\times3\) RGB images into 10 classes
+  (e.g., digits 0–9). The architecture is:</p>
+
+  <div class="eq">
+    $$
+    \text{CONV} \to \text{POOL} \to \text{CONV} \to \text{POOL} \to \text{FC} \to \text{FC} \to \text{Softmax}.
+    $$
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 260" role="img" aria-label="LeNet-5 style architecture">
+      <!-- input -->
+      <rect x="10" y="80" width="70" height="70" fill="#dcdffc" stroke="#3a63d8"/>
+      <text x="45" y="170" text-anchor="middle" font-size="11" fill="#3a63d8">32×32×3</text>
+
+      <text x="105" y="120" font-size="14">→</text>
+
+      <!-- CONV1 -->
+      <rect x="130" y="70" width="70" height="70" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="165" y="155" text-anchor="middle" font-size="10" fill="#3a63d8">CONV1 (f=5,s=1)</text>
+      <text x="165" y="170" text-anchor="middle" font-size="10" fill="#3a63d8">28×28×6</text>
+
+      <text x="222" y="120" font-size="14">→</text>
+
+      <!-- POOL1 -->
+      <rect x="245" y="70" width="70" height="70" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="280" y="155" text-anchor="middle" font-size="10" fill="#1f9d55">POOL1 (2×2,s=2)</text>
+      <text x="280" y="170" text-anchor="middle" font-size="10" fill="#1f9d55">14×14×6</text>
+
+      <text x="337" y="120" font-size="14">→</text>
+
+      <!-- CONV2 -->
+      <rect x="360" y="70" width="70" height="70" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="395" y="155" text-anchor="middle" font-size="10" fill="#3a63d8">CONV2 (f=5,s=1)</text>
+      <text x="395" y="170" text-anchor="middle" font-size="10" fill="#3a63d8">10×10×16</text>
+
+      <text x="452" y="120" font-size="14">→</text>
+
+      <!-- POOL2 -->
+      <rect x="475" y="70" width="70" height="70" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="510" y="155" text-anchor="middle" font-size="10" fill="#1f9d55">POOL2 (2×2,s=2)</text>
+      <text x="510" y="170" text-anchor="middle" font-size="10" fill="#1f9d55">5×5×16</text>
+
+      <text x="567" y="120" font-size="14">→</text>
+
+      <!-- FC3 -->
+      <rect x="590" y="70" width="20" height="70" fill="#f3e9ff" stroke="#7a3ad6"/>
+      <text x="600" y="155" text-anchor="middle" font-size="10" fill="#7a3ad6">FC3 (120)</text>
+
+      <text x="627" y="120" font-size="14">→</text>
+
+      <!-- FC4 -->
+      <rect x="650" y="70" width="20" height="70" fill="#f3e9ff" stroke="#7a3ad6"/>
+      <text x="660" y="155" text-anchor="middle" font-size="10" fill="#7a3ad6">FC4 (84)</text>
+
+      <text x="687" y="120" font-size="14">→</text>
+
+      <!-- softmax -->
+      <rect x="710" y="70" width="20" height="70" fill="#ffe9e9" stroke="#d64545"/>
+      <text x="720" y="155" text-anchor="middle" font-size="10" fill="#d64545">Softmax (10)</text>
+
+      <text x="755" y="120" font-size="14">→</text>
+      <text x="790" y="120" font-size="18">ŷ</text>
+    </svg>
+    <div class="caption">Figure 16.1 — The LeNet‑5 style network. Convolution + pooling reduce spatial size; fully connected
+    layers interpret the extracted features; softmax produces class probabilities.</div>
+  </div>
+
+  <h3>Layer‑by‑layer shapes and parameter counts</h3>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Layer</th><th>Activation shape</th><th>Activation size</th><th># parameters</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Input</td><td>(32, 32, 3)</td><td>3,072</td><td>0</td></tr>
+        <tr><td>CONV1 (f=5, s=1)</td><td>(28, 28, 8)</td><td>6,272</td><td>608</td></tr>
+        <tr><td>POOL1</td><td>(14, 14, 8)</td><td>1,568</td><td>0</td></tr>
+        <tr><td>CONV2 (f=5, s=1)</td><td>(10, 10, 16)</td><td>1,600</td><td>3,216</td></tr>
+        <tr><td>POOL2</td><td>(5, 5, 16)</td><td>400</td><td>0</td></tr>
+        <tr><td>FC3</td><td>(120, 1)</td><td>120</td><td>48,120</td></tr>
+        <tr><td>FC4</td><td>(84, 1)</td><td>84</td><td>10,164</td></tr>
+        <tr><td>Softmax</td><td>(10, 1)</td><td>10</td><td>850</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box exam">
+    <span class="label">🟣 Check a couple of the numbers</span>
+    <p><strong>CONV1 parameters:</strong> each filter is \(5\times5\times3 = 75\) weights + 1 bias = 76. With 8 filters:
+    \(76 \times 8 = 608\). ✓</p>
+    <p><strong>FC3 parameters:</strong> input is \(5\times5\times16 = 400\), output is 120. Weights: \(400\times 120 = 48{,}000\).
+    Biases: 120. Total: 48,120. ✓</p>
+  </div>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — Where the Parameters Live</span>
+    <p>Notice that most of the parameters live in the <strong>fully connected</strong> layers (FC3 alone has 48,120). The
+    <strong>convolutional layers are extremely parameter-efficient</strong>: CONV1 uses only 608. This is the key design
+    principle of CNNs.</p>
+  </div>
+
+  <!-- ==================== 17. WHY CONVOLUTIONS ==================== -->
+  <h2 id="why-conv">17. Why Convolutions Work</h2>
+
+  <p>Compared with a fully connected network on the same input, convolutions offer two powerful properties.</p>
+
+  <h3>17.1 Parameter sharing</h3>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — Parameter Sharing</span>
+    <p>The <em>same</em> filter (same weights) is reused at every spatial position. A feature detector that works in one
+    part of the image is likely useful in another part, so we don't need separate weights for every location.</p>
+  </div>
+
+  <div class="box int">
+    <span class="label">🟢 Intuition</span>
+    <p>A vertical edge detector is useful whether the edge is in the top-left or bottom-right of the image. Rather than
+    learning a separate "vertical edge detector" for every position, the network learns one filter and slides it everywhere.</p>
+  </div>
+
+  <h3>17.2 Sparsity of connections</h3>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — Sparsity of Connections</span>
+    <p>In each layer, every output value depends only on a small, local neighbourhood of inputs (the receptive field), not
+    on the entire input. This is a strong structural prior that matches how images actually work.</p>
+  </div>
+
+  <div class="box int">
+    <span class="label">🟢 Intuition</span>
+    <p>In an image, nearby pixels are strongly correlated and far-apart pixels often aren't. A CNN bakes this assumption
+    into its architecture instead of forcing the network to learn it from scratch.</p>
+  </div>
+
+  <h3>17.3 Consequences</h3>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Property</th><th>Fully Connected</th><th>Convolutional</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Parameter count grows with image size?</td>
+          <td>Yes — quadratically</td>
+          <td>No — depends only on \(f\), channels</td>
+        </tr>
+        <tr>
+          <td>Translation invariance</td>
+          <td>Must be learned</td>
+          <td>Built in via weight sharing</td>
+        </tr>
+        <tr>
+          <td>Locality exploited</td>
+          <td>No</td>
+          <td>Yes (small receptive field)</td>
+        </tr>
+        <tr>
+          <td>Overfitting risk on small data</td>
+          <td>High</td>
+          <td>Lower (fewer parameters)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== 18. PUTTING TOGETHER ==================== -->
+  <h2 id="putting-together">18. Putting It All Together — How a CNN Learns</h2>
+
+  <p>Given a training set \(\{(x^{(1)}, y^{(1)}), \dots, (x^{(m)}, y^{(m)})\}\), the network:</p>
+
+  <ol>
+    <li><strong>Forward propagates</strong> each input through a sequence of CONV / POOL / FC layers, producing a prediction
+    \(\hat{y}^{(i)}\).</li>
+    <li><strong>Computes a loss</strong> for each example (e.g., cross-entropy) and averages it:</li>
+  </ol>
+
+  <div class="eq">
+    $$ J(W, b) = \frac{1}{m} \sum_{i=1}^{m} \mathcal{L}\!\left(\hat{y}^{(i)},\; y^{(i)}\right). $$
+  </div>
+
+  <ol start="3">
+    <li><strong>Backpropagates</strong> to compute gradients \(\partial J / \partial W\), \(\partial J / \partial b\) for every
+    filter, bias, and FC weight.</li>
+    <li><strong>Updates</strong> the parameters with gradient descent:</li>
+  </ol>
+
+  <div class="eq">
+    $$ W \leftarrow W - \alpha \frac{\partial J}{\partial W}, \qquad b \leftarrow b - \alpha \frac{\partial J}{\partial b}. $$
+  </div>
+
+  <p>Where \(\alpha\) is the learning rate. Repeat until convergence.</p>
+
+  <div class="box int">
+    <span class="label">🟢 The Whole Story in One Sentence</span>
+    <p>A CNN is a stack of parameter-efficient, spatially-aware layers that learn a hierarchy of features (edges → parts →
+    objects) and use gradient descent on a supervised loss to fit those features to a task.</p>
+  </div>
+
+  <!-- ==================== 19. SUMMARY ==================== -->
+  <h2 id="summary">19. Weekly Summary</h2>
+
+  <p>This week introduced the core building blocks of convolutional networks. We saw:</p>
+
+  <ul>
+    <li><strong>Computer vision problems</strong> (classification, detection, style transfer) motivate CNNs.</li>
+    <li><strong>Fully connected networks fail on large images</strong> because the parameter count explodes
+    (3 billion for a single layer on a 1000×1000×3 image).</li>
+    <li><strong>Convolution</strong> slides a small filter across the input, computing element-wise products and sums.
+    The filter's values are learned parameters.</li>
+    <li>A \(3\times3\) filter \(\begin{bmatrix}1&0&-1\\1&0&-1\\1&0&-1\end{bmatrix}\) detects vertical edges; its transpose
+    detects horizontal edges.</li>
+    <li><strong>Padding</strong> \(p\) (usually with "same" padding, \(p=(f-1)/2\)) preserves spatial size and preserves
+    border information.</li>
+    <li><strong>Stride</strong> \(s\) controls how many pixels the filter moves per step; larger stride → smaller output.</li>
+    <li>Output size: \(\left\lfloor \frac{n + 2p - f}{s} \right\rfloor + 1\).</li>
+    <li>Deep-learning "convolution" is technically <strong>cross-correlation</strong> (no filter flip).</li>
+    <li>On RGB inputs, filters span all channels: \(f \times f \times n_C^{[l-1]}\). Each filter produces one 2D map; stacking
+    \(n_C^{[l]}\) filters gives an output volume with \(n_C^{[l]}\) channels.</li>
+    <li><strong>One conv layer</strong>: \(z^{[l]} = a^{[l-1]} * W^{[l]} + b^{[l]}\), &nbsp; \(a^{[l]} = g^{[l]}(z^{[l]})\).</li>
+    <li>Parameter count per layer: \(f\cdot f\cdot n_C^{[l-1]}\cdot n_C^{[l]} + n_C^{[l]}\) — independent of input size.</li>
+    <li><strong>Pooling</strong> (max or average) shrinks spatial dims with no learnable parameters.</li>
+    <li>LeNet‑5 style: CONV → POOL → CONV → POOL → FC → FC → Softmax.</li>
+    <li>CNNs succeed because of <strong>parameter sharing</strong> and <strong>sparsity of connections</strong>.</li>
+  </ul>
+
+  <!-- ==================== 20. EQUATIONS ==================== -->
+  <h2 id="equations">20. Important Equations</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Equation</th><th>What it means</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>\(\text{Output side} = \left\lfloor \dfrac{n + 2p - f}{s} \right\rfloor + 1\)</td>
+          <td>Output height/width of a conv layer (same for pooling with \(p=0\)).</td>
+        </tr>
+        <tr>
+          <td>\(p = \dfrac{f-1}{2}\)</td>
+          <td>Padding needed for "same" convolution with stride 1 and odd \(f\).</td>
+        </tr>
+        <tr>
+          <td>\(z^{[l]} = a^{[l-1]} * W^{[l]} + b^{[l]}\)</td>
+          <td>Pre-activation output of conv layer \(l\) (convolution + bias).</td>
+        </tr>
+        <tr>
+          <td>\(a^{[l]} = g^{[l]}(z^{[l]})\)</td>
+          <td>Activation of conv layer \(l\) (typically ReLU).</td>
+        </tr>
+        <tr>
+          <td>\(\#\text{params} = f\cdot f\cdot n_C^{[l-1]}\cdot n_C^{[l]} + n_C^{[l]}\)</td>
+          <td>Parameters in one conv layer (weights + biases).</td>
+        </tr>
+        <tr>
+          <td>\(J(W, b) = \dfrac{1}{m}\sum_{i=1}^{m}\mathcal{L}(\hat{y}^{(i)}, y^{(i)})\)</td>
+          <td>Cost function for training the CNN.</td>
+        </tr>
+        <tr>
+          <td>\(W \leftarrow W - \alpha \dfrac{\partial J}{\partial W}\)</td>
+          <td>Gradient-descent update for the filters/weights.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== 21. CONFUSIONS ==================== -->
+  <h2 id="confusions">21. Common Confusions</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Often confused</th><th>Correct distinction</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Convolution vs. cross-correlation</td>
+          <td>True convolution flips the filter; DL libraries skip the flip but still call it "convolution".</td>
+        </tr>
+        <tr>
+          <td>Filter size \(f\) vs. number of filters \(n_C^{[l]}\)</td>
+          <td>\(f\) is the spatial size of a single filter (e.g., 3×3). \(n_C^{[l]}\) is <em>how many</em> filters, which
+          equals the output channel count.</td>
+        </tr>
+        <tr>
+          <td>Input channels vs. output channels</td>
+          <td>Input channels (= filter depth) come from the previous layer. Output channels = number of filters in the current layer.</td>
+        </tr>
+        <tr>
+          <td>Padding \(p\) vs. stride \(s\)</td>
+          <td>Padding adds zeros around the input (preserves size). Stride shrinks the output by skipping positions.</td>
+        </tr>
+        <tr>
+          <td>Pooling vs. convolution</td>
+          <td>Convolution has learnable parameters. Pooling has none — it's a fixed reduction (max or mean).</td>
+        </tr>
+        <tr>
+          <td>"Same" vs. "valid" convolution</td>
+          <td>"Same" means output size = input size (needs padding). "Valid" means no padding.</td>
+        </tr>
+        <tr>
+          <td>Number of parameters vs. size of activation</td>
+          <td>Parameters are the learned weights/biases. Activations are the outputs at each layer. Conv layers have few
+          parameters but many activations.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== 22. REVIEW ==================== -->
+  <h2 id="review">22. Review Questions</h2>
+
+  <details>
+    <summary>Q1. Why does a fully connected network fail on a \(1000 \times 1000 \times 3\) image?</summary>
+    <div class="answer">
+      Flattening the image gives 3,000,000 inputs. A fully connected layer with 1000 hidden units would need a weight matrix
+      of shape \((1000, 3{,}000{,}000)\) — 3 billion parameters in a single layer. This is infeasible in memory and time,
+      and causes severe overfitting.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q2. What exactly does a convolution operation compute?</summary>
+    <div class="answer">
+      It slides a small filter over the input. At each position it computes the element-wise product between the filter and the
+      patch of the input under it, then sums all the products to produce one output value. Repeating at every valid position
+      yields the feature map.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q3. Why does \(\begin{bmatrix}1&0&-1\\1&0&-1\\1&0&-1\end{bmatrix}\) detect vertical edges?</summary>
+    <div class="answer">
+      It computes (left column of patch) − (right column of patch). At a vertical boundary where the left is bright and the
+      right is dark, this is large and positive. Inside a uniform region it is 0. So the output "lights up" at vertical edges.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q4. What does padding \(p=1\) do to a \(6\times6\) input, and why do we use it?</summary>
+    <div class="answer">
+      Padding \(p=1\) adds a ring of zeros around the input, making it \(8\times8\). Convolving with a \(3\times3\) filter
+      then gives a \(6\times6\) output — same size as the original. Padding prevents the spatial size from shrinking after
+      every layer and preserves border information.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q5. What is "same" convolution?</summary>
+    <div class="answer">
+      "Same" convolution uses padding so the output has the same spatial size as the input. With stride \(s=1\) and odd \(f\),
+      the required padding is \(p = (f-1)/2\).
+    </div>
+  </details>
+
+  <details>
+    <summary>Q6. What does stride \(s=2\) do?</summary>
+    <div class="answer">
+      The filter moves 2 pixels per step instead of 1. This halves the output size (approximately). It reduces computation
+      and produces a coarser feature map.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q7. Write the formula for the output size of a convolution.</summary>
+    <div class="answer">
+      $$\text{Output side} = \left\lfloor \frac{n + 2p - f}{s} \right\rfloor + 1.$$
+    </div>
+  </details>
+
+  <details>
+    <summary>Q8. On an RGB image, what is the shape of one filter in layer \(l\)?</summary>
+    <div class="answer">
+      \(f^{[l]} \times f^{[l]} \times n_C^{[l-1]}\) — the filter spans all input channels.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q9. How many parameters does a conv layer have (with \(n_C^{[l]}\) filters, each of size \(f \times f\), on an input
+    with \(n_C^{[l-1]}\) channels)?</summary>
+    <div class="answer">
+      $$f \cdot f \cdot n_C^{[l-1]} \cdot n_C^{[l]} + n_C^{[l]}.$$
+      The last term is one bias per filter.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q10. Why is the number of parameters in a conv layer independent of the input size?</summary>
+    <div class="answer">
+      Because the same filter (same weights) is reused at every spatial position — this is parameter sharing. The weight
+      count depends only on \(f\), \(n_C^{[l-1]}\), and \(n_C^{[l]}\).
+    </div>
+  </details>
+
+  <details>
+    <summary>Q11. What's the difference between max pooling and average pooling?</summary>
+    <div class="answer">
+      Max pooling outputs the maximum value inside each window; average pooling outputs the mean. Both use a fixed window
+      and have <strong>no learnable parameters</strong>.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q12. Does pooling change the number of channels?</summary>
+    <div class="answer">
+      No. Pooling operates independently on each channel, so \(n_C\) stays the same. It only reduces \(n_H\) and \(n_W\).
+    </div>
+  </details>
+
+  <details>
+    <summary>Q13. In a LeNet‑5 style network, which layers contain most of the parameters?</summary>
+    <div class="answer">
+      The fully connected layers. For example, FC3 alone can have 48,120 parameters, whereas CONV1 might have only 608.
+      This is the essence of CNN efficiency.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q14. What is a "receptive field"?</summary>
+    <div class="answer">
+      The region of the input that a given output value depends on. In a conv layer, an output depends only on an
+      \(f\times f\) patch of the input — this is the <em>sparsity of connections</em>. As layers stack, the effective
+      receptive field grows deeper into the network.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q15. Why do we typically use odd-sized filters?</summary>
+    <div class="answer">
+      Two reasons: (1) with odd \(f\), \(p=(f-1)/2\) is an integer, so "same" convolution works cleanly; (2) odd filters
+      have a well-defined central pixel.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q16. What is the difference between true convolution and cross-correlation?</summary>
+    <div class="answer">
+      True convolution flips the filter both horizontally and vertically before sliding. Cross-correlation does not flip.
+      Deep learning libraries use cross-correlation but call it "convolution" because the filter values are learned anyway.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q17. Suppose you have a \(32\times32\times3\) input and use 8 filters of size \(5\times5\) with stride 1 and
+    padding 0. What is the output shape?</summary>
+    <div class="answer">
+      Output side: \((32 - 5)/1 + 1 = 28\). Channels: 8. So the output is \(28 \times 28 \times 8\).
+    </div>
+  </details>
+
+  <details>
+    <summary>Q18. Repeat Q17 with stride 2 and padding 1.</summary>
+    <div class="answer">
+      Output side: \(\lfloor (32 + 2 - 5)/2 \rfloor + 1 = \lfloor 29/2 \rfloor + 1 = 14 + 1 = 15\). Channels: 8.
+      Output: \(15 \times 15 \times 8\).
+    </div>
+  </details>
+
+  <details>
+    <summary>Q19. What are the two architectural principles that make CNNs efficient?</summary>
+    <div class="answer">
+      (1) <strong>Parameter sharing</strong> — one filter reused at every spatial position. (2) <strong>Sparsity of
+      connections</strong> — each output depends only on a local patch of the input.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q20. Describe the pipeline of a full CNN classifier in one line.</summary>
+    <div class="answer">
+      Input → [CONV → POOL] × a few → flatten → FC → FC → softmax, trained end-to-end with gradient descent on a
+      supervised loss.
+    </div>
+  </details>
+
+  <!-- ==================== 23. SELF-TEST ==================== -->
+  <h2 id="selftest">23. Self‑Test</h2>
+
+  <p>Try to answer each question <em>before</em> opening the answer. Aim for ~30 minutes total.</p>
+
+  <h3>Easy</h3>
+
+  <details>
+    <summary>1. What does a \(3\times3\) filter with values \(\begin{bmatrix}1&1&1\\0&0&0\\-1&-1&-1\end{bmatrix}\) detect?</summary>
+    <div class="answer">
+      A horizontal edge — it computes (bottom row) − (top row) of the patch.
+    </div>
+  </details>
+
+  <details>
+    <summary>2. Compute the output size for \(n=10\), \(f=3\), \(p=0\), \(s=1\).</summary>
+    <div class="answer">
+      \((10 - 3)/1 + 1 = 8\). So \(8 \times 8\).
+    </div>
+  </details>
+
+  <details>
+    <summary>3. True or false: pooling layers have learnable parameters.</summary>
+    <div class="answer">
+      False. Pooling (max or average) has no learnable parameters.
+    </div>
+  </details>
+
+  <details>
+    <summary>4. If a conv layer has 20 filters of size \(3\times3\) on a 5-channel input, how many weights does the layer have
+    (ignore bias)?</summary>
+    <div class="answer">
+      \(3 \cdot 3 \cdot 5 \cdot 20 = 900\) weights.
+    </div>
+  </details>
+
+  <h3>Medium</h3>
+
+  <details>
+    <summary>5. You want to preserve the spatial size of a \(64\times64\times3\) input with a \(7\times7\) filter and stride 1.
+    What padding do you need? What is the output shape with 32 filters?</summary>
+    <div class="answer">
+      For "same": \(p = (f-1)/2 = 3\). Output is \(64\times64\times32\).
+    </div>
+  </details>
+
+  <details>
+    <summary>6. A network takes a \(128\times128\times3\) image and applies: CONV (f=5, s=1, p=2, 16 filters) → POOL (f=2, s=2) →
+    CONV (f=3, s=1, p=1, 32 filters) → POOL (f=2, s=2). Compute the final shape.</summary>
+    <div class="answer">
+      CONV1: \((128 + 4 - 5)/1 + 1 = 128\) → \(128\times128\times16\). POOL1: \((128-2)/2 + 1 = 64\) → \(64\times64\times16\).
+      CONV2: \((64 + 2 - 3)/1 + 1 = 64\) → \(64\times64\times32\). POOL2: \((64-2)/2 + 1 = 32\) → \(32\times32\times32\).
+    </div>
+  </details>
+
+  <details>
+    <summary>7. Why can't we use a \(3\times3\times1\) filter on a 3-channel RGB input?</summary>
+    <div class="answer">
+      Because element-wise multiplication requires matching shapes. The filter's channel dimension must equal the input's
+      channel dimension. So a filter for a 3-channel input must be \(3\times3\times3\).
+    </div>
+  </details>
+
+  <details>
+    <summary>8. Explain, using the flash-light analogy, what a filter is doing.</summary>
+    <div class="answer">
+      The filter is like a small flashlight that illuminates a 3×3 patch of the image. At each spot, it asks "how much does
+      this patch look like the pattern I'm looking for?" and outputs a number. Sliding the flashlight across the image gives
+      a map of <em>where</em> that pattern occurs.
+    </div>
+  </details>
+
+  <details>
+    <summary>9. You have a 32×32×3 image and want a conv layer with 5×5 filters that outputs 28×28×8. What stride and padding
+    should you use? How many filters?</summary>
+    <div class="answer">
+      \((32 + 2p - 5)/s + 1 = 28\). With \(p=0\) and \(s=1\), this gives 28. So stride 1, padding 0. Number of filters = 8
+      (to get 8 output channels).
+    </div>
+  </details>
+
+  <details>
+    <summary>10. How does the effective receptive field grow as we stack conv layers?</summary>
+    <div class="answer">
+      If each layer uses \(3\times3\) filters, after \(k\) layers a single output neuron depends on a \((2k+1)\times(2k+1)\)
+      region of the original input. This is why deeper networks can detect larger structures (eyes, faces, objects).
+    </div>
+  </details>
+
+  <h3>Hard</h3>
+
+  <details>
+    <summary>11. Prove the formula \(p = (f-1)/2\) for "same" convolution with stride 1.</summary>
+    <div class="answer">
+      Same convolution requires output size = input size: \(n + 2p - f + 1 = n\). Solving: \(2p = f - 1\), so
+      \(p = (f-1)/2\).
+    </div>
+  </details>
+
+  <details>
+    <summary>12. In a CNN, why might a designer use a stride-2 conv instead of a \(2\times2\) max pool layer?</summary>
+    <div class="answer">
+      A strided convolution has <em>learnable</em> parameters, so the network can learn <em>how</em> to downsample instead of
+      always taking the maximum. Max pooling is fixed. Many modern architectures (e.g., ResNet, some detection models) use
+      strided convs in place of pooling for this reason.
+    </div>
+  </details>
+
+  <details>
+    <summary>13. A conv layer has 256 filters of size \(3\times3\), on an input with 128 channels. How many parameters (with
+    bias)?</summary>
+    <div class="answer">
+      \(3 \cdot 3 \cdot 128 \cdot 256 + 256 = 294{,}912 + 256 = 295{,}168\) parameters.
+    </div>
+  </details>
+
+  <details>
+    <summary>14. Give an intuitive reason why "convolutional layers are translation-equivariant".</summary>
+    <div class="answer">
+      Because the same filter is applied at every position. If a feature shifts in the input, the same filter still fires at
+      the new position — so the output shifts correspondingly. This is what makes CNNs robust to translations of objects in
+      an image.
+    </div>
+  </details>
+
+  <details>
+    <summary>15. The LeNet‑5 table shows POOL and CONV layers having 0 or few parameters but many activations. Explain this
+    asymmetry.</summary>
+    <div class="answer">
+      Conv layers have few parameters because the same filter is reused spatially (parameter sharing). But the <em>activation</em>
+      volume can be large because every spatial position produces an output. Activations also don't need to be stored after
+      the forward pass except for caching during backprop — but they consume memory during training.
+    </div>
+  </details>
+
+  <details>
+    <summary>16. Suppose you stack three \(5\times5\) conv layers with stride 1 and no pooling. What is the size of the
+    receptive field of a neuron in the third layer?</summary>
+    <div class="answer">
+      Each additional 5×5 layer adds \(2 \cdot (5-1)/2 = 4\) to the radius. Third layer radius = \(2 + 2 + 2 = 6\),
+      so diameter = \(2\cdot 6 + 1 = 13\). Receptive field = \(13 \times 13\).
+    </div>
+  </details>
+
+  <details>
+    <summary>17. What would go wrong if we used <em>only</em> convolution layers (no pooling) and no stride &gt; 1 in a deep
+    network?</summary>
+    <div class="answer">
+      Spatial dimensions would shrink by \(f-1\) pixels per layer. A 100-layer network with \(3\times3\) filters would reduce
+      a \(100\times100\) input to \(100 - 2\cdot 100 = -100\) — impossible. You need padding ("same") to keep sizes
+      reasonable, but then the network has a huge activation volume. Pooling/strides solve this by shrinking
+      spatial size while keeping many channels.
+    </div>
+  </details>
+
+  <details>
+    <summary>18. You're told a CNN has a "receptive field of 5×5 at layer 3". If every conv in the network uses \(3\times3\)
+    filters, how many conv layers precede layer 3? (Assume stride 1, no pooling.)</summary>
+    <div class="answer">
+      A \(3\times3\) conv grows the receptive field diameter by 2 per layer. Layer 3 alone (one 3×3 conv) gives diameter 3.
+      Two stacked 3×3 convs give diameter 5. So the answer is 2 layers.
+    </div>
+  </details>
+
+  <details>
+    <summary>19. Explain why the same number of filters \(n_C^{[l]}\) is used to describe both the output channels of layer \(l\)
+    and the "depth" of the weight tensor of layer \(l+1\).</summary>
+    <div class="answer">
+      Because the output of layer \(l\) is the input of layer \(l+1\). The channels of layer \(l\)'s output become the channel
+      dimension that layer \(l+1\)'s filters must match. So \(n_C^{[l]}\) is both the output depth of layer \(l\) and the
+      input depth for layer \(l+1\)'s filters.
+    </div>
+  </details>
+
+  <details>
+    <summary>20. In one sentence each, state the two core architectural principles that make CNNs efficient, and give a concrete
+    example of each.</summary>
+    <div class="answer">
+      <strong>Parameter sharing:</strong> a single edge-detecting filter is reused at all spatial positions — e.g., the
+      vertical-edge filter \(\begin{bmatrix}1&0&-1\\1&0&-1\\1&0&-1\end{bmatrix}\) works everywhere in the image.
+      <strong>Sparsity of connections:</strong> each output depends only on a small local patch — e.g., a \(3\times3\) output
+      value in the first conv layer depends on just 9 input pixels, not on all 12,288.
+    </div>
+  </details>
+
+  <!-- ==================== WEEK NAV ==================== -->
+  <div class="weeknav">
+    <a href="C3_W2.html" class="nav-btn">← Previous Week</a>
+    <a href="#" title="Back to Course 4 index">↑ Course 4 Index</a>
+    <a href="#" title="Back to specialization index">⌂ Specialization</a>
+    <a href="C4_W2.html" class="nav-btn">Next Week →</a>
+  </div>
+
+  </main>
+</div>
+
+<!-- ======================== FOOTER ======================== -->
+<footer>
+  Notes compiled from the Deep Learning Specialization · Course 4 Week 1 · DeepLearning.AI · Andrew Ng.
+  Additional context and recreated diagrams are labelled where they appear.
+</footer>
+
+<button id="backTop" title="Back to top">↑</button>
+
+<!-- ======================== SCRIPTS ======================== -->
+<script>
+/* ----- Theme ----- */
+(function(){
+  var root = document.documentElement;
+  var stored = null;
+  try { stored = localStorage.getItem('dls-theme'); } catch(e){}
+  if (stored) root.setAttribute('data-theme', stored);
+  var btn = document.getElementById('themeBtn');
+  btn.addEventListener('click', function(){
+    var cur = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', cur);
+    try { localStorage.setItem('dls-theme', cur); } catch(e){}
+  });
+})();
+
+/* ----- Back to top ----- */
+(function(){
+  var btn = document.getElementById('backTop');
+  window.addEventListener('scroll', function(){
+    if (window.scrollY > 500) btn.classList.add('show'); else btn.classList.remove('show');
+  });
+  btn.addEventListener('click', function(){ window.scrollTo({top:0,behavior:'smooth'}); });
+})();
+
+/* ----- Simple in-page search ----- */
+(function(){
+  var input = document.getElementById('searchInput');
+  if (!input) return;
+  var timer = null;
+  input.addEventListener('input', function(){
+    clearTimeout(timer);
+    timer = setTimeout(function(){
+      var q = input.value.trim();
+      // clear previous highlights
+      document.querySelectorAll('mark.hit').forEach(function(m){
+        var t = document.createTextNode(m.textContent);
+        m.parentNode.replaceChild(t, m);
+      });
+      if (!q || q.length < 2) return;
+      var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+        acceptNode: function(node){
+          if (!node.parentNode) return NodeFilter.FILTER_REJECT;
+          var tag = node.parentNode.tagName;
+          if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'MARK') return NodeFilter.FILTER_REJECT;
+          if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      });
+      var re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi');
+      var hits = 0, first = null;
+      var nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      nodes.forEach(function(node){
+        if (hits >= 200) return;
+        var v = node.nodeValue;
+        if (!re.test(v)) return;
+        re.lastIndex = 0;
+        var frag = document.createDocumentFragment();
+        var last = 0, m;
+        while ((m = re.exec(v)) !== null){
+          frag.appendChild(document.createTextNode(v.slice(last, m.index)));
+          var mk = document.createElement('mark');
+          mk.className = 'hit';
+          mk.textContent = m[0];
+          frag.appendChild(mk);
+          last = m.index + m[0].length;
+          hits++;
+          if (hits >= 200) break;
+        }
+        frag.appendChild(document.createTextNode(v.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+        if (!first) first = frag;
+      });
+      if (first && first.querySelector) {
+        var el = first.querySelector('mark.hit');
+        if (el) el.scrollIntoView({behavior:'smooth', block:'center'});
+      }
+    }, 220);
+  });
+})();
+</script>
+
+</body>
+</html>

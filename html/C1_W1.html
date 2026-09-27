@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Course 1 · Week 1 — Introduction to Deep Learning</title>
+
+<!-- MathJax for LaTeX rendering with graceful fallback message -->
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$','$'], ['\\(','\\)']], displayMath: [['$$','$$'], ['\\[','\\]']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+:root{
+  --bg:#f7f8fb;
+  --bg-elev:#ffffff;
+  --bg-soft:#eef2f7;
+  --text:#1c2330;
+  --text-soft:#4a5568;
+  --muted:#6b7280;
+  --border:#dfe5ee;
+  --accent:#2563eb;
+  --accent-soft:#e0ebff;
+  --accent-2:#7c3aed;
+
+  --def-bg:#eaf2ff;      --def-bd:#2563eb;
+  --intu-bg:#e9f9ef;     --intu-bd:#16a34a;
+  --imp-bg:#fff7e0;      --imp-bd:#d97706;
+  --warn-bg:#ffeaea;     --warn-bd:#dc2626;
+  --ex-bg:#f4ecff;       --ex-bd:#7c3aed;
+  --impl-bg:#e7f6fb;     --impl-bd:#0891b2;
+  --ins-bg:#fff0f6;      --ins-bd:#db2777;
+
+  --code-bg:#0f172a;
+  --code-fg:#e2e8f0;
+
+  --shadow: 0 1px 2px rgba(16,24,40,.04), 0 4px 14px rgba(16,24,40,.06);
+  --radius:14px;
+  --radius-sm:10px;
+  --maxw:960px;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+               Arial, "Noto Sans", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+               "Liberation Mono", "Courier New", monospace;
+}
+
+html[data-theme="dark"]{
+  --bg:#0d1117;
+  --bg-elev:#161b22;
+  --bg-soft:#1c2230;
+  --text:#e6edf3;
+  --text-soft:#c9d1d9;
+  --muted:#8b949e;
+  --border:#2a3240;
+  --accent:#58a6ff;
+  --accent-soft:#1b2a45;
+  --accent-2:#a78bfa;
+
+  --def-bg:#12233f;      --def-bd:#3b82f6;
+  --intu-bg:#0f2a1c;     --intu-bd:#22c55e;
+  --imp-bg:#2c220c;      --imp-bd:#f59e0b;
+  --warn-bg:#2b1313;     --warn-bd:#ef4444;
+  --ex-bg:#241640;       --ex-bd:#a78bfa;
+  --impl-bg:#0b2730;     --impl-bd:#06b6d4;
+  --ins-bg:#2b1220;      --ins-bd:#ec4899;
+
+  --code-bg:#010409;
+  --code-fg:#e6edf3;
+
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.35);
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-sans);
+  line-height:1.7;
+  font-size:16.5px;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+img{max-width:100%;height:auto;display:block}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:color-mix(in srgb, var(--bg-elev) 92%, transparent);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--border);
+}
+.topbar-inner{
+  max-width:var(--maxw);margin:0 auto;
+  padding:.6rem 1rem;
+  display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;
+}
+.brand{
+  font-weight:700;font-size:.95rem;color:var(--accent);
+  text-decoration:none;white-space:nowrap;
+}
+.brand:hover{text-decoration:underline}
+.topbar .spacer{flex:1}
+.topbar button{
+  background:var(--bg-soft);border:1px solid var(--border);
+  color:var(--text);border-radius:999px;
+  padding:.4rem .8rem;font-size:.85rem;cursor:pointer;
+  font-family:inherit;
+}
+.topbar button:hover{border-color:var(--accent);color:var(--accent)}
+
+.wrap{
+  max-width:var(--maxw);
+  margin:0 auto;
+  padding:1.25rem 1rem 5rem;
+}
+
+/* ============================================================
+   HEADINGS
+   ============================================================ */
+h1,h2,h3,h4{line-height:1.28;color:var(--text);margin:1.6em 0 .6em}
+h1{font-size:2rem;margin-top:.4em;letter-spacing:-.02em}
+h2{
+  font-size:1.45rem;letter-spacing:-.01em;
+  padding-bottom:.35rem;border-bottom:2px solid var(--accent-soft);
+  margin-top:2.4em;
+}
+h3{font-size:1.15rem;color:var(--text-soft)}
+h4{font-size:1rem;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;font-size:.8rem}
+
+p{margin:.7em 0}
+ul,ol{margin:.5em 0 .9em;padding-left:1.4em}
+li{margin:.35em 0}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+hr{border:none;border-top:1px solid var(--border);margin:2.5em 0}
+
+/* ============================================================
+   HERO / TITLE
+   ============================================================ */
+.hero{
+  background:linear-gradient(135deg, var(--accent-soft), transparent 65%);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:1.5rem 1.4rem 1.3rem;
+  box-shadow:var(--shadow);
+  margin-bottom:1.5rem;
+}
+.hero .eyebrow{
+  font-size:.78rem;text-transform:uppercase;letter-spacing:.14em;
+  color:var(--accent);font-weight:700;
+}
+.hero h1{margin:.15em 0 .25em;font-size:1.85rem}
+.hero .sub{color:var(--text-soft);font-size:1rem;margin:0}
+.hero .meta{
+  margin-top:.9rem;display:flex;flex-wrap:wrap;gap:.5rem;
+}
+.pill{
+  background:var(--bg-elev);border:1px solid var(--border);
+  border-radius:999px;padding:.25rem .7rem;font-size:.8rem;color:var(--text-soft);
+}
+
+/* ============================================================
+   TOC
+   ============================================================ */
+.toc{
+  background:var(--bg-elev);border:1px solid var(--border);
+  border-radius:var(--radius);padding:1rem 1.2rem;
+  box-shadow:var(--shadow);
+  margin-bottom:2rem;
+}
+.toc h2{
+  font-size:1.05rem;border:none;margin:.1em 0 .5em;padding:0;
+}
+.toc ol{
+  columns:1;
+  list-style:none;padding-left:0;margin:0;
+}
+@media(min-width:640px){
+  .toc ol{columns:2;column-gap:1.6rem}
+}
+.toc li{margin:.25em 0;break-inside:avoid}
+.toc a{
+  color:var(--text-soft);font-size:.94rem;
+  display:inline-block;
+}
+.toc a:hover{color:var(--accent)}
+.toc .num{color:var(--muted);font-variant-numeric:tabular-nums;margin-right:.4em}
+
+/* ============================================================
+   CALLOUT BOXES
+   ============================================================ */
+.box{
+  border-radius:var(--radius-sm);
+  padding:.9rem 1.1rem;
+  margin:1.1em 0;
+  border-left:5px solid;
+  background:var(--bg-elev);
+}
+.box .label{
+  display:inline-flex;align-items:center;gap:.4rem;
+  font-weight:700;font-size:.82rem;
+  text-transform:uppercase;letter-spacing:.08em;
+  margin-bottom:.35rem;
+}
+.box p:first-of-type{margin-top:.2em}
+.box p:last-child{margin-bottom:.2em}
+
+.box.def{background:var(--def-bg);border-color:var(--def-bd)}
+.box.def .label{color:var(--def-bd)}
+.box.intu{background:var(--intu-bg);border-color:var(--intu-bd)}
+.box.intu .label{color:var(--intu-bd)}
+.box.imp{background:var(--imp-bg);border-color:var(--imp-bd)}
+.box.imp .label{color:var(--imp-bd)}
+.box.warn{background:var(--warn-bg);border-color:var(--warn-bd)}
+.box.warn .label{color:var(--warn-bd)}
+.box.ex{background:var(--ex-bg);border-color:var(--ex-bd)}
+.box.ex .label{color:var(--ex-bd)}
+.box.impl{background:var(--impl-bg);border-color:var(--impl-bd)}
+.box.impl .label{color:var(--impl-bd)}
+.box.ins{background:var(--ins-bg);border-color:var(--ins-bd)}
+.box.ins .label{color:var(--ins-bd)}
+
+/* ============================================================
+   EQUATIONS
+   ============================================================ */
+.eq{
+  background:var(--bg-soft);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:.9rem 1.1rem;
+  margin:1em 0;
+  overflow-x:auto;
+  text-align:center;
+}
+.eq-caption{
+  font-size:.85rem;color:var(--muted);margin-top:.4rem;text-align:center;
+}
+
+/* ============================================================
+   TABLES
+   ============================================================ */
+.table-wrap{overflow-x:auto;margin:1.1em 0;border-radius:var(--radius-sm);border:1px solid var(--border)}
+table{
+  width:100%;border-collapse:collapse;
+  font-size:.93rem;background:var(--bg-elev);
+}
+th,td{
+  padding:.65rem .85rem;text-align:left;border-bottom:1px solid var(--border);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);font-weight:700;color:var(--text);
+  font-size:.83rem;text-transform:uppercase;letter-spacing:.05em;
+}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:color-mix(in srgb, var(--accent-soft) 40%, transparent)}
+
+/* ============================================================
+   CODE
+   ============================================================ */
+code{
+  font-family:var(--font-mono);font-size:.88em;
+  background:var(--bg-soft);color:var(--text);
+  padding:.15em .4em;border-radius:6px;border:1px solid var(--border);
+}
+pre{
+  background:var(--code-bg);color:var(--code-fg);
+  padding:1rem 1.1rem;border-radius:var(--radius-sm);
+  overflow-x:auto;font-size:.87rem;line-height:1.6;
+  margin:1em 0;border:1px solid var(--border);
+}
+pre code{background:none;border:none;color:inherit;padding:0}
+.kw{color:#ff79c6}.st{color:#f1fa8c}.cm{color:#7d8b9d;font-style:italic}
+.fn{color:#8be9fd}.nm{color:#bd93f9}
+
+/* ============================================================
+   SVG DIAGRAM WRAPPER
+   ============================================================ */
+.fig{
+  margin:1.3em 0;padding:1rem;
+  background:var(--bg-elev);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  box-shadow:var(--shadow);
+}
+.fig svg{display:block;width:100%;height:auto;max-width:100%}
+.fig figcaption{
+  font-size:.85rem;color:var(--muted);
+  text-align:center;margin-top:.6rem;line-height:1.5;
+}
+.svg-text{font-family:var(--font-sans);fill:var(--text)}
+.svg-text-soft{font-family:var(--font-sans);fill:var(--text-soft)}
+.svg-line{stroke:var(--text-soft);stroke-width:1.4;fill:none}
+.svg-node{fill:var(--bg-elev);stroke:var(--accent);stroke-width:1.6}
+.svg-node-2{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.6}
+.svg-label{font-family:var(--font-sans);font-size:12px;fill:var(--text);font-weight:600}
+.svg-label-sm{font-family:var(--font-sans);font-size:11px;fill:var(--text-soft)}
+.svg-axis{stroke:var(--text-soft);stroke-width:1.2}
+.svg-grid{stroke:var(--border);stroke-width:1;stroke-dasharray:3 4}
+
+/* ============================================================
+   SUMMARY BOXES / REVIEW
+   ============================================================ */
+.summary{
+  background:linear-gradient(180deg, var(--accent-soft), transparent 80%);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:1.2rem 1.3rem;
+  margin:2em 0 1em;
+}
+.summary h2{border:none;margin-top:.2em;padding:0}
+
+details.qa{
+  background:var(--bg-elev);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:.7rem 1rem;margin:.55em 0;
+}
+details.qa summary{
+  cursor:pointer;font-weight:600;color:var(--text);
+  list-style:none;display:flex;gap:.6rem;align-items:flex-start;
+}
+details.qa summary::-webkit-details-marker{display:none}
+details.qa summary::before{
+  content:"Q";flex:none;
+  background:var(--accent);color:#fff;font-size:.72rem;font-weight:800;
+  border-radius:6px;padding:.12rem .42rem;line-height:1.4;margin-top:.15rem;
+}
+details.qa[open] summary::before{content:"A";background:var(--intu-bd)}
+details.qa .ans{
+  margin-top:.55rem;padding-top:.55rem;
+  border-top:1px dashed var(--border);
+  color:var(--text-soft);font-size:.95rem;
+}
+
+/* ============================================================
+   NAV FOOTER
+   ============================================================ */
+.navfoot{
+  margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border);
+  display:flex;flex-wrap:wrap;gap:.6rem;justify-content:space-between;align-items:center;
+}
+.navfoot a, .navfoot button{
+  background:var(--bg-elev);border:1px solid var(--border);
+  color:var(--text);border-radius:999px;
+  padding:.5rem .9rem;font-size:.85rem;text-decoration:none;cursor:pointer;
+  font-family:inherit;
+}
+.navfoot a:hover{border-color:var(--accent);color:var(--accent)}
+.navfoot .disabled{opacity:.5;pointer-events:none}
+
+.backtop{
+  position:fixed;right:1rem;bottom:1rem;z-index:90;
+  background:var(--accent);color:#fff;border:none;
+  border-radius:999px;padding:.6rem .9rem;
+  font-size:.85rem;cursor:pointer;box-shadow:var(--shadow);
+  font-family:inherit;
+  opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.backtop.show{opacity:1;pointer-events:auto}
+
+/* ============================================================
+   SEARCH
+   ============================================================ */
+.searchbar{
+  display:flex;gap:.5rem;align-items:center;
+  margin:0 0 1rem;
+}
+.searchbar input{
+  flex:1;background:var(--bg-elev);border:1px solid var(--border);
+  color:var(--text);border-radius:999px;padding:.5rem .9rem;
+  font-family:inherit;font-size:.9rem;outline:none;
+}
+.searchbar input:focus{border-color:var(--accent)}
+.searchbar .clear{
+  background:var(--bg-soft);border:1px solid var(--border);color:var(--text-soft);
+  border-radius:999px;padding:.4rem .8rem;cursor:pointer;font-size:.8rem;font-family:inherit;
+}
+mark.hit{background:#fde68a;color:#1c2330;border-radius:3px;padding:0 .12em}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media(max-width:640px){
+  body{font-size:15.5px}
+  h1{font-size:1.55rem}
+  .hero h1{font-size:1.45rem}
+  h2{font-size:1.22rem}
+  h3{font-size:1.05rem}
+  .wrap{padding:1rem .8rem 4rem}
+  th,td{padding:.5rem .6rem;font-size:.86rem}
+  .box{padding:.75rem .85rem}
+}
+
+@media print{
+  .topbar,.backtop,.navfoot,.searchbar{display:none}
+  body{background:#fff;color:#000}
+  .box,.fig,.toc,.summary{box-shadow:none}
+}
+</style>
+</head>
+
+<body>
+
+<!-- ================= TOP BAR ================= -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#top">Deep Learning Specialization</a>
+    <span class="spacer"></span>
+    <button id="themeBtn" type="button" aria-label="Toggle theme">🌗 Theme</button>
+  </div>
+</header>
+
+<div class="wrap" id="top">
+
+  <!-- ================= HERO ================= -->
+  <section class="hero">
+    <div class="eyebrow">Course 1 · Week 1</div>
+    <h1>Introduction to Deep Learning</h1>
+    <p class="sub">What neural networks are, what supervised learning looks like, why deep learning is taking off now, and what you'll build across the specialization.</p>
+    <div class="meta">
+      <span class="pill">📘 Beginner friendly</span>
+      <span class="pill">🧮 Light math</span>
+      <span class="pill">🎯 Foundations</span>
+      <span class="pill">⏱ ~45 min read</span>
+    </div>
+  </section>
+
+  <!-- ================= SEARCH ================= -->
+  <div class="searchbar">
+    <input id="searchInput" type="search" placeholder="Search this week's notes… (e.g. CNN, structured data)" aria-label="Search notes">
+    <button class="clear" id="searchClear" type="button">Clear</button>
+  </div>
+
+  <!-- ================= TOC ================= -->
+  <nav class="toc" aria-label="Table of contents">
+    <h2>📑 Table of Contents</h2>
+    <ol>
+      <li><span class="num">1.</span><a href="#s1">Welcome — AI is the New Electricity</a></li>
+      <li><span class="num">2.</span><a href="#s2">What is a Neural Network?</a></li>
+      <li><span class="num">3.</span><a href="#s3">The Housing Price Prediction Example</a></li>
+      <li><span class="num">4.</span><a href="#s4">Supervised Learning with Neural Networks</a></li>
+      <li><span class="num">5.</span><a href="#s5">Three Families: Standard NN, CNN, RNN</a></li>
+      <li><span class="num">6.</span><a href="#s6">Structured vs Unstructured Data</a></li>
+      <li><span class="num">7.</span><a href="#s7">Why Deep Learning Is Taking Off</a></li>
+      <li><span class="num">8.</span><a href="#s8">About the Specialization &amp; This Course</a></li>
+      <li><span class="num">9.</span><a href="#s9">Common Mistakes &amp; Clarifications</a></li>
+      <li><span class="num">10.</span><a href="#s10">Weekly Summary &amp; Review</a></li>
+    </ol>
+  </nav>
+
+  <!-- ============================================================
+       1. WELCOME
+       ============================================================ -->
+  <h2 id="s1">1. Welcome — AI is the New Electricity</h2>
+
+  <p>Andrew Ng opens the specialization with a bold analogy that frames the entire course:</p>
+
+  <div class="box imp">
+    <div class="label">⭐ Key Idea</div>
+    <p><strong>“AI is the new electricity.”</strong> Just as electricity once transformed transportation, manufacturing, healthcare, communications, and virtually every other industry, AI is now doing the same — and will keep doing so for decades.</p>
+  </div>
+
+  <div class="box intu">
+    <div class="label">🟢 Intuition</div>
+    <p>Before electricity, factories had to be located next to water wheels or steam engines; after electricity, power could be delivered anywhere, and every industry re-invented itself around it. Andrew Ng argues AI is on the same trajectory: instead of being a niche technology used only by a few companies, it is becoming a general-purpose tool that will be woven into almost every product and service.</p>
+  </div>
+
+  <h3>Why this framing matters for you</h3>
+  <ul>
+    <li><strong>It explains the course's ambition:</strong> deep learning is not a narrow trick — it's infrastructure for the next wave of technology.</li>
+    <li><strong>It justifies “learning by building”:</strong> because AI will be everywhere, having hands-on skills (training models, debugging them, deploying them) is more valuable than only understanding them conceptually.</li>
+    <li><strong>It sets expectations:</strong> the specialization will teach you both the math and the engineering craft of deep learning.</li>
+  </ul>
+
+  <div class="box ins">
+    <div class="label">💡 Insight</div>
+    <p>You don't have to accept the “new electricity” metaphor literally. Treat it as a lens: it tells you that the <em>breadth</em> of applications matters as much as the <em>depth</em> of any single model. The specialization reflects this by covering vision (CNNs), sequences (RNNs/LSTMs), and structured ML — not just one architecture.</p>
+  </div>
+
+  <!-- ============================================================
+       2. WHAT IS A NEURAL NETWORK
+       ============================================================ -->
+  <h2 id="s2">2. What is a Neural Network?</h2>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — Neural Network</div>
+    <p>A <strong>neural network</strong> is a machine learning model made of many simple computational units (called <em>neurons</em>) arranged in <em>layers</em>. Each neuron takes some numbers as input, computes a weighted sum of them, applies a simple non-linear function, and passes the result forward. Stacking many such neurons lets the network learn very complicated input→output relationships.</p>
+  </div>
+
+  <p>That definition is abstract on purpose. Let's build it up with the example Andrew Ng uses in the lectures: <em>predicting the price of a house</em>.</p>
+
+  <div class="box intu">
+    <div class="label">🟢 Intuition</div>
+    <p>Think of a neuron as a tiny <em>decision-maker</em>. It looks at a few numbers (e.g., the size of a house and the number of bedrooms), assigns an importance (weight) to each one, adds them up, and produces a single number that summarizes “how attractive is this house?” Many neurons in parallel → many mini-judgments. A second layer combines those judgments into a final estimate of price.</p>
+  </div>
+
+  <!-- ============================================================
+       3. HOUSING PRICE EXAMPLE
+       ============================================================ -->
+  <h2 id="s3">3. The Housing Price Prediction Example</h2>
+
+  <p>Suppose you want to sell a house and need to estimate its market price. You have some information (features) about the house:</p>
+
+  <ul>
+    <li><strong>Size</strong> (in square feet)</li>
+    <li><strong>Number of bedrooms</strong></li>
+    <li><strong>Zip code / postal code</strong> (encodes location)</li>
+    <li><strong>Wealth</strong> of the neighborhood (average income, etc.)</li>
+  </ul>
+
+  <p>The output you want is <strong>price</strong>. This is a classic <em>supervised learning</em> problem: you have inputs $x$ and a target output $y$, and you want to learn a mapping $x \to y$.</p>
+
+  <h3>3.1 The “size → price” thought experiment</h3>
+
+  <p>Andrew starts with the simplest possible version: predict price using <em>only</em> the size of the house. If you plot many houses on a graph with size on the $x$-axis and price on the $y$-axis, you'd see an upward trend — bigger houses cost more.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 520 300" role="img" aria-label="Scatter plot of house size vs price with an upward trend">
+      <!-- axes -->
+      <line class="svg-axis" x1="60" y1="260" x2="490" y2="260"/>
+      <line class="svg-axis" x1="60" y1="20" x2="60" y2="260"/>
+      <!-- axis labels -->
+      <text class="svg-label-sm" x="470" y="282" text-anchor="end">Size (sq ft)</text>
+      <text class="svg-label-sm" x="10" y="30">Price</text>
+      <!-- grid -->
+      <line class="svg-grid" x1="60" y1="200" x2="490" y2="200"/>
+      <line class="svg-grid" x1="60" y1="140" x2="490" y2="140"/>
+      <line class="svg-grid" x1="60" y1="80" x2="490" y2="80"/>
+      <!-- scatter points, upward trend -->
+      <g fill="#2563eb">
+        <circle cx="100" cy="235" r="4"/>
+        <circle cx="130" cy="225" r="4"/>
+        <circle cx="160" cy="220" r="4"/>
+        <circle cx="185" cy="205" r="4"/>
+        <circle cx="215" cy="195" r="4"/>
+        <circle cx="245" cy="185" r="4"/>
+        <circle cx="270" cy="170" r="4"/>
+        <circle cx="305" cy="160" r="4"/>
+        <circle cx="335" cy="145" r="4"/>
+        <circle cx="365" cy="135" r="4"/>
+        <circle cx="400" cy="115" r="4"/>
+        <circle cx="435" cy="100" r="4"/>
+        <circle cx="465" cy="90" r="4"/>
+      </g>
+      <!-- trend line -->
+      <line x1="80" y1="245" x2="480" y2="80" stroke="#16a34a" stroke-width="2.2" stroke-dasharray="6 4"/>
+      <text class="svg-label-sm" x="360" y="70" fill="#16a34a">learned relationship</text>
+    </svg>
+    <figcaption>Houses plotted by size (x) vs price (y). A neural network (with one neuron) can learn this upward trend, so given a new size it can predict a price.</figcaption>
+  </div>
+
+  <p>With one input feature (size), one neuron is enough to fit a straight (or slightly curved) relationship. That neuron essentially computes:</p>
+
+  <div class="eq">
+    $$\hat{y} = w \cdot x + b$$
+  </div>
+  <div class="eq-caption">Simple linear “neuron” — the foundation of everything else in this course.</div>
+
+  <p>Where:</p>
+  <ul>
+    <li>$x$ — the input feature (here, size in square feet).</li>
+    <li>$w$ — the <strong>weight</strong>: how many dollars each extra square foot is worth (slope of the line).</li>
+    <li>$b$ — the <strong>bias</strong>: the baseline price when $x = 0$ (y-intercept).</li>
+    <li>$\hat{y}$ — the predicted price.</li>
+  </ul>
+
+  <div class="box warn">
+    <div class="label">🔴 Warning — terminology</div>
+    <p>$\hat{y}$ (read “y-hat”) always means the <em>model's prediction</em>, while $y$ means the <em>true</em> value. Keeping this distinction is essential when you later write loss functions.</p>
+  </div>
+
+  <h3>3.2 From one feature to many — the real neural network</h3>
+
+  <p>A house's price isn't determined by size alone. It also depends on the number of bedrooms, the zip code (location), and the wealth of the neighborhood. Instead of fitting one trend line, we let the network learn <em>intermediate concepts</em>, then combine them:</p>
+
+  <ul>
+    <li><strong>Family size</strong> — depends on <em>size</em> and <em>#bedrooms</em>.</li>
+    <li><strong>Walkability</strong> — depends on <em>zip code</em>.</li>
+    <li><strong>School quality</strong> — depends on <em>zip code</em> and possibly <em>wealth</em>.</li>
+    <li><strong>Price</strong> — depends on family size, walkability, and school quality.</li>
+  </ul>
+
+  <p>Each of these intermediate quantities is exactly what a “neuron” in the <em>hidden layer</em> computes:</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 640 340" role="img" aria-label="Neural network for housing price prediction with four inputs, three hidden neurons, one output">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+        </marker>
+      </defs>
+      <!-- Inputs -->
+      <g>
+        <text class="svg-label" x="30" y="60">size</text>
+        <text class="svg-label" x="30" y="130">#bedrooms</text>
+        <text class="svg-label" x="30" y="200">zip code</text>
+        <text class="svg-label" x="30" y="270">wealth</text>
+        <circle class="svg-node-2" cx="115" cy="55" r="9"/>
+        <circle class="svg-node-2" cx="115" cy="125" r="9"/>
+        <circle class="svg-node-2" cx="115" cy="195" r="9"/>
+        <circle class="svg-node-2" cx="115" cy="265" r="9"/>
+      </g>
+
+      <!-- Hidden layer -->
+      <g>
+        <circle class="svg-node" cx="330" cy="80" r="22"/>
+        <circle class="svg-node" cx="330" cy="175" r="22"/>
+        <circle class="svg-node" cx="330" cy="265" r="22"/>
+        <text class="svg-label-sm" x="360" y="78">family size</text>
+        <text class="svg-label-sm" x="360" y="173">walkability</text>
+        <text class="svg-label-sm" x="360" y="263">school quality</text>
+      </g>
+
+      <!-- Output -->
+      <g>
+        <circle class="svg-node-2" cx="530" cy="175" r="22"/>
+        <text class="svg-label" x="565" y="180">price ŷ</text>
+      </g>
+
+      <!-- Connections (inputs -> hidden) -->
+      <g class="svg-line" color="#8b95a7">
+        <line x1="124" y1="55"  x2="308" y2="80"  marker-end="url(#arrow)"/>
+        <line x1="124" y1="55"  x2="308" y2="175" marker-end="url(#arrow)"/>
+        <line x1="124" y1="55"  x2="308" y2="265" marker-end="url(#arrow)"/>
+        <line x1="124" y1="125" x2="308" y2="80"  marker-end="url(#arrow)"/>
+        <line x1="124" y1="125" x2="308" y2="175" marker-end="url(#arrow)"/>
+        <line x1="124" y1="125" x2="308" y2="265" marker-end="url(#arrow)"/>
+        <line x1="124" y1="195" x2="308" y2="80"  marker-end="url(#arrow)"/>
+        <line x1="124" y1="195" x2="308" y2="175" marker-end="url(#arrow)"/>
+        <line x1="124" y1="195" x2="308" y2="265" marker-end="url(#arrow)"/>
+        <line x1="124" y1="265" x2="308" y2="80"  marker-end="url(#arrow)"/>
+        <line x1="124" y1="265" x2="308" y2="175" marker-end="url(#arrow)"/>
+        <line x1="124" y1="265" x2="308" y2="265" marker-end="url(#arrow)"/>
+      </g>
+      <!-- Hidden -> output -->
+      <g class="svg-line" color="#8b95a7">
+        <line x1="352" y1="80"  x2="508" y2="175" marker-end="url(#arrow)"/>
+        <line x1="352" y1="175" x2="508" y2="175" marker-end="url(#arrow)"/>
+        <line x1="352" y1="265" x2="508" y2="175" marker-end="url(#arrow)"/>
+      </g>
+
+      <!-- Layer labels -->
+      <text class="svg-label-sm" x="100" y="315" text-anchor="middle">Input layer</text>
+      <text class="svg-label-sm" x="330" y="315" text-anchor="middle">Hidden layer</text>
+      <text class="svg-label-sm" x="530" y="315" text-anchor="middle">Output layer</text>
+    </svg>
+    <figcaption>A small neural network for housing price prediction. Each connection carries a weight; each node in the hidden layer computes a weighted sum of inputs followed by a non-linear function. The network learns the <em>intermediate concepts</em> (family size, walkability, school quality) automatically — we never label them by hand.</figcaption>
+  </div>
+
+  <div class="box ins">
+    <div class="label">💡 Insight — this is the big idea</div>
+    <p>We never told the network “compute family size as size plus #bedrooms.” We simply gave it the raw features and the correct prices, and it discovered the intermediate concepts on its own. This is what makes neural networks powerful: <strong>they learn the features as well as the mapping from features to output.</strong></p>
+  </div>
+
+  <div class="box impl">
+    <div class="label">⚙️ Implementation — the standard visual</div>
+    <p>The four-input, three-hidden-unit, one-output diagram above is the canonical “neural network” picture. When you see similar diagrams later (with more layers, more units, different connections), the same rules apply: nodes store numbers, edges store weights, and information flows left to right (forward propagation).</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Common Mistake</div>
+    <p>Beginners often think a hidden layer's “neurons” have names like “family size” chosen by the programmer. In reality, hidden units are usually <em>unlabeled</em> — they're just numbers. The family-size/walkability interpretation is a useful mental model, not something we force the network to do.</p>
+  </div>
+
+  <!-- ============================================================
+       4. SUPERVISED LEARNING
+       ============================================================ -->
+  <h2 id="s4">4. Supervised Learning with Neural Networks</h2>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — Supervised Learning</div>
+    <p><strong>Supervised learning</strong> is a type of machine learning in which the model is given a dataset of <em>input–output pairs</em> $(x, y)$ and must learn a mapping $f$ such that $f(x) \approx y$ on new, unseen inputs.</p>
+  </div>
+
+  <p>Deep learning powers <em>many</em> things, but the specialization focuses on supervised learning because it is by far the most commercially valuable form of deep learning today.</p>
+
+  <h3>4.1 Real-world examples from the slides</h3>
+
+  <p>Andrew's table (reproduced below with added explanations) is one of the most-quoted slides of the course. It shows how the <em>same</em> supervised-learning framework applies across very different problems.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Input ($x$)</th>
+          <th>Output ($y$)</th>
+          <th>Application</th>
+          <th>Architecture typically used</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Home features (size, bedrooms, zip code, wealth)</td>
+          <td>Price</td>
+          <td>Real estate</td>
+          <td>Standard NN</td>
+        </tr>
+        <tr>
+          <td>Ad, user info</td>
+          <td>Click on ad? (0/1)</td>
+          <td>Online advertising</td>
+          <td>Standard NN</td>
+        </tr>
+        <tr>
+          <td>Image</td>
+          <td>Object (1 of 1,000 classes)</td>
+          <td>Photo tagging</td>
+          <td>CNN (Convolutional NN)</td>
+        </tr>
+        <tr>
+          <td>Audio</td>
+          <td>Text transcript</td>
+          <td>Speech recognition</td>
+          <td>RNN (Recurrent NN)</td>
+        </tr>
+        <tr>
+          <td>English text</td>
+          <td>Chinese text</td>
+          <td>Machine translation</td>
+          <td>RNN (often with attention)</td>
+        </tr>
+        <tr>
+          <td>Image + Radar info</td>
+          <td>Position of other cars</td>
+          <td>Autonomous driving</td>
+          <td>Custom / Hybrid</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box intu">
+    <div class="label">🟢 Intuition — read the table column-wise</div>
+    <p>The <strong>Input</strong> column shows the kind of data (numbers, images, audio, text). The <strong>Output</strong> column shows the kind of target (a price, a yes/no, a class label, a translation). The <strong>Application</strong> column shows the domain. The <strong>Architecture</strong> column shows the crucial lesson: <em>the type of input/output determines which neural network architecture is the natural fit</em>.</p>
+  </div>
+
+  <div class="box imp">
+    <div class="label">⭐ Key Idea</div>
+    <p>There isn't one “universal” neural network. Different data types have different structure (images are 2-D grids; speech and text are sequences), and the architecture should respect that structure.</p>
+  </div>
+
+  <h3>4.2 Two families of supervised learning</h3>
+
+  <p>Within supervised learning, the target $y$ can be either discrete or continuous. Andrew distinguishes:</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>Regression</th>
+          <th>Classification</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Target $y$</strong></td>
+          <td>Continuous number</td>
+          <td>Discrete label / category</td>
+        </tr>
+        <tr>
+          <td><strong>Example</strong></td>
+          <td>Predict house price in dollars</td>
+          <td>Predict whether a user clicks an ad (0 or 1)</td>
+        </tr>
+        <tr>
+          <td><strong>Output layer</strong></td>
+          <td>Single linear unit</td>
+          <td>Sigmoid (binary) or softmax (multi-class)</td>
+        </tr>
+        <tr>
+          <td><strong>Typical loss</strong></td>
+          <td>Mean squared error</td>
+          <td>Binary / categorical cross-entropy</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Common Mistake</div>
+    <p>Do not confuse <em>regression</em> (predicting a number) with <em>classification</em> (predicting a category). They look similar on the surface — both are supervised — but they use different output activations and different loss functions. Mixing them up is a classic beginner error.</p>
+  </div>
+
+  <!-- ============================================================
+       5. THREE ARCHITECTURE FAMILIES
+       ============================================================ -->
+  <h2 id="s5">5. Three Families: Standard NN, CNN, RNN</h2>
+
+  <p>The specialization covers three main architectural families. Knowing when to use each is one of the most practical skills you'll build.</p>
+
+  <h3>5.1 Standard (fully connected) neural network</h3>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — Standard NN</div>
+    <p>A <strong>standard neural network</strong> (also called a <em>fully connected</em> or <em>dense</em> network) is one in which every neuron in one layer connects to every neuron in the next layer. It treats the input as a flat vector of numbers, ignoring any spatial or temporal structure.</p>
+  </div>
+
+  <p>Used for: tabular data (housing features, ad-click features), and any problem where the input is naturally a fixed-length vector of numbers.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 420 240" role="img" aria-label="Standard fully connected neural network diagram">
+      <!-- inputs -->
+      <g>
+        <circle class="svg-node-2" cx="60" cy="40" r="12"/>
+        <circle class="svg-node-2" cx="60" cy="100" r="12"/>
+        <circle class="svg-node-2" cx="60" cy="160" r="12"/>
+        <circle class="svg-node-2" cx="60" cy="220" r="12"/>
+        <text class="svg-label-sm" x="20" y="44">x₁</text>
+        <text class="svg-label-sm" x="20" y="104">x₂</text>
+        <text class="svg-label-sm" x="20" y="164">x₃</text>
+        <text class="svg-label-sm" x="20" y="224">x₄</text>
+      </g>
+      <!-- hidden -->
+      <g>
+        <circle class="svg-node" cx="210" cy="60" r="16"/>
+        <circle class="svg-node" cx="210" cy="130" r="16"/>
+        <circle class="svg-node" cx="210" cy="200" r="16"/>
+      </g>
+      <!-- output -->
+      <g>
+        <circle class="svg-node-2" cx="360" cy="130" r="16"/>
+        <text class="svg-label-sm" x="385" y="135">ŷ</text>
+      </g>
+      <!-- connections -->
+      <g class="svg-line" color="#8b95a7">
+        <line x1="72" y1="40"  x2="194" y2="60"/>
+        <line x1="72" y1="40"  x2="194" y2="130"/>
+        <line x1="72" y1="40"  x2="194" y2="200"/>
+        <line x1="72" y1="100" x2="194" y2="60"/>
+        <line x1="72" y1="100" x2="194" y2="130"/>
+        <line x1="72" y1="100" x2="194" y2="200"/>
+        <line x1="72" y1="160" x2="194" y2="60"/>
+        <line x1="72" y1="160" x2="194" y2="130"/>
+        <line x1="72" y1="160" x2="194" y2="200"/>
+        <line x1="72" y1="220" x2="194" y2="60"/>
+        <line x1="72" y1="220" x2="194" y2="130"/>
+        <line x1="72" y1="220" x2="194" y2="200"/>
+        <line x1="226" y1="60"  x2="344" y2="130"/>
+        <line x1="226" y1="130" x2="344" y2="130"/>
+        <line x1="226" y1="200" x2="344" y2="130"/>
+      </g>
+      <text class="svg-label-sm" x="210" y="235" text-anchor="middle">Standard NN (fully connected)</text>
+    </svg>
+    <figcaption>Every input connects to every hidden unit, and every hidden unit connects to the output. Simple, general-purpose, but indifferent to data structure.</figcaption>
+  </div>
+
+  <h3>5.2 Convolutional Neural Network (CNN)</h3>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — CNN</div>
+    <p>A <strong>Convolutional Neural Network (CNN)</strong> is a neural network designed for data with grid-like structure, especially images. Instead of connecting every input to every neuron, it uses small <em>filters</em> that slide across the image, sharing weights across positions. This dramatically reduces the number of parameters and lets the network detect the same visual pattern anywhere in the image.</p>
+  </div>
+
+  <p>Used for: image classification, photo tagging, object detection, facial recognition, and also some audio tasks when treated as spectrograms.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 520 220" role="img" aria-label="CNN diagram with shrinking 3D volumes representing image, conv1, conv2, conv3">
+      <!-- image slab -->
+      <g>
+        <polygon points="30,40 110,40 110,180 30,180" fill="#e0ebff" stroke="#2563eb" stroke-width="1.5"/>
+        <polygon points="30,40 50,25 130,25 110,40" fill="#c7dcff" stroke="#2563eb" stroke-width="1.5"/>
+        <polygon points="110,40 130,25 130,165 110,180" fill="#a8c8ff" stroke="#2563eb" stroke-width="1.5"/>
+        <text class="svg-label-sm" x="55" y="200">image</text>
+      </g>
+      <!-- arrow -->
+      <text x="145" y="115" font-size="22" fill="#6b7280">→</text>
+      <!-- conv1 -->
+      <g>
+        <polygon points="175,55 245,55 245,175 175,175" fill="#e0ebff" stroke="#2563eb" stroke-width="1.5"/>
+        <polygon points="175,55 195,40 265,40 245,55" fill="#c7dcff" stroke="#2563eb" stroke-width="1.5"/>
+        <polygon points="245,55 265,40 265,160 245,175" fill="#a8c8ff" stroke="#2563eb" stroke-width="1.5"/>
+        <text class="svg-label-sm" x="195" y="200">conv1 (2,4,4)</text>
+      </g>
+      <text x="280" y="115" font-size="22" fill="#6b7280">→</text>
+      <!-- conv2 -->
+      <g>
+        <polygon points="310,75 360,75 360,160 310,160" fill="#e0ebff" stroke="#2563eb" stroke-width="1.5"/>
+        <polygon points="310,75 330,60 380,60 360,75" fill="#c7dcff" stroke="#2563eb" stroke-width="1.5"/>
+        <polygon points="360,75 380,60 380,145 360,160" fill="#a8c8ff" stroke="#2563eb" stroke-width="1.5"/>
+        <text class="svg-label-sm" x="310" y="200">conv2 (5,2,2)</text>
+      </g>
+      <text x="395" y="115" font-size="22" fill="#6b7280">→</text>
+      <!-- conv3 -->
+      <g>
+        <polygon points="425,90 455,90 455,145 425,145" fill="#e0ebff" stroke="#2563eb" stroke-width="1.5"/>
+        <polygon points="425,90 445,75 475,75 455,90" fill="#c7dcff" stroke="#2563eb" stroke-width="1.5"/>
+        <polygon points="455,90 475,75 475,130 455,145" fill="#a8c8ff" stroke="#2563eb" stroke-width="1.5"/>
+        <text class="svg-label-sm" x="415" y="200">conv3 (1,2,2)</text>
+      </g>
+    </svg>
+    <figcaption>A CNN processes an image through a sequence of convolutional layers. The spatial size shrinks and the number of channels changes; at the end, the features are flattened and fed to a small classifier. Notice that each box represents a 3-D volume (height × width × channels), not a flat vector.</figcaption>
+  </div>
+
+  <div class="box intu">
+    <div class="label">🟢 Intuition</div>
+    <p>If you tried to feed a 1-megapixel image into a fully connected network, the first layer alone could have hundreds of millions of weights. A CNN solves this by only looking at small local patches at a time — the same “edge detector” filter is reused across the whole image. This is called <em>weight sharing</em>. It makes CNNs both efficient and good at generalizing across positions.</p>
+  </div>
+
+  <h3>5.3 Recurrent Neural Network (RNN)</h3>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — RNN</div>
+    <p>A <strong>Recurrent Neural Network (RNN)</strong> is a neural network designed for <em>sequences</em> (text, audio, time series). At each time step $t$ it takes an input $x^{(t)}$ and the previous hidden state $a^{(t-1)}$, and produces a new hidden state $a^{(t)}$ and an output $\hat{y}^{(t)}$. The same weights are used at every time step, and information can flow across time.</p>
+  </div>
+
+  <p>Used for: speech recognition, machine translation, music generation, sentiment analysis, stock prediction, and virtually any problem where order matters.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 640 240" role="img" aria-label="RNN unrolled through time showing hidden state and outputs">
+      <!-- dashed box around hidden states -->
+      <rect x="130" y="90" width="380" height="60" fill="none" stroke="#7c3aed" stroke-width="1.6" stroke-dasharray="6 4"/>
+      <text class="svg-label-sm" x="145" y="82" fill="#7c3aed">unrolled through time →</text>
+
+      <!-- hidden state circles -->
+      <g>
+        <circle class="svg-node" cx="170" cy="120" r="22"/>
+        <circle class="svg-node" cx="310" cy="120" r="22"/>
+        <circle class="svg-node" cx="450" cy="120" r="22"/>
+        <text class="svg-label" x="150" y="125">a⟨t-1⟩</text>
+        <text class="svg-label" x="292" y="125">a⟨t⟩</text>
+        <text class="svg-label" x="432" y="125">a⟨t+1⟩</text>
+      </g>
+      <!-- recurrence arrows -->
+      <g class="svg-line" color="#7c3aed">
+        <line x1="192" y1="120" x2="288" y2="120"/>
+        <line x1="332" y1="120" x2="428" y2="120"/>
+      </g>
+      <!-- inputs -->
+      <g>
+        <circle class="svg-node-2" cx="170" cy="215" r="14"/>
+        <circle class="svg-node-2" cx="310" cy="215" r="14"/>
+        <circle class="svg-node-2" cx="450" cy="215" r="14"/>
+        <text class="svg-label" x="150" y="220">x⟨t-1⟩</text>
+        <text class="svg-label" x="292" y="220">x⟨t⟩</text>
+        <text class="svg-label" x="432" y="220">x⟨t+1⟩</text>
+      </g>
+      <!-- up arrows input -> hidden -->
+      <g class="svg-line" color="#8b95a7">
+        <line x1="170" y1="200" x2="170" y2="143"/>
+        <line x1="310" y1="200" x2="310" y2="143"/>
+        <line x1="450" y1="200" x2="450" y2="143"/>
+      </g>
+      <!-- outputs -->
+      <g>
+        <circle class="svg-node-2" cx="170" cy="40" r="14"/>
+        <circle class="svg-node-2" cx="310" cy="40" r="14"/>
+        <circle class="svg-node-2" cx="450" cy="40" r="14"/>
+        <text class="svg-label" x="150" y="45">ŷ⟨t-1⟩</text>
+        <text class="svg-label" x="292" y="45">ŷ⟨t⟩</text>
+        <text class="svg-label" x="432" y="45">ŷ⟨t+1⟩</text>
+      </g>
+      <g class="svg-line" color="#8b95a7">
+        <line x1="170" y1="98" x2="170" y2="55"/>
+        <line x1="310" y1="98" x2="310" y2="55"/>
+        <line x1="450" y1="98" x2="450" y2="55"/>
+      </g>
+    </svg>
+    <figcaption>An RNN “unrolled” across time. The same parameters (weights) are reused at every step. Information from earlier steps flows rightward via the hidden state $a$, which is what lets the network use past context when predicting the present output.</figcaption>
+  </div>
+
+  <div class="box intu">
+    <div class="label">🟢 Intuition</div>
+    <p>Think of reading a sentence one word at a time while keeping a “memory” of what you've read so far. That memory is the hidden state. At each new word, you update the memory and, optionally, emit a prediction. The RNN architecture formalizes this idea.</p>
+  </div>
+
+  <h3>5.4 Quick comparison of the three families</h3>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Aspect</th>
+          <th>Standard NN</th>
+          <th>CNN</th>
+          <th>RNN</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Designed for</strong></td><td>Tabular / vector data</td><td>Images / grid data</td><td>Sequences</td></tr>
+        <tr><td><strong>Key idea</strong></td><td>Every-to-every connections</td><td>Local filters, weight sharing</td><td>Hidden state passed through time</td></tr>
+        <tr><td><strong>Parameter growth</strong></td><td>Grows fast with input size</td><td>Stays small (filters reused)</td><td>Same weights reused per time step</td></tr>
+        <tr><td><strong>Example task</strong></td><td>House price</td><td>Photo tagging</td><td>Speech recognition</td></tr>
+        <tr><td><strong>Weakness</strong></td><td>Ignores data structure</td><td>Needs lots of labeled images</td><td>Vanilla RNN struggles with long sequences (→ LSTMs, GRUs)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ============================================================
+       6. STRUCTURED VS UNSTRUCTURED
+       ============================================================ -->
+  <h2 id="s6">6. Structured vs Unstructured Data</h2>
+
+  <p>Andrew introduces an important distinction that determines <em>how hard</em> a problem is for a neural network.</p>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — Structured Data</div>
+    <p><strong>Structured data</strong> is data that lives in a well-defined table: each row is an example, each column is a feature with a clear meaning (e.g., “size in sq ft,” “number of bedrooms,” “price in dollars”). Databases and spreadsheets are the natural home of structured data.</p>
+  </div>
+
+  <div class="fig">
+    <svg viewBox="0 0 460 200" role="img" aria-label="Example of structured data table">
+      <rect x="20" y="20" width="420" height="160" rx="6" fill="#ffffff" stroke="#dfe5ee"/>
+      <!-- header -->
+      <rect x="20" y="20" width="420" height="34" fill="#e0ebff"/>
+      <line x1="150" y1="20" x2="150" y2="180" stroke="#dfe5ee"/>
+      <line x1="300" y1="20" x2="300" y2="180" stroke="#dfe5ee"/>
+      <line x1="20" y1="54" x2="440" y2="54" stroke="#dfe5ee"/>
+      <line x1="20" y1="88" x2="440" y2="88" stroke="#dfe5ee"/>
+      <line x1="20" y1="122" x2="440" y2="122" stroke="#dfe5ee"/>
+      <line x1="20" y1="156" x2="440" y2="156" stroke="#dfe5ee"/>
+      <text class="svg-label" x="80" y="42" text-anchor="middle">Size</text>
+      <text class="svg-label" x="225" y="42" text-anchor="middle">#bedrooms</text>
+      <text class="svg-label" x="370" y="42" text-anchor="middle">Price (1000$)</text>
+      <text class="svg-label-sm" x="80" y="76" text-anchor="middle">2104</text>
+      <text class="svg-label-sm" x="225" y="76" text-anchor="middle">3</text>
+      <text class="svg-label-sm" x="370" y="76" text-anchor="middle">400</text>
+      <text class="svg-label-sm" x="80" y="110" text-anchor="middle">1600</text>
+      <text class="svg-label-sm" x="225" y="110" text-anchor="middle">3</text>
+      <text class="svg-label-sm" x="370" y="110" text-anchor="middle">330</text>
+      <text class="svg-label-sm" x="80" y="144" text-anchor="middle">2400</text>
+      <text class="svg-label-sm" x="225" y="144" text-anchor="middle">3</text>
+      <text class="svg-label-sm" x="370" y="144" text-anchor="middle">369</text>
+      <text class="svg-label-sm" x="80" y="178" text-anchor="middle">3000</text>
+      <text class="svg-label-sm" x="225" y="178" text-anchor="middle">4</text>
+      <text class="svg-label-sm" x="370" y="178" text-anchor="middle">540</text>
+    </svg>
+    <figcaption>Housing data in table form. Every column is a well-defined numeric feature. This is classic structured data.</figcaption>
+  </div>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — Unstructured Data</div>
+    <p><strong>Unstructured data</strong> is data whose “features” are not pre-organized as named columns. Images, audio waveforms, and raw text are the canonical examples — the meaning lives in pixel values, frequency patterns, or word sequences, not in labeled columns.</p>
+  </div>
+
+  <p>Examples from the slides:</p>
+  <ul>
+    <li><strong>Audio</strong> — a waveform of pressure values over time.</li>
+    <li><strong>Images</strong> — a grid of pixel intensities.</li>
+    <li><strong>Text</strong> — a sequence of words or characters (e.g., “Four scores and seven years ago…”).</li>
+  </ul>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Aspect</th>
+          <th>Structured Data</th>
+          <th>Unstructured Data</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Form</strong></td><td>Tables with named columns</td><td>Pixels, audio, text, etc.</td></tr>
+        <tr><td><strong>Examples</strong></td><td>Housing, ad-click logs, medical records</td><td>Images, speech, natural language</td></tr>
+        <tr><td><strong>Human interpretation</strong></td><td>Easy (each column has meaning)</td><td>Harder (needs models to extract meaning)</td></tr>
+        <tr><td><strong>Deep learning impact</strong></td><td>Helped, but traditional ML (e.g., gradient boosting) still competitive</td><td>Massive gains — DL often beats previous approaches by large margins</td></tr>
+        <tr><td><strong>Typical architecture</strong></td><td>Standard NN</td><td>CNN (images), RNN (text/audio)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box ins">
+    <div class="label">💡 Insight — why this distinction matters</div>
+    <p>Deep learning has produced spectacular wins in <em>unstructured</em> domains (image recognition, speech, language). In <em>structured</em> domains, the gains are real but often smaller, because human-engineered features and classical methods already perform well. As a practitioner, this tells you where DL gives you the most leverage — and where it might be overkill.</p>
+  </div>
+
+  <!-- ============================================================
+       7. WHY DL IS TAKING OFF
+       ============================================================ -->
+  <h2 id="s7">7. Why Deep Learning Is Taking Off</h2>
+
+  <p>Deep learning isn't new — the ideas date back decades. So why is it exploding <em>now</em>? Andrew's answer is captured in one famous slide.</p>
+
+  <h3>7.1 Scale drives deep learning progress</h3>
+
+  <div class="fig">
+    <svg viewBox="0 0 640 400" role="img" aria-label="Performance vs amount of data for traditional ML and neural networks of increasing size">
+      <!-- axes -->
+      <line class="svg-axis" x1="70" y1="340" x2="610" y2="340"/>
+      <line class="svg-axis" x1="70" y1="30" x2="70" y2="340"/>
+      <text class="svg-label" x="330" y="380" text-anchor="middle">Amount of data (m)</text>
+      <text class="svg-label" x="30" y="180" text-anchor="middle" transform="rotate(-90 30 180)">Performance</text>
+
+      <!-- curves -->
+      <!-- Traditional ML (red), plateaus early -->
+      <path d="M70,300 C150,180 210,170 320,168 C420,167 540,167 605,166"
+            fill="none" stroke="#dc2626" stroke-width="2.6"/>
+      <text class="svg-label-sm" x="470" y="158" fill="#dc2626">Traditional ML (SVM, logistic regression)</text>
+
+      <!-- Small NN (yellow) -->
+      <path d="M70,310 C150,220 230,190 340,180 C450,172 550,168 605,166"
+            fill="none" stroke="#d97706" stroke-width="2.6"/>
+      <text class="svg-label-sm" x="480" y="190" fill="#d97706">Small NN</text>
+
+      <!-- Medium NN (blue) -->
+      <path d="M70,315 C160,230 240,170 360,130 C470,100 550,88 605,82"
+            fill="none" stroke="#2563eb" stroke-width="2.6"/>
+      <text class="svg-label-sm" x="480" y="105" fill="#2563eb">Medium NN</text>
+
+      <!-- Large NN (green) -->
+      <path d="M70,318 C170,235 260,150 380,90 C490,45 550,30 605,22"
+            fill="none" stroke="#16a34a" stroke-width="2.6"/>
+      <text class="svg-label-sm" x="480" y="40" fill="#16a34a">Large NN</text>
+
+      <!-- "small training set" annotation -->
+      <text class="svg-label-sm" x="120" y="240">small training</text>
+      <text class="svg-label-sm" x="140" y="256">sets work here</text>
+      <line x1="180" y1="270" x2="180" y2="330" stroke="#6b7280" stroke-dasharray="3 3"/>
+      <line x1="240" y1="270" x2="240" y2="330" stroke="#6b7280" stroke-dasharray="3 3"/>
+    </svg>
+    <figcaption>The famous “scale drives progress” graph. For small datasets, traditional algorithms and neural networks perform comparably. As data grows, traditional algorithms plateau, small NNs plateau a bit later, and large NNs keep improving. The lesson: when you have a lot of labeled data, bigger neural networks tend to win.</figcaption>
+  </div>
+
+  <div class="box imp">
+    <div class="label">⭐ Key Idea</div>
+    <p>Two things had to become true for deep learning to take off:</p>
+    <ol>
+      <li><strong>Lots of labeled data</strong> became available (the digital revolution — websites, sensors, smartphones — produced enormous datasets).</li>
+      <li><strong>Lots of compute</strong> became available (GPUs, then TPUs and cloud computing) to train large networks on that data.</li>
+    </ol>
+    <p>When both are present, large neural networks outperform older methods by a wide margin. When data is scarce, the advantage shrinks.</p>
+  </div>
+
+  <div class="box intu">
+    <div class="label">🟢 Intuition — why bigger networks need more data</div>
+    <p>A large neural network has millions (sometimes billions) of parameters. To fit so many parameters without just memorizing the training set, it needs a lot of examples. Small networks have fewer parameters and can be trained on small datasets — but they also can't represent very complex functions. The graph shows this trade-off: the payoff from going big only appears once you have enough data.</p>
+  </div>
+
+  <h3>7.2 What you should take from this</h3>
+  <ul>
+    <li><strong>Before deep learning:</strong> with little data, people often spent most of their time engineering features and using classical algorithms (SVMs, logistic regression, decision trees).</li>
+    <li><strong>After deep learning:</strong> with lots of data, a large network can learn features automatically and outperform hand-engineering.</li>
+    <li><strong>Practical implication:</strong> the first question to ask about a new problem is not “which model?” but “how much labeled data do I have, and how much compute can I afford?”</li>
+  </ul>
+
+  <div class="box ins">
+    <div class="label">💡 Insight</div>
+    <p>Andrew repeatedly emphasizes: <em>scale</em> — meaning size of data, size of model, and amount of compute — is the single biggest lever for improving deep learning performance. This idea is the seed for later weeks (regularization, optimization, and error analysis).</p>
+  </div>
+
+  <!-- ============================================================
+       8. ABOUT THE SPECIALIZATION
+       ============================================================ -->
+  <h2 id="s8">8. About the Specialization &amp; This Course</h2>
+
+  <h3>8.1 The five courses in the specialization</h3>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>#</th><th>Course</th><th>Focus</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>Neural Networks and Deep Learning</td><td>Build your first networks; forward and backward propagation; deep networks</td></tr>
+        <tr><td>2</td><td>Improving Deep Neural Networks: Hyperparameter Tuning, Regularization and Optimization</td><td>How to make training actually work well (bias/variance, regularization, optimizers)</td></tr>
+        <tr><td>3</td><td>Structuring Your Machine Learning Project</td><td>How to plan, diagnose and prioritize work on ML projects</td></tr>
+        <tr><td>4</td><td>Convolutional Neural Networks (CNN)</td><td>Computer vision architectures</td></tr>
+        <tr><td>5</td><td>Natural Language Processing: Building Sequence Models</td><td>RNNs, LSTMs, attention, and modern sequence models</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box ins">
+    <div class="label">💡 Insight — ordering matters</div>
+    <p>The courses are sequenced deliberately: first learn to <em>build</em> a network (Course 1), then learn to <em>make it work well</em> (Course 2), then learn to <em>organize a project</em> (Course 3), and only then dive into specialized architectures (Courses 4 and 5). Don't skip ahead — each course assumes the previous one.</p>
+  </div>
+
+  <h3>8.2 Outline of Course 1</h3>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Week</th><th>Topic</th></tr></thead>
+      <tbody>
+        <tr><td>Week 1</td><td><strong>Introduction</strong> (this week) — What is a NN? Supervised learning, why DL is taking off</td></tr>
+        <tr><td>Week 2</td><td>Basics of Neural Network programming — logistic regression as a NN, vectorization, gradients, loss functions</td></tr>
+        <tr><td>Week 3</td><td>One hidden layer Neural Networks — forward and backward propagation for shallow networks</td></tr>
+        <tr><td>Week 4</td><td>Deep Neural Networks — generalizing to many layers; building blocks of deep learning</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ============================================================
+       9. COMMON MISTAKES
+       ============================================================ -->
+  <h2 id="s9">9. Common Mistakes &amp; Clarifications</h2>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 1 — “Neural networks are a new invention.”</div>
+    <p>They aren't. The mathematics behind neural networks (gradient descent, chain rule, backpropagation) has been understood for decades. What's new is the <em>scale</em> of data and compute, which finally made them practical.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 2 — “One architecture fits all problems.”</div>
+    <p>No. Use Standard NNs for tabular data, CNNs for images/grids, RNNs for sequences. Matching architecture to data structure is one of the most important practical decisions you'll make.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 3 — “Deep learning always beats traditional ML.”</div>
+    <p>Only when data and compute are plentiful. On small structured datasets, methods like logistic regression, SVMs, or gradient-boosted trees often match or beat deep learning — and are easier to train and interpret.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 4 — “Neurons in hidden layers have predefined meanings.”</div>
+    <p>Hidden units are usually unlabeled. The “family size / walkability / school quality” story is an intuition for <em>why</em> hidden layers help, not a prescription for what the network computes.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 5 — Confusing regression and classification.</div>
+    <p>Predicting a price is <em>regression</em>; predicting click/no-click is <em>classification</em>. They use different output layers and different loss functions.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 6 — Reading “$y$” and “$\hat{y}$” as the same thing.</div>
+    <p>$y$ is the ground-truth label. $\hat{y}$ is the model's prediction. The loss compares the two — mixing them up makes every equation incomprehensible.</p>
+  </div>
+
+  <!-- ============================================================
+       10. SUMMARY & REVIEW
+       ============================================================ -->
+  <h2 id="s10">10. Weekly Summary &amp; Review</h2>
+
+  <section class="summary">
+    <h2 style="border:none">📌 Weekly Summary</h2>
+
+    <p><strong>1. Framing.</strong> AI is positioned as the “new electricity” — a general-purpose technology that will transform many industries, similar to how electricity once did. Deep learning is a central part of that transformation.</p>
+
+    <p><strong>2. What a neural network is.</strong> A neural network is a stack of simple computational units (neurons). Each neuron computes a weighted sum of its inputs, adds a bias, applies a non-linear function, and passes the result forward. Layers of neurons let the model learn complex input→output mappings.</p>
+
+    <p><strong>3. The housing price example.</strong> Four inputs (size, #bedrooms, zip code, wealth) → three hidden units (interpretable as family size, walkability, school quality) → one output (price). The hidden units are <em>learned</em>, not hand-specified.</p>
+
+    <p><strong>4. Supervised learning.</strong> Given labeled pairs $(x, y)$, learn $f$ such that $f(x) \approx y$. Applications span real estate, advertising, image tagging, speech recognition, machine translation, and autonomous driving.</p>
+
+    <p><strong>5. Three architecture families.</strong> Standard NN (tabular data), CNN (images / grid data), RNN (sequences). The right choice depends on the structure of the input.</p>
+
+    <p><strong>6. Structured vs unstructured data.</strong> Structured data lives in tables; unstructured data is images, audio, text. Deep learning has produced dramatic gains especially on unstructured data.</p>
+
+    <p><strong>7. Why now?</strong> Scale — more labeled data and more compute — is what turned decades-old ideas into a dominant technology. Traditional ML plateaus as data grows; large neural networks keep improving.</p>
+
+    <p><strong>8. Course roadmap.</strong> Course 1 builds neural networks from scratch; later courses focus on tuning, project structuring, and specialized architectures (CNNs, sequence models).</p>
+  </section>
+
+  <h3>✅ Must-Know Concepts</h3>
+  <ul>
+    <li>The definition of a neural network and a neuron.</li>
+    <li>What supervised learning is and its two sub-types (regression, classification).</li>
+    <li>The housing price example and what “hidden layer” means.</li>
+    <li>The three architecture families (Standard NN, CNN, RNN) and what each is for.</li>
+    <li>Structured vs unstructured data, and why the distinction matters.</li>
+    <li>The “scale drives progress” lesson and its two drivers (data + compute).</li>
+    <li>The five courses and the purpose of each.</li>
+  </ul>
+
+  <h3>🧮 Important Equations (Week 1)</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Equation</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>$\hat{y} = w \cdot x + b$</td>
+          <td>A single neuron with one input: a weighted sum plus bias — the simplest case of a neuron computation.</td>
+        </tr>
+        <tr>
+          <td>$f: x \to y$</td>
+          <td>The supervised-learning goal: learn a function that maps inputs $x$ to targets $y$.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>⚠️ Common Confusions Recap</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Confusion</th><th>Resolution</th></tr></thead>
+      <tbody>
+        <tr><td>Neural network vs deep learning</td><td>Deep learning = neural networks with <em>many</em> layers. A single-layer network is a neural network but not “deep.”</td></tr>
+        <tr><td>Regression vs classification</td><td>Regression predicts numbers; classification predicts categories.</td></tr>
+        <tr><td>$y$ vs $\hat{y}$</td><td>$y$ = true label; $\hat{y}$ = model prediction.</td></tr>
+        <tr><td>Structured vs unstructured data</td><td>Structured = tables with named columns; unstructured = images/audio/text.</td></tr>
+        <tr><td>CNN vs RNN</td><td>CNN = spatial structure (images); RNN = temporal/sequential structure (text, audio).</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>📝 Quick Review (Click to Reveal Answers)</h3>
+
+  <details class="qa">
+    <summary>Why is deep learning described as “the new electricity”?</summary>
+    <div class="ans">It's a general-purpose technology that is expected to transform nearly every industry, just as electricity did a century ago. It signals breadth of impact, not just depth in one field.</div>
+  </details>
+
+  <details class="qa">
+    <summary>In one sentence, what does a single neuron compute?</summary>
+    <div class="ans">A weighted sum of its inputs plus a bias, followed by a non-linear activation function.</div>
+  </details>
+
+  <details class="qa">
+    <summary>In the housing example, what are the four inputs, the three hidden concepts, and the output?</summary>
+    <div class="ans">Inputs: size, #bedrooms, zip code, wealth. Hidden concepts: family size, walkability, school quality. Output: price.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Are the hidden units of a neural network explicitly programmed to represent “family size,” “walkability,” etc.?</summary>
+    <div class="ans">No. Hidden units are learned automatically; the labels are only an intuition for what kinds of intermediate concepts the network <em>can</em> learn to represent.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What distinguishes supervised learning from other forms of learning?</summary>
+    <div class="ans">The training data consists of labeled input–output pairs $(x, y)$, and the model learns to map $x$ to $y$.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Give one example each of regression and classification from the lecture.</summary>
+    <div class="ans">Regression: predicting house price (a continuous number). Classification: predicting whether a user clicks an ad (0 or 1).</div>
+  </details>
+
+  <details class="qa">
+    <summary>Which architecture is the natural fit for image data, and why?</summary>
+    <div class="ans">CNN. Because images are 2-D grids, and convolutions with shared weights exploit spatial locality and translation invariance while keeping parameter counts small.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Which architecture is used for speech recognition and machine translation?</summary>
+    <div class="ans">RNN (recurrent neural networks), because these tasks involve sequences where order and context matter.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What's the difference between structured and unstructured data? Give an example of each.</summary>
+    <div class="ans">Structured data lives in tables with named columns (e.g., housing data: size, #bedrooms, price). Unstructured data has no such pre-organized columns (e.g., images, audio waveforms, raw text).</div>
+  </details>
+
+  <details class="qa">
+    <summary>Name two reasons deep learning is taking off now, even though the ideas are decades old.</summary>
+    <div class="ans">(1) Massive amounts of labeled data are now available (the digital revolution). (2) Cheap, powerful compute (GPUs, cloud) makes it possible to train large networks on that data.</div>
+  </details>
+
+  <details class="qa">
+    <summary>According to the “scale drives progress” graph, when do neural networks clearly outperform traditional ML algorithms?</summary>
+    <div class="ans">When there is a large amount of labeled data. With small datasets, traditional ML and neural networks perform comparably.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Why might logistic regression outperform a large neural network on a small tabular dataset?</summary>
+    <div class="ans">Large networks have many parameters and need a lot of data to train without overfitting. On small datasets, simpler models with fewer parameters often generalize better.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What does $\hat{y}$ mean, and how is it different from $y$?</summary>
+    <div class="ans">$\hat{y}$ is the model's prediction. $y$ is the true target value. The loss measures the discrepancy between them.</div>
+  </details>
+
+  <details class="qa">
+    <summary>List the five courses in the Deep Learning Specialization in order.</summary>
+    <div class="ans">1. Neural Networks and Deep Learning. 2. Improving Deep Neural Networks: Hyperparameter Tuning, Regularization and Optimization. 3. Structuring Your Machine Learning Project. 4. Convolutional Neural Networks. 5. Natural Language Processing: Building Sequence Models.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What are the four weekly topics of Course 1?</summary>
+    <div class="ans">Week 1: Introduction. Week 2: Basics of Neural Network programming. Week 3: One hidden layer Neural Networks. Week 4: Deep Neural Networks.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Why does the specialization cover unstructured data so heavily?</summary>
+    <div class="ans">Because deep learning has produced the largest gains there — images, audio, and text — compared with traditional ML methods. These are also the domains with the most commercial interest today.</div>
+  </details>
+
+  <h3>🧠 Self-Test (Conceptual)</h3>
+
+  <details class="qa">
+    <summary>You're given a new problem: predicting the likelihood a customer will churn, using a table of 30 numeric features and 5,000 labeled examples. Would you start with a CNN, an RNN, or a standard NN? Justify.</summary>
+    <div class="ans">Standard NN (or even a simpler model). The data is structured/tabular with no spatial or sequential structure; 5,000 examples is small for a deep model, so a simple NN or gradient-boosted trees may be appropriate. CNN and RNN are unnecessary because there's no grid or sequence structure.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Why is it misleading to say “deeper networks always perform better”?</summary>
+    <div class="ans">Deeper networks have more parameters and need more data and compute. With limited data they may overfit; with limited compute they may be infeasible. Depth is beneficial only when there's enough data and compute to train the network properly.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Explain to a non-technical friend why the housing network's “hidden” layer is useful.</summary>
+    <div class="ans">Because raw features like size and #bedrooms are hard to combine directly into price. The hidden layer lets the network build intermediate ideas (like “family size”) that are more informative for pricing. It's like a team where each member specializes in one sub-question before the final decision is made.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Suppose you trained a large neural network on 100 labeled examples and it performed worse than logistic regression. What does the “scale drives progress” graph predict, and what would you do?</summary>
+    <div class="ans">The graph predicts that at small data sizes, traditional models can match or beat large networks. Recommended actions: collect more labeled data, or use a smaller model / stronger regularization, or switch to a simpler classical model.</div>
+  </details>
+
+  <details class="qa">
+    <summary>You read a headline: “AI will replace radiologists.” Using the “new electricity” framing, how would Andrew Ng likely respond?</summary>
+    <div class="ans">He would say AI is a general-purpose transformative technology. Rather than replacing radiologists wholesale, AI will likely change how radiology is practiced — increasing productivity and shifting tasks — just as electricity transformed factory work without literally replacing workers. The framing emphasizes reshaping industries, not replacing humans.</div>
+  </details>
+
+</div><!-- /wrap -->
+
+<!-- ================= FOOTER NAV ================= -->
+<nav class="navfoot" aria-label="Week navigation">
+  <a href="#" class="nav-btn disabled">← Previous Week</a>
+  <a href="#top">↑ Back to Top</a>
+  <a href="#">Back to Course 1</a>
+  <a href="#">Back to Specialization</a>
+  <a href="C1_W2.html" class="nav-btn">Next Week →</a>
+</nav>
+
+<button class="backtop" id="backtop" type="button" aria-label="Back to top">↑ Top</button>
+
+<script>
+/* ============================================================
+   THEME TOGGLE
+   ============================================================ */
+(function(){
+  const root = document.documentElement;
+  const stored = localStorage.getItem('dl-theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if (stored === 'dark' || (!stored && prefersDark)) root.setAttribute('data-theme','dark');
+
+  const btn = document.getElementById('themeBtn');
+  btn.addEventListener('click', () => {
+    const cur = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', cur);
+    localStorage.setItem('dl-theme', cur);
+  });
+})();
+
+/* ============================================================
+   BACK TO TOP
+   ============================================================ */
+(function(){
+  const b = document.getElementById('backtop');
+  const onScroll = () => {
+    if (window.scrollY > 500) b.classList.add('show');
+    else b.classList.remove('show');
+  };
+  window.addEventListener('scroll', onScroll, {passive:true});
+  b.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+})();
+
+/* ============================================================
+   CLIENT-SIDE SEARCH (highlight matches in the page)
+   ============================================================ */
+(function(){
+  const input = document.getElementById('searchInput');
+  const clear = document.getElementById('searchClear');
+  const wrap = document.querySelector('.wrap');
+  let originalHTML = null;
+  let originalBody = null;
+
+  function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+  function doSearch(q){
+    // Reset first
+    if (originalBody === null){
+      originalBody = wrap.innerHTML;
+    } else {
+      wrap.innerHTML = originalBody;
+    }
+
+    if (!q || q.trim().length < 2) return;
+
+    const term = q.trim();
+    const re = new RegExp('(' + escapeRegExp(term) + ')', 'gi');
+
+    // Walk text nodes only (skip script/style/pre)
+    const walker = document.createTreeWalker(wrap, NodeFilter.SHOW_TEXT, {
+      acceptNode(node){
+        if (!node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        const p = node.parentElement;
+        if (!p) return NodeFilter.FILTER_REJECT;
+        const tag = p.tagName;
+        if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'PRE' || tag === 'CODE') return NodeFilter.FILTER_REJECT;
+        if (!re.test(node.nodeValue)) { re.lastIndex = 0; return NodeFilter.FILTER_REJECT; }
+        re.lastIndex = 0;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+
+    const targets = [];
+    while (walker.nextNode()) targets.push(walker.currentNode);
+
+    targets.forEach(node => {
+      const span = document.createElement('span');
+      span.innerHTML = node.nodeValue.replace(re, '<mark class="hit">$1</mark>');
+      node.parentNode.replaceChild(span, node);
+    });
+  }
+
+  let t = null;
+  input.addEventListener('input', (e) => {
+    clearTimeout(t);
+    t = setTimeout(() => doSearch(e.target.value), 180);
+  });
+
+  clear.addEventListener('click', () => {
+    input.value = '';
+    doSearch('');
+  });
+})();
+
+/* ============================================================
+   MathJax re-typeset after search swaps DOM (only if loaded)
+   ============================================================ */
+if (window.MathJax && window.MathJax.typesetPromise){
+  window.MathJax.typesetPromise();
+}
+</script>
+
+</body>
+</html>

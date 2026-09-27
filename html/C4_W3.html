@@ -1,0 +1,2067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Course 4 · Week 3 — Object Detection &amp; Semantic Segmentation</title>
+
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$','$'], ['\\(','\\)']], displayMath: [['$$','$$'], ['\\[','\\]']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+  :root{
+    --bg:#f7f8fb; --bg-alt:#ffffff; --text:#1c2230; --muted:#5b6478; --border:#e3e6ee;
+    --accent:#3a63d8; --accent-soft:#eaefff;
+    --def:#e8f1ff; --def-b:#3a63d8;
+    --int:#e8fbf0; --int-b:#1f9d55;
+    --imp:#fff6e0; --imp-b:#d99a00;
+    --warn:#ffe9e9; --warn-b:#d64545;
+    --exam:#f3e9ff; --exam-b:#7a3ad6;
+    --code-bg:#0f172a; --code-text:#e6edf7;
+    --shadow:0 1px 3px rgba(20,30,60,.06),0 8px 24px rgba(20,30,60,.06);
+  }
+  html[data-theme="dark"]{
+    --bg:#0e1116; --bg-alt:#161b23; --text:#e6ecf5; --muted:#a1abc0; --border:#2a3242;
+    --accent:#7d9cff; --accent-soft:#1b2440;
+    --def:#132347; --def-b:#7d9cff;
+    --int:#0f2b1d; --int-b:#4bd18a;
+    --imp:#2c2410; --imp-b:#f0b73f;
+    --warn:#2e1414; --warn-b:#ff7b7b;
+    --exam:#20143a; --exam-b:#b48cff;
+    --code-bg:#05080f; --code-text:#d7e3f4;
+    --shadow:0 1px 3px rgba(0,0,0,.5),0 8px 24px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    line-height:1.65;-webkit-font-smoothing:antialiased;font-size:16.5px;}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{font-family:"JetBrains Mono",Menlo,Consolas,monospace;font-size:.9em;
+    background:rgba(127,127,127,.14);padding:2px 5px;border-radius:4px}
+  pre{background:var(--code-bg);color:var(--code-text);padding:16px 18px;border-radius:10px;
+    overflow-x:auto;font-size:13.5px;line-height:1.55;box-shadow:var(--shadow)}
+  pre code{background:transparent;color:inherit;padding:0;font-size:inherit}
+
+  .topbar{position:sticky;top:0;z-index:50;background:var(--bg-alt);
+    border-bottom:1px solid var(--border);padding:10px 16px;
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;box-shadow:var(--shadow)}
+  .topbar .brand{font-weight:700;font-size:15px;letter-spacing:.2px}
+  .topbar .brand small{display:block;color:var(--muted);font-weight:400;font-size:11.5px}
+  .topbar .spacer{flex:1}
+  .topbar button,.topbar a.btn{
+    background:var(--accent-soft);color:var(--accent);border:1px solid transparent;
+    padding:7px 11px;border-radius:8px;font-size:13.5px;cursor:pointer;font-weight:600}
+  .topbar button:hover,.topbar a.btn:hover{filter:brightness(.97);text-decoration:none}
+  .search-wrap{position:relative}
+  .search-wrap input{padding:8px 12px 8px 30px;border-radius:8px;border:1px solid var(--border);
+    background:var(--bg);color:var(--text);font-size:13.5px;min-width:190px;outline:none}
+  .search-wrap::before{content:"🔍";position:absolute;left:9px;top:50%;transform:translateY(-50%);
+    font-size:12px;opacity:.7}
+
+  .layout{display:grid;grid-template-columns:290px minmax(0,1fr);gap:24px;
+    max-width:1400px;margin:0 auto;padding:24px 18px 80px}
+  @media(max-width:960px){.layout{grid-template-columns:1fr;padding:16px 12px 60px}}
+
+  aside.toc{position:sticky;top:74px;align-self:start;max-height:calc(100vh - 90px);
+    overflow-y:auto;background:var(--bg-alt);border:1px solid var(--border);
+    border-radius:12px;padding:14px 14px 18px;box-shadow:var(--shadow);font-size:14px}
+  aside.toc h3{margin:0 0 8px;font-size:13px;text-transform:uppercase;
+    letter-spacing:.6px;color:var(--muted)}
+  aside.toc ol{margin:0;padding-left:18px}
+  aside.toc ol li{margin:5px 0}
+  aside.toc a{color:var(--text)}
+  aside.toc a:hover{color:var(--accent)}
+  @media(max-width:960px){aside.toc{position:static;max-height:none}}
+
+  main{min-width:0}
+  h1{font-size:clamp(22px,3.4vw,30px);margin:0 0 6px}
+  h2{font-size:clamp(19px,2.6vw,24px);margin:44px 0 12px;padding-bottom:6px;
+    border-bottom:2px solid var(--border)}
+  h3{font-size:clamp(17px,2.1vw,20px);margin:28px 0 8px}
+  h4{font-size:16px;margin:20px 0 6px}
+  p{margin:9px 0}
+  ul,ol{padding-left:22px}
+  li{margin:5px 0}
+  .lead{color:var(--muted);font-size:15.5px}
+
+  .box{border-left:5px solid var(--accent);background:var(--bg-alt);
+    padding:14px 16px;border-radius:10px;margin:16px 0;box-shadow:var(--shadow)}
+  .box .label{display:inline-block;font-size:11.5px;font-weight:800;
+    letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px}
+  .box.def{border-color:var(--def-b);background:var(--def)}
+  .box.def .label{color:var(--def-b)}
+  .box.int{border-color:var(--int-b);background:var(--int)}
+  .box.int .label{color:var(--int-b)}
+  .box.imp{border-color:var(--imp-b);background:var(--imp)}
+  .box.imp .label{color:var(--imp-b)}
+  .box.warn{border-color:var(--warn-b);background:var(--warn)}
+  .box.warn .label{color:var(--warn-b)}
+  .box.exam{border-color:var(--exam-b);background:var(--exam)}
+  .box.exam .label{color:var(--exam-b)}
+  .box.extra{border-color:var(--muted);background:var(--bg-alt)}
+  .box.extra .label{color:var(--muted)}
+
+  .eq{background:var(--bg-alt);border:1px solid var(--border);border-radius:10px;
+    padding:10px 16px;margin:14px 0;overflow-x:auto;box-shadow:var(--shadow)}
+  .eq .eq-label{font-size:12px;color:var(--muted);margin-bottom:4px}
+
+  .table-wrap{overflow-x:auto;margin:14px 0}
+  table{border-collapse:collapse;width:100%;min-width:480px;font-size:14.5px;
+    background:var(--bg-alt);border-radius:10px;overflow:hidden;box-shadow:var(--shadow)}
+  th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+  th{background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:13.5px}
+  tr:last-child td{border-bottom:none}
+
+  .diagram{background:var(--bg-alt);border:1px solid var(--border);border-radius:12px;
+    padding:16px;margin:18px 0;box-shadow:var(--shadow);text-align:center;overflow-x:auto}
+  .diagram svg{max-width:100%;height:auto}
+  .diagram .caption{font-size:13px;color:var(--muted);margin-top:10px;text-align:left}
+
+  details{background:var(--bg-alt);border:1px solid var(--border);border-radius:10px;
+    padding:10px 14px;margin:10px 0;box-shadow:var(--shadow)}
+  details summary{cursor:pointer;font-weight:600;color:var(--accent);outline:none}
+  details[open] summary{margin-bottom:8px}
+  details .answer{color:var(--text);font-size:15px}
+
+  .weeknav{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;
+    margin:44px 0 10px;padding:16px;background:var(--bg-alt);border:1px solid var(--border);
+    border-radius:12px;box-shadow:var(--shadow)}
+  .weeknav a{flex:1 1 auto;text-align:center;padding:10px 14px;border-radius:8px;
+    background:var(--accent-soft);color:var(--accent);font-weight:600;font-size:14px}
+  .weeknav a:hover{text-decoration:none;filter:brightness(.97)}
+
+  #backTop{position:fixed;right:16px;bottom:16px;z-index:60;background:var(--accent);
+    color:#fff;border:none;width:44px;height:44px;border-radius:50%;font-size:18px;
+    cursor:pointer;box-shadow:0 6px 18px rgba(58,99,216,.4);display:none}
+  #backTop.show{display:block}
+  mark.hit{background:#ffe066;color:#000;border-radius:3px;padding:0 2px}
+
+  footer{max-width:1400px;margin:0 auto;padding:10px 18px 60px;
+    color:var(--muted);font-size:13px;text-align:center}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Course 4 · Week 3 <small>Object Detection &amp; Semantic Segmentation</small></div>
+  <div class="spacer"></div>
+  <div class="search-wrap"><input id="searchInput" type="text" placeholder="Search in notes…" /></div>
+  <button id="themeBtn" title="Toggle light/dark">🌗 Theme</button>
+</div>
+
+<div class="layout">
+
+  <aside class="toc">
+    <h3>Table of Contents</h3>
+    <ol>
+      <li><a href="#overview">Week Overview</a></li>
+      <li><a href="#loc-vs-detect">Localization vs Detection</a></li>
+      <li><a href="#localization">Classification with Localization</a></li>
+      <li><a href="#target-y">Defining the Target Label y</a></li>
+      <li><a href="#landmark">Landmark Detection</a></li>
+      <li><a href="#detection">Object Detection</a></li>
+      <li><a href="#sliding">Sliding Windows Detection</a></li>
+      <li><a href="#conv-sliding">Convolutional Sliding Windows</a></li>
+      <li><a href="#yolo">Bounding Box Predictions (YOLO)</a></li>
+      <li><a href="#iou">Intersection over Union (IoU)</a></li>
+      <li><a href="#nms">Non-Max Suppression (NMS)</a></li>
+      <li><a href="#anchor">Anchor Boxes</a></li>
+      <li><a href="#yolo-full">YOLO in Full</a></li>
+      <li><a href="#rcnn">Region Proposals (R-CNN family)</a></li>
+      <li><a href="#segmentation">Semantic Segmentation vs Object Detection</a></li>
+      <li><a href="#transpose">Transpose Convolution</a></li>
+      <li><a href="#unet">U-Net Architecture</a></li>
+      <li><a href="#summary">Weekly Summary</a></li>
+      <li><a href="#equations">Important Equations</a></li>
+      <li><a href="#confusions">Common Confusions</a></li>
+      <li><a href="#review">Review Questions</a></li>
+      <li><a href="#selftest">Self‑Test</a></li>
+    </ol>
+  </aside>
+
+  <main>
+
+  <h1 id="overview">Week 3 — Object Detection &amp; Semantic Segmentation</h1>
+  <p class="lead">Course 4 (Convolutional Neural Networks) · Deep Learning Specialization · Andrew Ng</p>
+
+  <div class="box def">
+    <span class="label">🔵 What This Week Is About</span>
+    <p>Up to now we've answered "what is in this image?" This week we answer "<em>where</em> is it, and how many?" —
+    the task of <strong>object detection</strong>. We start with classification + localization (one object), add landmark
+    detection, then build up the full object detection pipeline: sliding windows, its convolutional implementation,
+    bounding-box regression (YOLO), IoU, non-max suppression, and anchor boxes. We finish with region proposals
+    (R-CNN family) and <strong>semantic segmentation</strong> with <strong>U-Net</strong>, where every pixel gets a class
+    label.</p>
+  </div>
+
+  <div class="box int">
+    <span class="label">🟢 Big-Picture Progression</span>
+    <ul>
+      <li><strong>Image classification</strong> → single label ("cat").</li>
+      <li><strong>Classification + localization</strong> → label + one bounding box.</li>
+      <li><strong>Landmark detection</strong> → coordinates of specific features (eyes, nose, joints).</li>
+      <li><strong>Object detection</strong> → multiple objects, each with a label + box.</li>
+      <li><strong>Semantic segmentation</strong> → per-pixel class labels (e.g., road / car / building).</li>
+    </ul>
+  </div>
+
+  <!-- ==================== LOCALIZATION VS DETECTION ==================== -->
+  <h2 id="loc-vs-detect">1. Localization vs Detection</h2>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 240" role="img" aria-label="Classification vs classification with localization vs detection">
+      <!-- classification -->
+      <text x="120" y="25" text-anchor="middle" font-weight="700" font-size="14">Image classification</text>
+      <rect x="30" y="50" width="180" height="120" fill="#e0e5f0" stroke="#333"/>
+      <text x="120" y="115" text-anchor="middle" font-size="22">🚗</text>
+      <text x="120" y="195" text-anchor="middle" font-size="12">"car"</text>
+
+      <!-- classification + localization -->
+      <text x="450" y="25" text-anchor="middle" font-weight="700" font-size="14">Classification + localization</text>
+      <rect x="360" y="50" width="180" height="120" fill="#e0e5f0" stroke="#333"/>
+      <rect x="405" y="70" width="90" height="70" fill="none" stroke="#d64545" stroke-width="3"/>
+      <text x="450" y="112" text-anchor="middle" font-size="22">🚗</text>
+      <text x="450" y="195" text-anchor="middle" font-size="12">"car" + box</text>
+
+      <!-- detection -->
+      <text x="770" y="25" text-anchor="middle" font-weight="700" font-size="14">Detection</text>
+      <rect x="680" y="50" width="180" height="120" fill="#e0e5f0" stroke="#333"/>
+      <rect x="695" y="80" width="70" height="50" fill="none" stroke="#d64545" stroke-width="3"/>
+      <rect x="790" y="75" width="60" height="60" fill="none" stroke="#d64545" stroke-width="3"/>
+      <text x="730" y="112" text-anchor="middle" font-size="18">🚗</text>
+      <text x="820" y="112" text-anchor="middle" font-size="18">🚶</text>
+      <text x="770" y="195" text-anchor="middle" font-size="12">multiple objects + boxes</text>
+    </svg>
+    <div class="caption">Figure 1.1 — Three tasks in increasing difficulty: classify; classify AND locate one object;
+    detect multiple objects with boxes and labels.</div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Task</th><th>Input</th><th>Output</th></tr></thead>
+      <tbody>
+        <tr><td>Image classification</td><td>Image</td><td>A class label (e.g., "car").</td></tr>
+        <tr><td>Classification + localization</td><td>Image</td><td>A class label + coordinates of ONE bounding box.</td></tr>
+        <tr><td>Object detection</td><td>Image</td><td>A variable number of (class, bounding box) pairs.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== LOCALIZATION ==================== -->
+  <h2 id="localization">2. Classification with Localization</h2>
+
+  <p>Given a picture with a single object (e.g., one car), produce both the class label <em>and</em> the coordinates of a
+  bounding box that surrounds the object.</p>
+
+  <h3>2.1 Bounding box parameters</h3>
+
+  <p>A bounding box is described by four numbers:</p>
+  <ul>
+    <li>\(b_x, b_y\) — the \((x, y)\) coordinates of the <strong>centre</strong> of the box.</li>
+    <li>\(b_h\) — the <strong>height</strong> of the box.</li>
+    <li>\(b_w\) — the <strong>width</strong> of the box.</li>
+  </ul>
+
+  <div class="diagram">
+    <svg viewBox="0 0 480 260" role="img" aria-label="Bounding box parameters on a car image">
+      <rect x="40" y="30" width="400" height="200" fill="#e0e5f0" stroke="#333"/>
+      <!-- car -->
+      <rect x="150" y="90" width="180" height="100" fill="#b0b8c8" stroke="#666"/>
+      <circle cx="190" cy="195" r="12" fill="#333"/>
+      <circle cx="290" cy="195" r="12" fill="#333"/>
+      <text x="240" y="145" text-anchor="middle" font-size="22">🚗</text>
+
+      <!-- bounding box -->
+      <rect x="150" y="70" width="180" height="130" fill="none" stroke="#d64545" stroke-width="3"/>
+
+      <!-- centre dot -->
+      <circle cx="240" cy="135" r="5" fill="#3a63d8"/>
+
+      <!-- annotation arrows -->
+      <line x1="240" y1="135" x2="240" y2="30" stroke="#3a63d8" stroke-dasharray="3 3"/>
+      <line x1="240" y1="135" x2="30" y2="135" stroke="#3a63d8" stroke-dasharray="3 3"/>
+      <text x="250" y="25" font-size="13" fill="#3a63d8">b_x</text>
+      <text x="15" y="130" font-size="13" fill="#3a63d8">b_y</text>
+
+      <text x="340" y="90" font-size="13" fill="#d64545">b_w</text>
+      <line x1="150" y1="85" x2="330" y2="85" stroke="#d64545"/>
+
+      <text x="355" y="150" font-size="13" fill="#d64545">b_h</text>
+      <line x1="340" y1="70" x2="340" y2="200" stroke="#d64545"/>
+    </svg>
+    <div class="caption">Figure 2.1 — Bounding box notation. \(b_x, b_y\) are the box centre coordinates; \(b_w, b_h\)
+    are its width and height. All values are usually normalised by the image dimensions.</div>
+  </div>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — Normalised Coordinates</span>
+    <p>In practice, \(b_x, b_y, b_w, b_h\) are all <strong>normalised to the range \([0,1]\)</strong>. So \(b_x = 0.5\)
+    means the box centre is at the horizontal midpoint of the image. This keeps the network's outputs bounded and makes
+    training easier.</p>
+  </div>
+
+  <h3>2.2 The network architecture</h3>
+
+  <p>Start with a standard CNN that outputs a feature vector. Then attach <em>multiple heads</em>:</p>
+
+  <ul>
+    <li><strong>Class head</strong> (softmax over classes + "background") → predicts the class.</li>
+    <li><strong>Box head</strong> (4 linear outputs) → predicts \(b_x, b_y, b_h, b_w\).</li>
+  </ul>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 220" role="img" aria-label="Classification with localization network architecture">
+      <!-- input -->
+      <rect x="20" y="80" width="60" height="60" fill="#dcdffc" stroke="#3a63d8"/>
+      <text x="50" y="115" text-anchor="middle" font-size="20">🚗</text>
+
+      <text x="90" y="115" font-size="14">→</text>
+
+      <!-- conv net -->
+      <rect x="115" y="70" width="180" height="80" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="205" y="115" text-anchor="middle" font-size="14" fill="#3a63d8">ConvNet</text>
+
+      <text x="305" y="115" font-size="14">→</text>
+
+      <!-- feature vector -->
+      <rect x="330" y="80" width="18" height="60" fill="#f3e9ff" stroke="#7a3ad6"/>
+      <text x="339" y="160" text-anchor="middle" font-size="11" fill="#7a3ad6">features</text>
+
+      <!-- two heads -->
+      <text x="370" y="60" font-size="13" fill="#1f9d55">Softmax head</text>
+      <rect x="380" y="30" width="100" height="45" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="430" y="57" text-anchor="middle" font-size="12" fill="#1f9d55">softmax (4+1)</text>
+
+      <text x="370" y="140" font-size="13" fill="#d64545">Regression head</text>
+      <rect x="380" y="110" width="130" height="45" fill="#ffe9e9" stroke="#d64545"/>
+      <text x="445" y="130" text-anchor="middle" font-size="12" fill="#d64545">linear: b_x, b_y,</text>
+      <text x="445" y="145" text-anchor="middle" font-size="12" fill="#d64545">b_h, b_w</text>
+
+      <!-- arrows -->
+      <line x1="348" y1="95" x2="378" y2="60" stroke="#1f9d55"/>
+      <line x1="348" y1="120" x2="378" y2="135" stroke="#d64545"/>
+
+      <!-- outputs -->
+      <text x="530" y="57" font-size="13">→ class</text>
+      <text x="530" y="135" font-size="13">→ box coordinates</text>
+    </svg>
+    <div class="caption">Figure 2.2 — A classification-with-localization network has a shared "backbone" (ConvNet) and two
+    output heads: one for the class, one for the bounding box coordinates.</div>
+  </div>
+
+  <!-- ==================== TARGET Y ==================== -->
+  <h2 id="target-y">3. Defining the Target Label \(y\)</h2>
+
+  <p>To train this network, we need to define what the ground-truth label \(y\) looks like for each image.</p>
+
+  <h3>3.1 The class list</h3>
+
+  <p>Example from the lecture — four categories (the "background" class handles images with no object):</p>
+  <ol>
+    <li>Pedestrian</li>
+    <li>Car</li>
+    <li>Motorcycle</li>
+    <li>Background</li>
+  </ol>
+
+  <h3>3.2 The label vector</h3>
+
+  <p>Each training example's target is an 8-dimensional vector (assuming 3 object classes):</p>
+
+  <div class="eq">
+    $$
+    y = \begin{bmatrix} p_c \\ b_x \\ b_y \\ b_h \\ b_w \\ c_1 \\ c_2 \\ c_3 \end{bmatrix}
+    $$
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Symbol</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>\(p_c\)</td><td>Probability that <strong>any</strong> object is present (1 = object, 0 = background).</td></tr>
+        <tr><td>\(b_x, b_y, b_h, b_w\)</td><td>Bounding-box coordinates (only meaningful if \(p_c=1\)).</td></tr>
+        <tr><td>\(c_1, c_2, c_3\)</td><td>One-hot class labels (e.g., [1,0,0] = pedestrian; [0,1,0] = car; …).</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>3.3 Two cases: object vs background</h3>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 320" role="img" aria-label="Two label examples: car present vs no object">
+      <!-- car present -->
+      <text x="180" y="30" text-anchor="middle" font-weight="700" font-size="14">Object present (a car)</text>
+      <rect x="60" y="50" width="240" height="120" fill="#e0e5f0" stroke="#333"/>
+      <rect x="130" y="80" width="110" height="70" fill="none" stroke="#d64545" stroke-width="3"/>
+      <text x="185" y="125" text-anchor="middle" font-size="22">🚗</text>
+
+      <text x="400" y="120" font-size="16">y =</text>
+      <text x="450" y="60" font-size="14">⎡ 1 ⎤ ← p_c = 1 (object)</text>
+      <text x="450" y="82" font-size="14">⎢ b_x ⎥ ← box</text>
+      <text x="450" y="104" font-size="14">⎢ b_y ⎥</text>
+      <text x="450" y="126" font-size="14">⎢ b_h ⎥</text>
+      <text x="450" y="148" font-size="14">⎢ b_w ⎥</text>
+      <text x="450" y="170" font-size="14">⎢ c₁ ⎥ ← class = [0,1,0] (car)</text>
+      <text x="450" y="192" font-size="14">⎢ c₂ ⎥</text>
+      <text x="450" y="214" font-size="14">⎣ c₃ ⎦</text>
+
+      <!-- no object -->
+      <text x="680" y="30" text-anchor="middle" font-weight="700" font-size="14">No object (background)</text>
+      <rect x="560" y="50" width="240" height="120" fill="#dfe5e8" stroke="#333"/>
+      <text x="680" y="115" text-anchor="middle" font-size="22">🌲</text>
+
+      <text x="400" y="280" font-size="16">y =</text>
+      <text x="450" y="250" font-size="14">⎡ 0 ⎤ ← p_c = 0 (background)</text>
+      <text x="450" y="272" font-size="14">⎢ ? ⎥ ← "don't care"</text>
+      <text x="450" y="294" font-size="14">⎢ ? ⎥</text>
+      <text x="450" y="316" font-size="14">⎣ ? ⎦</text>
+    </svg>
+    <div class="caption">Figure 3.1 — Two training labels. When an object is present, \(p_c = 1\) and the box + class
+    values are meaningful. When there is no object (\(p_c = 0\)), the remaining entries can be set to anything — we
+    "don't care" about them.</div>
+  </div>
+
+  <h3>3.4 The loss function</h3>
+
+  <p>Because the network has multiple outputs, we combine several loss terms with a <strong>switch based on \(p_c\)</strong>:</p>
+
+  <div class="eq">
+    $$
+    \mathcal{L}(\hat{y}, y) =
+    \begin{cases}
+    (\hat{y}_1 - y_1)^2 + \sum_{i=2}^{8}(\hat{y}_i - y_i)^2 & \text{if } y_1 = 1 \text{ (object present)} \\[6pt]
+    (\hat{y}_1 - y_1)^2 & \text{if } y_1 = 0 \text{ (background)}
+    \end{cases}
+    $$
+  </div>
+
+  <div class="box int">
+    <span class="label">🟢 Intuition — Why the Switch?</span>
+    <p>When \(p_c=1\), we need to train the box coordinates <em>and</em> the class probabilities — so we sum squared
+    errors across all 8 outputs. When \(p_c=0\), there is no object to localise or classify, so we only train
+    \(p_c\) itself. Training the "don't care" entries on a background image would give contradictory gradients.</p>
+  </div>
+
+  <div class="box extra">
+    <span class="label">📎 Additional Context — Modern Practice</span>
+    <p>Andrew's lecture uses squared error for simplicity. In practice, object detectors use:</p>
+    <ul>
+      <li><strong>Log loss</strong> for \(p_c\) (binary classification) and for class probabilities (softmax cross-entropy).</li>
+      <li><strong>L1 / smooth-L1</strong> losses for the box coordinates \(b_x, b_y, b_h, b_w\).</li>
+      <li><strong>IoU-based</strong> losses (e.g., GIoU, DIoU) in the latest detectors.</li>
+    </ul>
+    <p>The switch-on-\(p_c\) structure is the key idea and persists in all of them.</p>
+  </div>
+
+  <!-- ==================== LANDMARK DETECTION ==================== -->
+  <h2 id="landmark">4. Landmark Detection</h2>
+
+  <p>Instead of drawing a box around the whole object, we might want the network to output the coordinates of
+  <strong>specific features</strong> — the corners of the eyes, the tip of the nose, joints of the body, etc.</p>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — Landmark Detection</span>
+    <p><strong>Landmark detection</strong> is a regression task where the network outputs the \((x, y)\) coordinates of
+    a fixed set of landmarks on an object. Each landmark is two numbers, so \(k\) landmarks → \(2k\) outputs.</p>
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 720 260" role="img" aria-label="Landmark detection on a face">
+      <!-- face -->
+      <ellipse cx="360" cy="130" rx="90" ry="110" fill="#fde2c5" stroke="#333"/>
+      <!-- landmarks (red dots) -->
+      <circle cx="330" cy="95" r="4" fill="#d64545"/>
+      <circle cx="390" cy="95" r="4" fill="#d64545"/>
+      <circle cx="360" cy="130" r="4" fill="#d64545"/>
+      <circle cx="330" cy="165" r="4" fill="#d64545"/>
+      <circle cx="390" cy="165" r="4" fill="#d64545"/>
+      <circle cx="310" cy="120" r="4" fill="#d64545"/>
+      <circle cx="410" cy="120" r="4" fill="#d64545"/>
+      <!-- simple smile -->
+      <path d="M 330 175 Q 360 195 390 175" stroke="#7a3ad6" stroke-width="2" fill="none"/>
+
+      <!-- annotation -->
+      <text x="530" y="60" font-size="14">Each landmark → 2 numbers</text>
+      <text x="530" y="85" font-size="14">(l₁ₓ, l₁ᵧ), (l₂ₓ, l₂ᵧ), …</text>
+      <text x="530" y="115" font-size="14">64 landmarks → 128 outputs</text>
+
+      <text x="530" y="165" font-size="14" fill="#1f9d55">Use cases:</text>
+      <text x="530" y="190" font-size="13">• AR filters (Snapchat)</text>
+      <text x="530" y="210" font-size="13">• Emotion recognition</text>
+      <text x="530" y="230" font-size="13">• Pose estimation (human body)</text>
+    </svg>
+    <div class="caption">Figure 4.1 — Landmark detection on a face. Each red dot is a landmark whose \((x,y)\)
+    coordinates the network learns to output. The training set must be <em>consistently annotated</em> — landmark 1
+    must always be the same feature (e.g., left eye corner).</div>
+  </div>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — Landmark Consistency</span>
+    <p>The training labels must be <strong>consistent across examples</strong>. Landmark 1 must always denote the same
+    point (e.g., the left corner of the left eye). If annotation order varies between images, the network can't learn.</p>
+  </div>
+
+  <div class="box warn">
+    <span class="label">🔴 Warning — More Landmarks ≠ Better</span>
+    <p>Landmark detection requires a large, consistently-annotated dataset. It's not a general-purpose technique — pick
+    a fixed set of landmarks that is meaningful for your task (e.g., 64 face points, or 17 joints for human pose).</p>
+  </div>
+
+  <!-- ==================== OBJECT DETECTION ==================== -->
+  <h2 id="detection">5. Object Detection</h2>
+
+  <p>Localization gave us one box per image. Real applications need <em>many</em> objects located at once.</p>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — Object Detection</span>
+    <p><strong>Object detection</strong> identifies and localises multiple objects in an image. Output is a variable-length
+    list of (class, bounding box) pairs.</p>
+  </div>
+
+  <h3>5.1 Building a training set for detection</h3>
+
+  <p>You can reuse a classifier trained on <em>cropped</em> images and slide it across an image. This is the core idea
+  behind sliding windows.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 240" role="img" aria-label="Detection training set from cropped positive and negative examples">
+      <text x="100" y="25" text-anchor="middle" font-weight="700" font-size="14">Training set</text>
+      <!-- positive examples -->
+      <rect x="30" y="50" width="60" height="60" fill="#e0e5f0" stroke="#333"/>
+      <text x="60" y="90" text-anchor="middle" font-size="20">🚗</text>
+      <text x="100" y="85" font-size="14">1</text>
+
+      <rect x="30" y="120" width="60" height="60" fill="#e0e5f0" stroke="#333"/>
+      <text x="60" y="160" text-anchor="middle" font-size="20">🚕</text>
+      <text x="100" y="155" font-size="14">1</text>
+
+      <rect x="30" y="190" width="60" height="60" fill="#e0e5f0" stroke="#333"/>
+      <text x="60" y="230" text-anchor="middle" font-size="20">🚙</text>
+      <text x="100" y="225" font-size="14">1</text>
+
+      <!-- negative examples -->
+      <rect x="160" y="50" width="60" height="60" fill="#dfe5e8" stroke="#333"/>
+      <text x="190" y="90" text-anchor="middle" font-size="20">🌲</text>
+      <text x="230" y="85" font-size="14">0</text>
+
+      <rect x="160" y="120" width="60" height="60" fill="#dfe5e8" stroke="#333"/>
+      <text x="190" y="160" text-anchor="middle" font-size="20">❄️</text>
+      <text x="230" y="155" font-size="14">0</text>
+
+      <!-- full image with crops -->
+      <rect x="360" y="40" width="260" height="160" fill="#e0e5f0" stroke="#333"/>
+      <rect x="390" y="80" width="80" height="60" fill="none" stroke="#d64545" stroke-width="2"/>
+      <rect x="470" y="90" width="90" height="50" fill="none" stroke="#d64545" stroke-width="2"/>
+      <text x="500" y="220" text-anchor="middle" font-size="12">Full image → extract crops</text>
+
+      <text x="700" y="120" font-size="14">→ Feed each crop</text>
+      <text x="700" y="140" font-size="14">to classifier</text>
+      <text x="700" y="160" font-size="14">→ get 0/1</text>
+    </svg>
+    <div class="caption">Figure 5.1 — Build a training set of tightly-cropped car images (label 1) and non-car images
+    (label 0). A classifier trained on this can then be slid across a larger image to find cars.</div>
+  </div>
+
+  <!-- ==================== SLIDING WINDOWS ==================== -->
+  <h2 id="sliding">6. Sliding Windows Detection</h2>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — Sliding Window Detection</span>
+    <p>Slide a fixed-size window across the image at multiple positions and scales. At each position, crop the patch
+    inside the window and pass it through the classifier. If the classifier says "car", record that window as a detection.</p>
+  </div>
+
+  <div class="box int">
+    <span class="label">🟢 Intuition — A Flashlight Scanning the Image</span>
+    <p>Imagine a rectangular flashlight of a fixed size that you sweep left-to-right, top-to-bottom, across the whole
+    image. Then repeat with a bigger flashlight (to catch bigger objects), then an even bigger one. At each sweep
+    position you ask, "Does this crop contain an object?"</p>
+  </div>
+
+  <h3>6.1 Algorithm</h3>
+
+  <ol>
+    <li>Pick a window size (e.g., 64×64).</li>
+    <li>Slide the window across the image with a fixed <strong>stride</strong> (e.g., 4 pixels).</li>
+    <li>At each position, crop the patch and run the classifier.</li>
+    <li>If the classifier outputs "object", save the window position as a detection.</li>
+    <li>Repeat with larger window sizes to catch objects of different scales.</li>
+  </ol>
+
+  <div class="diagram">
+    <svg viewBox="0 0 720 260" role="img" aria-label="Sliding window across an image">
+      <rect x="20" y="30" width="300" height="200" fill="#e0e5f0" stroke="#333"/>
+      <text x="170" y="130" text-anchor="middle" font-size="22">🚗 🚶</text>
+
+      <!-- window positions -->
+      <rect x="20" y="30" width="80" height="80" fill="none" stroke="#3a63d8" stroke-width="2"/>
+      <rect x="100" y="30" width="80" height="80" fill="none" stroke="#3a63d8" stroke-width="1" stroke-dasharray="3 3"/>
+      <rect x="180" y="30" width="80" height="80" fill="none" stroke="#3a63d8" stroke-width="1" stroke-dasharray="3 3"/>
+      <rect x="20" y="110" width="80" height="80" fill="none" stroke="#3a63d8" stroke-width="1" stroke-dasharray="3 3"/>
+      <rect x="100" y="110" width="80" height="80" fill="none" stroke="#3a63d8" stroke-width="1" stroke-dasharray="3 3"/>
+      <rect x="180" y="110" width="80" height="80" fill="none" stroke="#3a63d8" stroke-width="1" stroke-dasharray="3" />
+
+      <text x="170" y="250" text-anchor="middle" font-size="12">Slide a fixed-size window with a stride</text>
+
+      <!-- classifier -->
+      <text x="360" y="130" font-size="24">→</text>
+      <rect x="400" y="80" width="100" height="100" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="450" y="125" text-anchor="middle" font-size="12" fill="#3a63d8">Classifier</text>
+      <text x="450" y="145" text-anchor="middle" font-size="12" fill="#3a63d8">(CNN)</text>
+
+      <text x="520" y="130" font-size="24">→</text>
+      <text x="560" y="120" font-size="14">0 or 1</text>
+      <text x="560" y="150" font-size="12" fill="#5b6478">"car / no car"</text>
+    </svg>
+    <div class="caption">Figure 6.1 — Sliding window detection. At every position and size, crop a patch and classify it.</div>
+  </div>
+
+  <div class="box warn">
+    <span class="label">🔴 Warning — Computationally Expensive</span>
+    <p>Sliding windows with a small stride and many scales means <em>thousands</em> of forward passes through the CNN per
+    image. This is far too slow for real-time detection. The next section shows the fix.</p>
+  </div>
+
+  <!-- ==================== CONV SLIDING WINDOWS ==================== -->
+  <h2 id="conv-sliding">7. Convolutional Implementation of Sliding Windows</h2>
+
+  <p>The key observation is that sliding windows can be implemented as a single convolutional forward pass, replacing the
+  naive approach of running the classifier many times.</p>
+
+  <h3>7.1 Turning FC layers into convolutions</h3>
+
+  <p>Consider a classifier that takes \(14\times14\times3\) input, applies conv + pool, then FC + FC + softmax. The FC
+  layers can be replaced with convolutions of matching size:</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 200" role="img" aria-label="FC layers as convolutions">
+      <!-- top: FC version -->
+      <text x="30" y="25" font-weight="700" font-size="13">With fully connected layers</text>
+      <rect x="20" y="40" width="60" height="60" fill="#dcdffc" stroke="#3a63d8"/>
+      <text x="50" y="115" text-anchor="middle" font-size="10" fill="#3a63d8">14×14×3</text>
+
+      <text x="90" y="75" font-size="12">→</text>
+      <rect x="110" y="45" width="50" height="50" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="135" y="115" text-anchor="middle" font-size="10" fill="#3a63d8">CONV 5×5</text>
+      <text x="135" y="128" text-anchor="middle" font-size="10" fill="#3a63d8">10×10×16</text>
+
+      <text x="170" y="75" font-size="12">→</text>
+      <rect x="190" y="45" width="40" height="50" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="210" y="115" text-anchor="middle" font-size="10" fill="#1f9d55">MAXPOOL</text>
+      <text x="210" y="128" text-anchor="middle" font-size="10" fill="#1f9d55">5×5×16</text>
+
+      <text x="240" y="75" font-size="12">→</text>
+      <rect x="260" y="45" width="18" height="50" fill="#f3e9ff" stroke="#7a3ad6"/>
+      <text x="269" y="115" text-anchor="middle" font-size="10" fill="#7a3ad6">FC 400</text>
+
+      <text x="290" y="75" font-size="12">→</text>
+      <rect x="310" y="45" width="18" height="50" fill="#f3e9ff" stroke="#7a3ad6"/>
+      <text x="319" y="115" text-anchor="middle" font-size="10" fill="#7a3ad6">FC 400</text>
+
+      <text x="340" y="75" font-size="12">→</text>
+      <rect x="360" y="45" width="18" height="50" fill="#ffe9e9" stroke="#d64545"/>
+      <text x="369" y="115" text-anchor="middle" font-size="10" fill="#d64545">softmax 4</text>
+
+      <!-- bottom: conv version -->
+      <text x="30" y="150" font-weight="700" font-size="13">As convolutions (same computation)</text>
+      <rect x="20" y="160" width="60" height="30" fill="#dcdffc" stroke="#3a63d8"/>
+
+      <text x="90" y="180" font-size="12">→</text>
+      <rect x="110" y="165" width="50" height="20" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="135" y="200" text-anchor="middle" font-size="9" fill="#3a63d8">CONV 5×5</text>
+
+      <text x="170" y="180" font-size="12">→</text>
+      <rect x="190" y="165" width="40" height="20" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="210" y="200" text-anchor="middle" font-size="9" fill="#1f9d55">MAXPOOL</text>
+
+      <text x="240" y="180" font-size="12">→</text>
+      <rect x="260" y="165" width="18" height="20" fill="#f3e9ff" stroke="#7a3ad6"/>
+      <text x="269" y="200" text-anchor="middle" font-size="9" fill="#7a3ad6">CONV 5×5</text>
+
+      <text x="290" y="180" font-size="12">→</text>
+      <rect x="310" y="165" width="18" height="20" fill="#f3e9ff" stroke="#7a3ad6"/>
+      <text x="319" y="200" text-anchor="middle" font-size="9" fill="#7a3ad6">CONV 1×1</text>
+
+      <text x="340" y="180" font-size="12">→</text>
+      <rect x="360" y="165" width="18" height="20" fill="#ffe9e9" stroke="#d64545"/>
+      <text x="369" y="200" text-anchor="middle" font-size="9" fill="#d64545">CONV 1×1</text>
+
+      <!-- equivalence arrows -->
+      <text x="480" y="110" font-size="13" fill="#1f9d55">= same numbers</text>
+      <text x="480" y="130" font-size="13" fill="#5b6478">but conv version is more flexible</text>
+    </svg>
+    <div class="caption">Figure 7.1 — Replacing FC layers by their equivalent conv layers gives a fully convolutional
+    network. This enables the sliding-window trick below.</div>
+  </div>
+
+  <h3>7.2 The trick — one forward pass, many windows</h3>
+
+  <p>Instead of cropping patches and running the network many times, feed the <em>whole image</em> through the fully
+  convolutional network once. The output is a grid where each cell is the classification result for one sliding-window
+  position.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 300" role="img" aria-label="Fully convolutional sliding windows">
+      <!-- small input -->
+      <rect x="20" y="100" width="60" height="60" fill="#dcdffc" stroke="#3a63d8"/>
+      <text x="50" y="185" text-anchor="middle" font-size="11" fill="#3a63d8">14×14×3</text>
+      <text x="50" y="200" text-anchor="middle" font-size="10" fill="#5b6478">(a crop)</text>
+
+      <text x="95" y="130" font-size="14">→</text>
+      <rect x="115" y="100" width="50" height="60" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="140" y="185" text-anchor="middle" font-size="10" fill="#3a63d8">CONV</text>
+      <text x="140" y="200" text-anchor="middle" font-size="10" fill="#3a63d8">10×10×16</text>
+
+      <text x="175" y="130" font-size="14">→</text>
+      <rect x="195" y="100" width="50" height="60" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="220" y="185" text-anchor="middle" font-size="10" fill="#1f9d55">POOL</text>
+      <text x="220" y="200" text-anchor="middle" font-size="10" fill="#1f9d55">5×5×16</text>
+
+      <text x="255" y="130" font-size="14">→</text>
+      <rect x="275" y="100" width="50" height="60" fill="#f3e9ff" stroke="#7a3ad6"/>
+      <text x="300" y="185" text-anchor="middle" font-size="10" fill="#7a3ad6">FC→CONV</text>
+      <text x="300" y="200" text-anchor="middle" font-size="10" fill="#7a3ad6">1×1×400</text>
+
+      <text x="335" y="130" font-size="14">→</text>
+      <rect x="355" y="100" width="30" height="60" fill="#ffe9e9" stroke="#d64545"/>
+      <text x="370" y="185" text-anchor="middle" font-size="10" fill="#d64545">1×1×4</text>
+
+      <!-- big input -->
+      <text x="30" y="35" font-weight="700" font-size="13">Feed bigger image — get a grid of outputs</text>
+      <rect x="20" y="45" width="120" height="40" fill="#dcdffc" stroke="#3a63d8"/>
+      <text x="80" y="105" text-anchor="middle" font-size="11" fill="#3a63d8">16×16×3</text>
+
+      <text x="155" y="65" font-size="14">→</text>
+      <rect x="175" y="45" width="60" height="40" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="205" y="105" text-anchor="middle" font-size="10" fill="#3a63d8">12×12×16</text>
+
+      <text x="250" y="65" font-size="14">→</text>
+      <rect x="270" y="45" width="60" height="40" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="300" y="105" text-anchor="middle" font-size="10" fill="#1f9d55">6×6×16</text>
+
+      <text x="345" y="65" font-size="14">→</text>
+      <rect x="365" y="45" width="60" height="40" fill="#f3e9ff" stroke="#7a3ad6"/>
+      <text x="395" y="105" text-anchor="middle" font-size="10" fill="#7a3ad6">2×2×400</text>
+
+      <text x="440" y="65" font-size="14">→</text>
+      <rect x="460" y="45" width="60" height="40" fill="#ffe9e9" stroke="#d64545"/>
+      <text x="490" y="105" text-anchor="middle" font-size="10" fill="#d64545">2×2×4</text>
+
+      <!-- explanation -->
+      <text x="580" y="60" font-size="12">Each of the 4 cells in the</text>
+      <text x="580" y="78" font-size="12">2×2×4 output corresponds to</text>
+      <text x="580" y="96" font-size="12">one sliding-window position.</text>
+
+      <text x="580" y="130" font-size="12" fill="#1f9d55">Single forward pass replaces</text>
+      <text x="580" y="148" font-size="12" fill="#1f9d55">many separate crops!</text>
+
+      <!-- arrows down -->
+      <text x="490" y="185" text-anchor="middle" font-size="30" fill="#7a3ad6">↓</text>
+      <text x="490" y="225" text-anchor="middle" font-size="12">the 2×2×4 output grid</text>
+      <text x="490" y="245" text-anchor="middle" font-size="12">is one cell per window position</text>
+    </svg>
+    <div class="caption">Figure 7.2 — Sliding windows as a single conv pass. The big \(16\times16\times3\) input produces
+    a \(2\times2\times4\) output — each of the four output cells is the classification for one 14×14 crop of the input.</div>
+  </div>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — Why This Is a Huge Speedup</span>
+    <p>Naive sliding windows: run the classifier ~N times (N = number of positions × scales). Conv implementation: run
+    the network <em>once</em>. The number of positions is baked into the spatial dimensions of the output. This is
+    what makes real-time detection possible.</p>
+  </div>
+
+  <div class="box warn">
+    <span class="label">🔴 Warning — Coarse Localisation</span>
+    <p>Because the conv implementation outputs one prediction per window position (not per pixel), the localisation can
+    be coarse. The next section shows how to get much more accurate boxes.</p>
+  </div>
+
+  <!-- ==================== YOLO ==================== -->
+  <h2 id="yolo">8. Bounding Box Predictions — YOLO</h2>
+
+  <p>Redmon et al., 2015. YOLO = "You Only Look Once". Real-time object detection.</p>
+
+  <h3>8.1 The grid idea</h3>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — YOLO Grid</span>
+    <p>Divide the input image into an \(S \times S\) grid (e.g., \(3\times3\), or \(19\times19\) in the real paper). For
+    each grid cell, ask the network to predict a label vector \(y\) describing the object whose <em>centre</em> falls
+    inside that cell.</p>
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 700 260" role="img" aria-label="YOLO grid with label assignment">
+      <!-- grid image -->
+      <rect x="20" y="30" width="200" height="200" fill="#e0e5f0" stroke="#333"/>
+      <line x1="86.6" y1="30" x2="86.6" y2="230" stroke="#333"/>
+      <line x1="153.3" y1="30" x2="153.3" y2="230" stroke="#333"/>
+      <line x1="20" y1="96.6" x2="220" y2="96.6" stroke="#333"/>
+      <line x1="20" y1="163.3" x2="220" y2="163.3" stroke="#333"/>
+
+      <!-- two cars -->
+      <text x="70" y="130" font-size="20">🚗</text>
+      <text x="180" y="130" font-size="20">🚐</text>
+
+      <!-- bounding boxes -->
+      <rect x="50" y="100" width="40" height="40" fill="none" stroke="#d64545" stroke-width="2"/>
+      <rect x="160" y="100" width="50" height="40" fill="none" stroke="#d64545" stroke-width="2"/>
+
+      <!-- centre dots -->
+      <circle cx="70" cy="120" r="4" fill="#3a63d8"/>
+      <circle cx="185" cy="120" r="4" fill="#3a63d8"/>
+
+      <!-- labels -->
+      <text x="260" y="60" font-weight="700" font-size="14">Labels for training</text>
+      <text x="260" y="85" font-size="13">Each cell's y =</text>
+      <text x="280" y="115" font-size="13">[p_c, b_x, b_y, b_h, b_w, c₁, c₂, c₃]</text>
+      <text x="260" y="145" font-size="13">= 8 numbers</text>
+
+      <text x="260" y="185" font-size="13">Output volume: 3×3×8</text>
+      <text x="260" y="210" font-size="13">(one vector per grid cell)</text>
+    </svg>
+    <div class="caption">Figure 8.1 — YOLO partitions the image into a grid. Each cell predicts an 8-dimensional label
+    describing any object whose centre lies in that cell. In the actual YOLO paper, the grid is \(19\times19\) → output
+    volume \(19\times19\times 8\).</div>
+  </div>
+
+  <h3>8.2 Target output</h3>
+
+  <p>For a \(3\times 3\) grid with 3 classes, the target volume is \(3\times 3\times 8\). Cells with no object get
+  \(p_c = 0\); cells containing an object's centre get \(p_c = 1\) and the appropriate box + class entries.</p>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — Object Assigned to Cell with Its Centre</span>
+    <p>An object is assigned to the grid cell containing its <strong>centre</strong>. If the object spans multiple cells,
+    it still belongs to only one (the centre cell) — this avoids ambiguity during training.</p>
+  </div>
+
+  <h3>8.3 How the network is trained</h3>
+
+  <p>Build a ConvNet whose output has shape \(S\times S\times 8\) (or \(S\times S\times(5+K)\) for \(K\) classes).
+  Train with the switch-loss from §3 — the network learns \(p_c\), the box coordinates, and the class probabilities
+  simultaneously.</p>
+
+  <h3>8.4 Inference — turning the grid into boxes</h3>
+
+  <p>At test time, run the CNN once to get the \(S\times S\times 8\) output, then post-process:</p>
+
+  <ol>
+    <li>For each grid cell, read off \(p_c\) and (if \(p_c\) is above a threshold) the box + class.</li>
+    <li>Many cells might produce overlapping boxes for the same object.</li>
+    <li>Apply <strong>non-max suppression</strong> (§10) to keep only the best box per object.</li>
+  </ol>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — What YOLO Solves</span>
+    <ul>
+      <li>Faster than sliding windows — one forward pass.</li>
+      <li>More accurate boxes — regression on box coordinates.</li>
+      <li>Capable of detecting multiple objects — each grid cell is independent.</li>
+    </ul>
+  </div>
+
+  <!-- ==================== IOU ==================== -->
+  <h2 id="iou">9. Intersection over Union (IoU)</h2>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — Intersection over Union</span>
+    <p><strong>IoU</strong> measures how much two bounding boxes overlap. It is the ratio of the area of their
+    intersection to the area of their union.</p>
+    <div class="eq">
+      $$ \text{IoU} = \frac{\text{Area of overlap}}{\text{Area of union}} $$
+    </div>
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 720 260" role="img" aria-label="IoU computation between two boxes">
+      <!-- ground truth box -->
+      <rect x="80" y="60" width="180" height="140" fill="none" stroke="#7a3ad6" stroke-width="3"/>
+      <text x="170" y="240" text-anchor="middle" font-size="13" fill="#7a3ad6">Ground truth (purple)</text>
+
+      <!-- predicted box -->
+      <rect x="140" y="90" width="180" height="140" fill="none" stroke="#d64545" stroke-width="3"/>
+      <text x="230" y="255" text-anchor="middle" font-size="13" fill="#d64545">Predicted (red)</text>
+
+      <!-- intersection area hatched -->
+      <rect x="140" y="90" width="120" height="110" fill="#ffe066" fill-opacity=".5" stroke="none"/>
+
+      <!-- legend -->
+      <rect x="440" y="60" width="60" height="30" fill="#ffe066" fill-opacity=".6" stroke="#d99a00"/>
+      <text x="515" y="80" font-size="13">= Intersection</text>
+
+      <rect x="440" y="120" width="60" height="30" fill="none" stroke="#555"/>
+      <text x="515" y="140" font-size="13">= Union</text>
+
+      <text x="440" y="190" font-size="14" font-weight="700">IoU = </text>
+      <text x="510" y="190" font-size="14">intersection area / union area</text>
+      <text x="440" y="220" font-size="13">"Correct" if IoU ≥ 0.5 (convention)</text>
+    </svg>
+    <div class="caption">Figure 9.1 — IoU between a ground-truth box and a predicted box. IoU ≥ 0.5 is the conventional
+    threshold for calling a detection "correct."</div>
+  </div>
+
+  <div class="box int">
+    <span class="label">🟢 Intuition — Overlap Quality Score</span>
+    <p>If the two boxes are identical, IoU = 1. If they don't touch at all, IoU = 0. Anything in between measures how
+    well they overlap — a simple, robust way to say "did we get the box approximately right?"</p>
+  </div>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — Threshold Choice</span>
+    <p>IoU ≥ 0.5 is a common convention, but stricter tasks use 0.75 or higher. The exact threshold is a
+    hyperparameter you choose based on the application.</p>
+  </div>
+
+  <!-- ==================== NMS ==================== -->
+  <h2 id="nms">10. Non-Max Suppression (NMS)</h2>
+
+  <p>After YOLO produces many box predictions, many of them overlap heavily for the same object. NMS cleans them up.</p>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — Non-Max Suppression</span>
+    <p><strong>NMS</strong> is a post-processing step that removes redundant, overlapping detections and keeps only
+    the highest-confidence one for each object.</p>
+  </div>
+
+  <div class="box int">
+    <span class="label">🟢 Intuition — Elections</span>
+    <p>Imagine several overlapping boxes each saying "I found a car!" NMS picks the one with the highest confidence,
+    declares it the winner, and discards all other boxes that heavily overlap with it. Then it repeats with the
+    remaining boxes until no overlaps remain.</p>
+  </div>
+
+  <h3>10.1 Algorithm</h3>
+
+  <ol>
+    <li><strong>Discard low-confidence boxes</strong>: remove all boxes with \(p_c \le 0.6\) (or some threshold).</li>
+    <li>While boxes remain:
+      <ol type="a">
+        <li>Pick the box with the highest \(p_c\). Output it as a prediction.</li>
+        <li>Discard any remaining box that has IoU ≥ 0.5 with the box just picked.</li>
+      </ol>
+    </li>
+    <li>Repeat for each class separately (pedestrian, car, motorcycle, …).</li>
+  </ol>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 320" role="img" aria-label="NMS step-by-step">
+      <!-- step 1 -->
+      <text x="140" y="25" text-anchor="middle" font-weight="700" font-size="13">Step 1: many overlapping boxes</text>
+      <rect x="20" y="40" width="240" height="120" fill="#e0e5f0" stroke="#333"/>
+      <!-- car -->
+      <rect x="90" y="90" width="100" height="50" fill="none" stroke="#d64545" stroke-width="1.5"/>
+      <rect x="80" y="85" width="120" height="60" fill="none" stroke="#d64545" stroke-width="1.5"/>
+      <rect x="100" y="95" width="100" height="45" fill="none" stroke="#d64545" stroke-width="1.5"/>
+      <text x="140" y="120" text-anchor="middle" font-size="16">🚗</text>
+      <text x="230" y="80" font-size="11">0.8</text>
+      <text x="70" y="80" font-size="11">0.7</text>
+      <text x="215" y="145" font-size="11">0.6</text>
+
+      <!-- step 2 -->
+      <text x="450" y="25" text-anchor="middle" font-weight="700" font-size="13">Step 2: discard low p_c, pick max</text>
+      <rect x="330" y="40" width="240" height="120" fill="#e0e5f0" stroke="#333"/>
+      <rect x="400" y="85" width="120" height="60" fill="none" stroke="#d64545" stroke-width="3"/>
+      <text x="460" y="120" text-anchor="middle" font-size="16">🚗</text>
+      <text x="530" y="105" font-size="11" fill="#1f9d55" font-weight="700">keep! (0.8)</text>
+
+      <!-- step 3 -->
+      <text x="760" y="25" text-anchor="middle" font-weight="700" font-size="13">Step 3: suppress overlapping boxes</text>
+      <rect x="640" y="40" width="240" height="120" fill="#e0e5f0" stroke="#333"/>
+      <rect x="710" y="85" width="120" height="60" fill="none" stroke="#d64545" stroke-width="3"/>
+      <text x="770" y="120" text-anchor="middle" font-size="16">🚗</text>
+      <rect x="700" y="90" width="100" height="45" fill="none" stroke="#d64545" stroke-width="1" stroke-dasharray="3 3" opacity=".4"/>
+      <rect x="730" y="95" width="100" height="50" fill="none" stroke="#d64545" stroke-width="1" stroke-dasharray="3 3" opacity=".4"/>
+
+      <!-- bottom: final -->
+      <text x="450" y="220" text-anchor="middle" font-weight="700" font-size="14">Final result</text>
+      <rect x="330" y="240" width="240" height="70" fill="#e0e5f0" stroke="#333"/>
+      <rect x="400" y="255" width="120" height="45" fill="none" stroke="#1f9d55" stroke-width="3"/>
+      <text x="460" y="285" text-anchor="middle" font-size="16">🚗</text>
+      <text x="600" y="280" font-size="13" fill="#1f9d55">one clean box</text>
+    </svg>
+    <div class="caption">Figure 10.1 — NMS in action. Starting from many overlapping predictions, NMS keeps the
+    highest-confidence box and discards nearby ones with high IoU.</div>
+  </div>
+
+  <div class="box warn">
+    <span class="label">🔴 Warning — NMS Is Per Class</span>
+    <p>If you have multiple classes, run NMS separately for each class. Otherwise a "car" box and a "pedestrian" box
+    that happen to overlap would suppress each other — which is wrong, since they refer to different objects.</p>
+  </div>
+
+  <!-- ==================== ANCHOR BOXES ==================== -->
+  <h2 id="anchor">11. Anchor Boxes</h2>
+
+  <p>YOLO's basic grid has a problem: what if two objects fall into the same grid cell? Or what if the same cell
+  contains both a tall pedestrian and a wide car? Anchor boxes solve both issues.</p>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — Anchor Boxes</span>
+    <p><strong>Anchor boxes</strong> are pre-defined box shapes (e.g., one tall, one wide) that each grid cell predicts
+    against. Instead of outputting one object per cell, each cell outputs one object per anchor box.</p>
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 280" role="img" aria-label="Anchor boxes for a pedestrian and a car in the same cell">
+      <!-- image -->
+      <rect x="20" y="40" width="240" height="200" fill="#e0e5f0" stroke="#333"/>
+      <line x1="100" y1="40" x2="100" y2="240" stroke="#333"/>
+      <line x1="180" y1="40" x2="180" y2="240" stroke="#333"/>
+      <line x1="20" y1="107" x2="260" y2="107" stroke="#333"/>
+      <line x1="20" y1="173" x2="260" y2="173" stroke="#333"/>
+
+      <!-- pedestrian and car in same cell -->
+      <text x="140" y="145" text-anchor="middle" font-size="30">🚶</text>
+      <rect x="115" y="115" width="40" height="80" fill="none" stroke="#d64545" stroke-width="2"/>
+      <text x="140" y="230" text-anchor="middle" font-size="14">🚗</text>
+      <rect x="80" y="210" width="120" height="30" fill="none" stroke="#7a3ad6" stroke-width="2"/>
+
+      <!-- anchor box labels -->
+      <text x="400" y="60" font-weight="700" font-size="14">Anchor box 1: tall (pedestrian)</text>
+      <rect x="400" y="80" width="50" height="120" fill="none" stroke="#d64545" stroke-width="2"/>
+      <circle cx="425" cy="140" r="4" fill="#d64545"/>
+
+      <text x="400" y="230" font-weight="700" font-size="14">Anchor box 2: wide (car)</text>
+      <rect x="400" y="240" width="120" height="30" fill="none" stroke="#7a3ad6" stroke-width="2"/>
+
+      <!-- output -->
+      <text x="620" y="60" font-weight="700" font-size="14">Output per cell:</text>
+      <text x="620" y="90" font-size="13">[p_c, b_x, b_y, b_h, b_w, c₁, c₂, c₃]</text>
+      <text x="620" y="115" font-size="13">for anchor box 1</text>
+      <text x="620" y="145" font-size="13">[p_c, b_x, b_y, b_h, b_w, c₁, c₂, c₃]</text>
+      <text x="620" y="170" font-size="13">for anchor box 2</text>
+
+      <text x="620" y="215" font-size="14" fill="#1f9d55">Total: 16 numbers per cell</text>
+      <text x="620" y="240" font-size="14" fill="#1f9d55">(2 × 8 = 16)</text>
+    </svg>
+    <div class="caption">Figure 11.1 — Anchor boxes. With two anchors, each cell outputs two object predictions
+    (one per anchor). A tall pedestrian uses the tall anchor; a wide car uses the wide anchor.</div>
+  </div>
+
+  <h3>11.1 How training labels are assigned</h3>
+
+  <ol>
+    <li>Each object is assigned to the grid cell containing its <strong>centre</strong>.</li>
+    <li>Within that cell, the object is assigned to the anchor box with the <strong>highest IoU</strong> with the
+    object's shape.</li>
+    <li>The other anchor's entries are set to \(p_c = 0\) (no object).</li>
+  </ol>
+
+  <h3>11.2 How the output shape changes</h3>
+
+  <div class="eq">
+    $$ S \times S \times (n_{\text{anchors}} \times 8) $$
+  </div>
+
+  <p>For a \(3\times 3\) grid with 2 anchors and 3 classes: \(3 \times 3 \times 16\).</p>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — When to Use Anchors</span>
+    <ul>
+      <li><strong>Two objects in the same cell</strong> → anchors let the cell represent both.</li>
+      <li><strong>Objects of very different shapes</strong> → anchors specialise by shape, improving box regression.</li>
+      <li>Typically 5–10 anchors are used, chosen via k-means clustering of dataset box shapes.</li>
+    </ul>
+  </div>
+
+  <div class="box warn">
+    <span class="label">🔴 Warning — Limitations of Anchors</span>
+    <ul>
+      <li>Two objects of the <em>same</em> shape in the same cell still can't be represented (rare in practice).</li>
+      <li>You must choose anchor shapes for your dataset — generic anchors work poorly on unusual data.</li>
+    </ul>
+  </div>
+
+  <!-- ==================== YOLO FULL ==================== -->
+  <h2 id="yolo-full">12. YOLO in Full — Putting It Together</h2>
+
+  <h3>12.1 Training</h3>
+
+  <ol>
+    <li>Divide each training image into an \(S \times S\) grid (e.g., \(3\times 3\), or \(19\times 19\)).</li>
+    <li>For each cell, build the target \(y\) vector (\(8 \times n_{\text{anchors}}\) numbers).</li>
+    <li>Run a ConvNet on the input image. Its output has shape \(S \times S \times (8 \times n_{\text{anchors}})\).</li>
+    <li>Train with the switch-loss (§3) on \(p_c\), the box coordinates, and the class probabilities.</li>
+  </ol>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 200" role="img" aria-label="YOLO training pipeline">
+      <rect x="20" y="70" width="100" height="60" fill="#dcdffc" stroke="#3a63d8"/>
+      <text x="70" y="105" text-anchor="middle" font-size="11" fill="#3a63d8">100×100×3</text>
+      <text x="70" y="120" text-anchor="middle" font-size="10" fill="#5b6478">input image</text>
+
+      <text x="135" y="105" font-size="16">→</text>
+      <rect x="160" y="70" width="120" height="60" fill="#e8f1ff" stroke="#3a63d8"/>
+      <text x="220" y="105" text-anchor="middle" font-size="12" fill="#3a63d8">ConvNet</text>
+
+      <text x="295" y="105" font-size="16">→</text>
+      <rect x="320" y="70" width="120" height="60" fill="#ffe9e9" stroke="#d64545"/>
+      <text x="380" y="105" text-anchor="middle" font-size="12" fill="#d64545">3×3×16</text>
+      <text x="380" y="120" text-anchor="middle" font-size="10" fill="#d64545">output grid</text>
+
+      <text x="455" y="105" font-size="16">→</text>
+      <rect x="480" y="70" width="120" height="60" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="540" y="105" text-anchor="middle" font-size="12" fill="#1f9d55">Compare to y</text>
+      <text x="540" y="120" text-anchor="middle" font-size="10" fill="#1f9d55">(switch-loss)</text>
+
+      <text x="650" y="105" font-size="16">→</text>
+      <text x="700" y="105" font-size="13">backprop + update</text>
+    </svg>
+    <div class="caption">Figure 12.1 — YOLO training. The network outputs an \(S\times S\times (8\cdot n_{\text{anchors}})\)
+    tensor; the loss compares it against the target grid built from the ground-truth annotations.</div>
+  </div>
+
+  <h3>12.2 Inference</h3>
+
+  <ol>
+    <li>Run the network once → get \(S \times S \times 16\) output.</li>
+    <li>For each grid cell and each anchor, read off the predicted \(p_c\) and box.</li>
+    <li>Discard low-\(p_c\) predictions.</li>
+    <li>For each class, run <strong>non-max suppression</strong> to get the final boxes.</li>
+  </ol>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — Why YOLO Is Fast and Popular</span>
+    <ul>
+      <li>Single forward pass — no per-region classification.</li>
+      <li>Regression on box coordinates gives accurate localisation.</li>
+      <li>Handles multiple objects naturally via the grid.</li>
+      <li>Real-time capable (with an efficient backbone).</li>
+    </ul>
+  </div>
+
+  <!-- ==================== R-CNN ==================== -->
+  <h2 id="rcnn">13. Region Proposals — The R-CNN Family</h2>
+
+  <p>An alternative to sliding windows is to first <em>propose</em> a small set of candidate regions, then classify
+  each one.</p>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — Region Proposals</span>
+    <p><strong>Region proposals</strong> are candidate bounding boxes that are likely to contain objects, generated by a
+    separate algorithm (e.g., selective search) <em>before</em> the CNN runs. This avoids processing every possible
+    window.</p>
+  </div>
+
+  <h3>13.1 Three generations</h3>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Method</th><th>Idea</th><th>Speed</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>R-CNN</strong> (Girshick et al., 2014)</td>
+          <td>Use selective search to propose ~2000 regions. Classify each region with a CNN one at a time. Output label + refined box.</td>
+          <td>Very slow (2000 separate CNN passes per image).</td>
+        </tr>
+        <tr>
+          <td><strong>Fast R-CNN</strong></td>
+          <td>Run the CNN once on the full image. Use <em>RoI pooling</em> to extract features for each proposed region from the shared feature map. Classify + regress boxes from those features.</td>
+          <td>Much faster than R-CNN.</td>
+        </tr>
+        <tr>
+          <td><strong>Faster R-CNN</strong></td>
+          <td>Replace the hand-crafted region proposal algorithm with a <em>Region Proposal Network</em> (RPN) — a small CNN that learns to propose regions.</td>
+          <td>Fastest of the three; often real-time capable.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — R-CNN vs YOLO</span>
+    <ul>
+      <li><strong>R-CNN family</strong>: two-stage (propose then classify). Higher accuracy, slower.</li>
+      <li><strong>YOLO</strong>: one-stage (predict everything at once). Faster, slightly lower accuracy historically
+      (modern YOLO versions have closed the gap).</li>
+    </ul>
+  </div>
+
+  <div class="box extra">
+    <span class="label">📎 Additional Context — Optional Material</span>
+    <p>Andrew marks this section as <em>optional</em>. You'll be well-served knowing the three names and the high-level
+    distinction, without needing to derive the details.</p>
+  </div>
+
+  <!-- ==================== SEGMENTATION ==================== -->
+  <h2 id="segmentation">14. Semantic Segmentation vs Object Detection</h2>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — Semantic Segmentation</span>
+    <p><strong>Semantic segmentation</strong> assigns a class label to <em>every pixel</em> in the image. Instead of a
+    list of bounding boxes, the output is a segmentation map with the same spatial size as the input.</p>
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 240" role="img" aria-label="Object detection vs semantic segmentation">
+      <!-- input -->
+      <rect x="20" y="60" width="200" height="140" fill="#e0e5f0" stroke="#333"/>
+      <text x="120" y="110" text-anchor="middle" font-size="22">🚗</text>
+      <text x="120" y="150" text-anchor="middle" font-size="14">🏢 🌳</text>
+      <text x="120" y="220" text-anchor="middle" font-size="12">Input image</text>
+
+      <!-- object detection -->
+      <text x="370" y="30" text-anchor="middle" font-weight="700" font-size="14">Object detection</text>
+      <rect x="270" y="60" width="200" height="140" fill="#e0e5f0" stroke="#333"/>
+      <rect x="290" y="90" width="120" height="60" fill="none" stroke="#d64545" stroke-width="2"/>
+      <text x="350" y="125" text-anchor="middle" font-size="20">🚗</text>
+      <rect x="420" y="80" width="40" height="100" fill="none" stroke="#7a3ad6" stroke-width="2"/>
+      <rect x="420" y="100" width="40" height="40" fill="none" stroke="#1f9d55" stroke-width="2"/>
+      <text x="370" y="220" text-anchor="middle" font-size="12">Boxes + labels</text>
+
+      <!-- semantic segmentation -->
+      <text x="670" y="30" text-anchor="middle" font-weight="700" font-size="14">Semantic segmentation</text>
+      <rect x="570" y="60" width="200" height="140" stroke="#333"/>
+      <!-- coloured regions -->
+      <rect x="570" y="60" width="200" height="40" fill="#a37ae0"/>  <!-- sky/building -->
+      <rect x="570" y="100" width="80" height="100" fill="#f08050"/> <!-- car region -->
+      <rect x="650" y="100" width="120" height="60" fill="#80d080"/> <!-- tree -->
+      <rect x="650" y="160" width="120" height="40" fill="#e0e0b0"/> <!-- road -->
+      <text x="670" y="220" text-anchor="middle" font-size="12">Per-pixel class labels</text>
+    </svg>
+    <div class="caption">Figure 14.1 — Detection gives bounding boxes; semantic segmentation labels every pixel. The
+    output has the same spatial size as the input.</div>
+  </div>
+
+  <h3>14.1 Per-pixel class labels</h3>
+
+  <p>Each pixel in the image gets a class label. Classes might be, for example: {1: car, 2: building, 3: road}. The
+  network's output is a "segmentation map" with the same height and width as the input.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 720 200" role="img" aria-label="Per-pixel class labels">
+      <text x="100" y="25" text-anchor="middle" font-weight="700" font-size="13">Input image</text>
+      <rect x="20" y="40" width="160" height="140" fill="#e0e5f0" stroke="#333"/>
+      <rect x="40" y="100" width="100" height="40" fill="#f08050"/>
+      <rect x="20" y="60" width="160" height="40" fill="#a37ae0"/>
+
+      <text x="350" y="110" text-anchor="middle" font-size="14">→</text>
+
+      <text x="560" y="25" text-anchor="middle" font-weight="700" font-size="13">Segmentation map</text>
+      <rect x="480" y="40" width="160" height="140" stroke="#333"/>
+      <text x="500" y="80" font-size="12">2 2 2 2 2 2</text>
+      <text x="500" y="100" font-size="12">2 2 2 2 2 2</text>
+      <text x="500" y="120" font-size="12" fill="#f08050">1 1 1 1 1 1</text>
+      <text x="500" y="140" font-size="12" fill="#f08050">1 1 1 1 1 1</text>
+      <text x="500" y="160" font-size="12" fill="#5b6478">3 3 3 3 3 3</text>
+      <text x="500" y="180" font-size="12" fill="#5b6478">3 3 3 3 3 3</text>
+
+      <text x="360" y="185" text-anchor="middle" font-size="11">1 = car, 2 = building, 3 = road</text>
+    </svg>
+    <div class="caption">Figure 14.2 — A segmentation map stores a class label at each pixel, matching the input's
+    spatial dimensions.</div>
+  </div>
+
+  <div class="box int">
+    <span class="label">🟢 Why Semantic Segmentation?</span>
+    <ul>
+      <li><strong>Medical imaging</strong> — tumour boundaries, organ segmentation.</li>
+      <li><strong>Autonomous driving</strong> — road, car, pedestrian, sidewalk pixels.</li>
+      <li><strong>Satellite imagery</strong> — land-use classification per pixel.</li>
+    </ul>
+  </div>
+
+  <!-- ==================== TRANSPOSE CONV ==================== -->
+  <h2 id="transpose">15. Transpose Convolution</h2>
+
+  <p>Segmentation requires upsampling: the network first downsamples the image (via pooling/strided convs) to capture
+  <em>what</em> is present, then must upsample back to full resolution to say <em>where</em> each class appears.</p>
+
+  <div class="box def">
+    <span class="label">🔵 Definition — Transpose Convolution</span>
+    <p><strong>Transpose convolution</strong> (also called deconvolution or fractionally-strided convolution) is a
+    learnable upsampling operation. It takes a small input and produces a larger output — the opposite of a normal
+    convolution.</p>
+  </div>
+
+  <div class="box int">
+    <span class="label">🟢 Intuition — Reversing the Flow</span>
+    <p>A normal convolution maps a large input to a small output. A transpose convolution maps a small input to a
+    large output by <em>spreading</em> each input value into a small patch and summing overlapping contributions.</p>
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 260" role="img" aria-label="Normal conv vs transpose conv">
+      <text x="200" y="30" text-anchor="middle" font-weight="700" font-size="14">Normal Convolution</text>
+      <rect x="60" y="60" width="120" height="120" fill="#dcdffc" stroke="#3a63d8"/>
+      <text x="120" y="200" text-anchor="middle" font-size="12">large (6×6)</text>
+
+      <text x="210" y="125" font-size="20">*</text>
+
+      <rect x="240" y="100" width="40" height="40" fill="#ffe14d" stroke="#333"/>
+      <text x="260" y="160" text-anchor="middle" font-size="12">filter</text>
+
+      <text x="300" y="125" font-size="20">=</text>
+
+      <rect x="330" y="90" width="60" height="60" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="360" y="170" text-anchor="middle" font-size="12">small (4×4)</text>
+
+      <!-- transpose -->
+      <text x="650" y="30" text-anchor="middle" font-weight="700" font-size="14">Transpose Convolution</text>
+      <rect x="530" y="90" width="60" height="60" fill="#e8fbf0" stroke="#1f9d55"/>
+      <text x="560" y="170" text-anchor="middle" font-size="12">small (2×2)</text>
+
+      <text x="610" y="125" font-size="20">*</text>
+
+      <rect x="640" y="100" width="40" height="40" fill="#ffe14d" stroke="#333"/>
+      <text x="660" y="160" text-anchor="middle" font-size="12">filter</text>
+
+      <text x="700" y="125" font-size="20">=</text>
+
+      <rect x="730" y="60" width="120" height="120" fill="#dcdffc" stroke="#3a63d8"/>
+      <text x="790" y="200" text-anchor="middle" font-size="12">large (upsampled)</text>
+    </svg>
+    <div class="caption">Figure 15.1 — Normal convolution shrinks spatial size. Transpose convolution <em>grows</em> it.
+    The filter is still learned — the operation is just "inverse-shaped."</div>
+  </div>
+
+  <h3>15.1 How the numbers work</h3>
+
+  <p>Take a \(2 \times 2\) input and a \(3 \times 3\) filter, with padding \(p=1\) and stride \(s=2\). Transpose
+  convolution produces a \(4 \times 4\) output:</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 720 240" role="img" aria-label="Transpose convolution numbers">
+      <!-- input -->
+      <g font-size="16" text-anchor="middle">
+        <rect x="20" y="80" width="80" height="80" stroke="#333" fill="#e8fbf0"/>
+        <line x1="60" y1="80" x2="60" y2="160" stroke="#333"/>
+        <line x1="20" y1="120" x2="100" y2="120" stroke="#333"/>
+        <text x="40" y="107">2</text><text x="80" y="107">1</text>
+        <text x="40" y="147">3</text><text x="80" y="147">2</text>
+      </g>
+      <text x="60" y="190" text-anchor="middle" font-size="12">input (2×2)</text>
+
+      <text x="130" y="125" font-size="18">*</text>
+
+      <!-- filter -->
+      <g font-size="12" text-anchor="middle">
+        <rect x="160" y="60" width="120" height="120" fill="#ffe14d" stroke="#333"/>
+        <line x1="200" y1="60" x2="200" y2="180" stroke="#333"/>
+        <line x1="240" y1="60" x2="240" y2="180" stroke="#333"/>
+        <line x1="160" y1="100" x2="280" y2="100" stroke="#333"/>
+        <line x1="160" y1="140" x2="280" y2="140" stroke="#333"/>
+        <text x="180" y="87">1</text><text x="220" y="87">2</text><text x="260" y="87">1</text>
+        <text x="180" y="127">2</text><text x="220" y="127">0</text><text x="260" y="127">1</text>
+        <text x="180" y="167">0</text><text x="220" y="167">2</text><text x="260" y="167">1</text>
+      </g>
+      <text x="220" y="200" text-anchor="middle" font-size="12">filter (3×3)</text>
+
+      <text x="310" y="125" font-size="18">=</text>
+
+      <!-- output -->
+      <g font-size="14" text-anchor="middle">
+        <rect x="360" y="40" width="200" height="200" stroke="#333" fill="#dcdffc"/>
+        <line x1="410" y1="40" x2="410" y2="240" stroke="#333"/>
+        <line x1="460" y1="40" x2="460" y2="240" stroke="#333"/>
+        <line x1="510" y1="40" x2="510" y2="240" stroke="#333"/>
+        <line x1="360" y1="90" x2="560" y2="90" stroke="#333"/>
+        <line x1="360" y1="140" x2="560" y2="140" stroke="#333"/>
+        <line x1="360" y1="190" x2="560" y2="190" stroke="#333"/>
+        <text x="385" y="70">1</text><text x="435" y="70">2</text><text x="485" y="70">1</text><text x="535" y="70">0</text>
+        <text x="385" y="120">2</text><text x="435" y="120">4</text><text x="485" y="120">2</text><text x="535" y="120">0</text>
+        <text x="385" y="170">0</text><text x="435" y="170">2</text><text x="485" y="170">2</text><text x="535" y="170">2</text>
+        <text x="385" y="220">0</text><text x="435" y="220">3</text><text x="485" y="220">0</text><text x="535" y="220">4</text>
+      </g>
+      <text x="460" y="260" text-anchor="middle" font-size="12">output (4×4) — upsampled!</text>
+    </svg>
+    <div class="caption">Figure 15.2 — Transpose conv takes a small input and produces a larger output. Parameters:
+    filter \(f=3\), padding \(p=1\), stride \(s=2\). The numbers are illustrative.</div>
+  </div>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — What to Remember</span>
+    <ul>
+      <li>Transpose conv is a <strong>learned</strong> upsampling operation — the filter values are trained.</li>
+      <li>It's the reverse of a normal conv in terms of shape, though not a mathematical inverse.</li>
+      <li>Used in segmentation, generative models, and any architecture that needs to expand spatial dimensions.</li>
+    </ul>
+  </div>
+
+  <!-- ==================== U-NET ==================== -->
+  <h2 id="unet">16. U-Net Architecture</h2>
+
+  <p>Ronneberger et al., 2015. U-Net is a fully convolutional network designed for biomedical image segmentation.
+  Its shape — down then up — is what gives it the name (the "U").</p>
+
+  <h3>16.1 The overall architecture</h3>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 360" role="img" aria-label="U-Net architecture">
+      <!-- encoder (downsampling) -->
+      <rect x="20" y="150" width="70" height="60" fill="#4a7bd8" stroke="#333"/>
+      <text x="55" y="185" text-anchor="middle" font-size="10" fill="#fff">H×W×3</text>
+
+      <rect x="140" y="130" width="60" height="100" fill="#4a7bd8" stroke="#333"/>
+      <rect x="210" y="130" width="60" height="100" fill="#4a7bd8" stroke="#333"/>
+
+      <rect x="320" y="110" width="50" height="140" fill="#4a7bd8" stroke="#333"/>
+      <rect x="380" y="110" width="50" height="140" fill="#4a7bd8" stroke="#333"/>
+
+      <rect x="480" y="90" width="40" height="180" fill="#4a7bd8" stroke="#333"/>
+      <rect x="530" y="90" width="40" height="180" fill="#4a7bd8" stroke="#333"/>
+
+      <!-- bottleneck -->
+      <rect x="640" y="130" width="40" height="100" fill="#2c4a99" stroke="#333"/>
+
+      <!-- decoder (upsampling) -->
+      <rect x="530" y="90" width="40" height="180" fill="#5fa8d8" stroke="#333" opacity=".7"/>
+      <rect x="480" y="90" width="40" height="180" fill="#5fa8d8" stroke="#333" opacity=".7"/>
+
+      <rect x="380" y="110" width="50" height="140" fill="#5fa8d8" stroke="#333" opacity=".7"/>
+      <rect x="320" y="110" width="50" height="140" fill="#5fa8d8" stroke="#333" opacity=".7"/>
+
+      <rect x="210" y="130" width="60" height="100" fill="#5fa8d8" stroke="#333" opacity=".7"/>
+      <rect x="140" y="130" width="60" height="100" fill="#5fa8d8" stroke="#333" opacity=".7"/>
+
+      <rect x="820" y="150" width="60" height="60" fill="#dcdffc" stroke="#333"/>
+      <text x="850" y="185" text-anchor="middle" font-size="10">H×W×#classes</text>
+
+      <!-- skip connections (arcs) -->
+      <g stroke="#7a3ad6" fill="none" stroke-width="1.5">
+        <path d="M 90 160 Q 300 30 730 160"/>
+        <path d="M 200 140 Q 350 60 700 140"/>
+        <path d="M 300 120 Q 400 90 640 120"/>
+      </g>
+
+      <!-- arrows (downsampling) -->
+      <g stroke="#d64545" fill="none" stroke-width="2">
+        <path d="M 90 200 L 140 200" marker-end="url(#ar1)"/>
+      </g>
+      <defs>
+        <marker id="ar1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#d64545"/>
+        </marker>
+      </defs>
+
+      <!-- labels -->
+      <text x="55" y="240" text-anchor="middle" font-size="11" fill="#4a7bd8">Encoder</text>
+      <text x="55" y="255" text-anchor="middle" font-size="11" fill="#4a7bd8">(down)</text>
+
+      <text x="850" y="240" text-anchor="middle" font-size="11" fill="#5fa8d8">Decoder</text>
+      <text x="850" y="255" text-anchor="middle" font-size="11" fill="#5fa8d8">(up)</text>
+
+      <text x="450" y="30" text-anchor="middle" font-size="12" fill="#7a3ad6">Skip connections (transfer high-res features)</text>
+
+      <text x="450" y="320" text-anchor="middle" font-size="12" fill="#5b6478">
+        Legend: blue blocks = conv+ReLU; arrows = pooling / transpose conv
+      </text>
+    </svg>
+    <div class="caption">Figure 16.1 — U-Net. The encoder (left) down­samples via conv + pooling. The decoder (right)
+    upsamples via transpose conv. Skip connections (purple arcs) copy high-resolution features directly from encoder
+    to decoder so precise localisation is not lost.</div>
+  </div>
+
+  <h3>16.2 Why skip connections are essential</h3>
+
+  <div class="box int">
+    <span class="label">🟢 Intuition</span>
+    <p>As the encoder downsamples, it captures semantic information (e.g., "this region is a car") but loses spatial
+    precision. The decoder needs to recover <em>where</em> the car's edges are. Skip connections feed the decoder the
+    high-resolution feature maps from the encoder, so it can combine "what" (from deep features) with "where"
+    (from shallow features).</p>
+  </div>
+
+  <div class="box imp">
+    <span class="label">🟡 Important — U-Net Ingredients</span>
+    <ul>
+      <li><strong>Encoder:</strong> stack of conv + maxpool (downsampling).</li>
+      <li><strong>Bottleneck:</strong> most compressed representation.</li>
+      <li><strong>Decoder:</strong> stack of transpose conv + conv (upsampling).</li>
+      <li><strong>Skip connections:</strong> concatenate encoder features onto the corresponding decoder layer.</li>
+      <li><strong>Output:</strong> \(H \times W \times n_{\text{classes}}\) — per-pixel logits.</li>
+    </ul>
+  </div>
+
+  <div class="box warn">
+    <span class="label">🔴 Warning — Skip Connections Here Are Not ResNet's</span>
+    <p>U-Net's skip connections <em>concatenate</em> encoder feature maps onto decoder feature maps (increasing channel
+    count). ResNet's skip connections <em>add</em> the input to the block output (channel count unchanged). Different
+    operations, similar motivation: preserve gradient flow and information.</p>
+  </div>
+
+  <!-- ==================== SUMMARY ==================== -->
+  <h2 id="summary">17. Weekly Summary</h2>
+
+  <ul>
+    <li><strong>Classification + localization:</strong> predict class + one bounding box. Output vector
+    \(y = [p_c, b_x, b_y, b_h, b_w, c_1, \dots, c_K]\).</li>
+    <li><strong>Loss switch:</strong> if \(p_c = 1\), train everything; if \(p_c = 0\), only train \(p_c\).</li>
+    <li><strong>Landmark detection:</strong> output coordinates of fixed features (face, pose). Consistency across
+    examples is essential.</li>
+    <li><strong>Sliding windows:</strong> naive approach is slow. Conv implementation computes all window positions
+    in one forward pass.</li>
+    <li><strong>YOLO:</strong> divide image into a grid, each cell predicts an \(8\)-number label. Fast, one-shot
+    detection.</li>
+    <li><strong>IoU:</strong> overlap quality measure. IoU ≥ 0.5 = "correct" detection.</li>
+    <li><strong>NMS:</strong> discard redundant overlapping boxes; keep highest-confidence per object per class.</li>
+    <li><strong>Anchor boxes:</strong> allow multiple objects per grid cell and specialisation by shape.</li>
+    <li><strong>R-CNN family:</strong> propose regions then classify (R-CNN, Fast R-CNN, Faster R-CNN).</li>
+    <li><strong>Semantic segmentation:</strong> per-pixel class labels; output same size as input.</li>
+    <li><strong>Transpose convolution:</strong> learned upsampling operation.</li>
+    <li><strong>U-Net:</strong> encoder-decoder with skip connections for high-quality segmentation.</li>
+  </ul>
+
+  <!-- ==================== EQUATIONS ==================== -->
+  <h2 id="equations">18. Important Equations</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Equation</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>\(y = [p_c, b_x, b_y, b_h, b_w, c_1, \dots, c_K]^T\)</td>
+          <td>Target label for classification + localization. \(p_c\) = objectness, \(b_*\) = box coords,
+          \(c_i\) = class one-hot.</td>
+        </tr>
+        <tr>
+          <td>\(\mathcal{L}(\hat{y}, y) = \sum_i (\hat{y}_i - y_i)^2\) when \(y_1=1\)</td>
+          <td>Loss when an object is present — all 8 outputs supervised.</td>
+        </tr>
+        <tr>
+          <td>\(\mathcal{L}(\hat{y}, y) = (\hat{y}_1 - y_1)^2\) when \(y_1=0\)</td>
+          <td>Loss when no object — only \(p_c\) supervised.</td>
+        </tr>
+        <tr>
+          <td>\(\text{IoU} = \dfrac{\text{Area}(\text{Box}_1 \cap \text{Box}_2)}{\text{Area}(\text{Box}_1 \cup \text{Box}_2)}\)</td>
+          <td>Overlap measure between two boxes. Correct if ≥ 0.5 (convention).</td>
+        </tr>
+        <tr>
+          <td>\(S \times S \times (8 \times n_{\text{anchors}})\)</td>
+          <td>Output shape of a YOLO network with \(S\times S\) grid and \(n_{\text{anchors}}\) anchors.</td>
+        </tr>
+        <tr>
+          <td>\(n_H^{[out]} = \lfloor (n_H^{[in]} + 2p - f)/s \rfloor + 1\)</td>
+          <td>Conv output size (recall from Week 1).</td>
+        </tr>
+        <tr>
+          <td>\(n_H^{[out]} = (n_H^{[in]} - 1)\cdot s - 2p + f\)</td>
+          <td>Transpose conv output size (upsampling formula).</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== CONFUSIONS ==================== -->
+  <h2 id="confusions">19. Common Confusions</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Often confused</th><th>Correct distinction</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Classification vs localization vs detection</td>
+          <td>Classification = label only. Localization = label + one box. Detection = labels + multiple boxes.</td>
+        </tr>
+        <tr>
+          <td>\(p_c\) vs class probabilities \(c_i\)</td>
+          <td>\(p_c\) = "is there any object?" (binary). \(c_i\) = "which class?" (one-hot). Both are needed.</td>
+        </tr>
+        <tr>
+          <td>Landmark detection vs object detection</td>
+          <td>Landmarks = coordinates of specific features (eyes, joints). Object detection = bounding boxes around
+          whole objects.</td>
+        </tr>
+        <tr>
+          <td>Sliding windows vs YOLO</td>
+          <td>Sliding windows explicitly enumerate positions (slow). YOLO uses a fixed grid, one prediction per cell
+          (fast).</td>
+        </tr>
+        <tr>
+          <td>IoU vs accuracy</td>
+          <td>IoU measures box overlap. Accuracy measures class correctness. Both matter for detection quality.</td>
+        </tr>
+        <tr>
+          <td>NMS threshold vs confidence threshold</td>
+          <td>Confidence threshold discards low-\(p_c\) predictions. NMS threshold discards boxes overlapping the
+          chosen one.</td>
+        </tr>
+        <tr>
+          <td>Anchor box vs bounding box</td>
+          <td>An anchor box is a <em>template shape</em> (fixed). A bounding box is a <em>predicted</em> box that
+          the network regresses, relative to the anchor.</td>
+        </tr>
+        <tr>
+          <td>Object detection vs semantic segmentation</td>
+          <td>Detection = bounding boxes. Segmentation = per-pixel class labels (no boxes).</td>
+        </tr>
+        <tr>
+          <td>Transpose conv vs deconvolution</td>
+          <td>"Deconvolution" is a loose name for transpose conv — it is NOT a mathematical inverse of convolution.
+          Prefer the term "transpose convolution."</td>
+        </tr>
+        <tr>
+          <td>ResNet skip vs U-Net skip</td>
+          <td>ResNet adds (element-wise). U-Net concatenates (channels stack). Different purposes.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== REVIEW ==================== -->
+  <h2 id="review">20. Review Questions</h2>
+
+  <details>
+    <summary>Q1. What is the difference between classification with localization and object detection?</summary>
+    <div class="answer">
+      Classification with localization predicts one object's class and its bounding box. Object detection predicts
+      multiple objects, each with its own class and bounding box. Detection has a variable-length output.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q2. Write the target label vector \(y\) for classification with localization and explain each entry.</summary>
+    <div class="answer">
+      $$y = [p_c, b_x, b_y, b_h, b_w, c_1, \dots, c_K]^T$$
+      \(p_c\) — 1 if an object is present, 0 otherwise. \(b_x, b_y\) — box centre coordinates (normalised). \(b_h, b_w\)
+      — box height/width (normalised). \(c_1, \dots, c_K\) — one-hot class probabilities.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q3. Why does the loss switch on \(p_c\)?</summary>
+    <div class="answer">
+      When \(p_c=0\) (no object), the box and class values are undefined — the annotation has no meaning. We "don't
+      care" about those entries and shouldn't backpropagate through them. The switch ensures the loss only trains
+      the parts of \(y\) that actually have ground truth.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q4. What is landmark detection, and what is a common failure mode?</summary>
+    <div class="answer">
+      Landmark detection outputs \((x, y)\) coordinates of a fixed set of features (e.g., 64 face points). Common
+      failure: if annotations are inconsistent across training examples (e.g., "landmark 1" means different things in
+      different images), the network cannot learn.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q5. Why is naive sliding-window detection slow?</summary>
+    <div class="answer">
+      It requires one forward pass through the classifier for each window position (× each scale). A 1000×1000 image
+      with stride 4 and multiple scales could need tens of thousands of forward passes.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q6. How does the convolutional implementation speed up sliding windows?</summary>
+    <div class="answer">
+      By replacing fully connected layers with equivalent conv layers (e.g., a \(5\times5\times16\) FC becomes a
+      \(5\times5\) conv, and \(1\times1\) FCs become \(1\times1\) convs). Then feed the whole image through once — the
+      output is a grid where each cell represents one window position. One forward pass instead of thousands.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q7. Describe YOLO's grid approach in one sentence.</summary>
+    <div class="answer">
+      Divide the image into an \(S\times S\) grid; each cell predicts an 8-dimensional label for the object whose
+      centre lies inside that cell (or predicts \(p_c=0\) if there is no object).
+    </div>
+  </details>
+
+  <details>
+    <summary>Q8. What is IoU and why do we use it?</summary>
+    <div class="answer">
+      IoU = (area of intersection) / (area of union) between two boxes. It's a scale-invariant measure of how much
+      two boxes overlap. It lets us quantitatively say "the predicted box is approximately right" — IoU ≥ 0.5 is
+      the conventional correctness threshold.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q9. Describe the NMS algorithm.</summary>
+    <div class="answer">
+      (1) Discard all boxes with \(p_c\) below a threshold. (2) While boxes remain: pick the one with the highest
+      \(p_c\), output it, discard any remaining box with IoU ≥ 0.5 with the picked one. Repeat. Do this per class.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q10. Why does YOLO use anchor boxes?</summary>
+    <div class="answer">
+      Two reasons: (1) a single grid cell may contain two objects (e.g., pedestrian and car) — anchor boxes give
+      one prediction slot per object. (2) objects of different shapes (tall vs wide) are better modelled by
+      shape-specific anchors, improving box regression.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q11. How do you assign a ground-truth object to a grid cell + anchor box during training?</summary>
+    <div class="answer">
+      Find the grid cell containing the object's centre. Within that cell, choose the anchor box whose shape has the
+      highest IoU with the object's ground-truth box. Assign the object to that (cell, anchor) slot. Set \(p_c=1\) there
+      and \(p_c=0\) for the other anchors in the same cell.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q12. What is the difference between R-CNN, Fast R-CNN, and Faster R-CNN?</summary>
+    <div class="answer">
+      R-CNN: propose ~2000 regions with selective search, classify each with a CNN (slow). Fast R-CNN: run CNN once
+      on the full image, use RoI pooling to extract features from each proposed region (much faster). Faster R-CNN:
+      replace selective search with a learned Region Proposal Network (fastest).
+    </div>
+  </details>
+
+  <details>
+    <summary>Q13. What is the difference between object detection and semantic segmentation?</summary>
+    <div class="answer">
+      Object detection outputs a list of bounding boxes (each with a class label). Semantic segmentation outputs a
+      per-pixel class label map with the same spatial size as the input — no boxes involved.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q14. What is transpose convolution, and how does it differ from a normal convolution?</summary>
+    <div class="answer">
+      Transpose convolution is a learned upsampling operation. A normal convolution maps a large input to a small
+      output (downsampling). Transpose convolution maps a small input to a large output (upsampling), by spreading
+      each input value into a small patch and summing overlaps.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q15. Why does U-Net use skip connections?</summary>
+    <div class="answer">
+      The encoder downsamples and captures "what" (semantic content) but loses fine spatial detail. The decoder
+      upsamples and needs to recover "where." Skip connections copy high-resolution features from encoder to decoder,
+      letting the decoder combine semantic depth with spatial precision.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q16. Compute the IoU given: two boxes, one with area 100, one with area 120, and their intersection
+    is 60.</summary>
+    <div class="answer">
+      Union = 100 + 120 − 60 = 160. IoU = 60 / 160 = 0.375. Below 0.5, so this would be considered an incorrect
+      detection by the conventional threshold.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q17. A YOLO network uses a \(19\times 19\) grid, 5 anchor boxes, and 20 classes. What is the output shape?</summary>
+    <div class="answer">
+      Each cell-anchor predicts \(5 + K = 5 + 20 = 25\) values? No — for YOLO v1 style with the vector
+      \([p_c, b_x, b_y, b_h, b_w, c_1,\dots,c_K]\) that's \(5 + K\) values. With 5 anchors per cell:
+      \(19 \times 19 \times (5 \times (5+20)) = 19 \times 19 \times 125\).
+      (For the simpler 3-class example in the lectures, it's \(19\times 19\times(5\times 8) = 19\times19\times 40\).)
+    </div>
+  </details>
+
+  <details>
+    <summary>Q18. Why is \(p_c\) needed separately from the class probabilities?</summary>
+    <div class="answer">
+      Because "there is no object" is different from "the object is class X." Without \(p_c\), a cell with no object
+      would still be forced to pick some class with high probability. \(p_c\) lets the network say "nothing here."
+    </div>
+  </details>
+
+  <details>
+    <summary>Q19. Why is NMS applied separately per class?</summary>
+    <div class="answer">
+      Because a pedestrian box and a car box can overlap heavily without being duplicates of each other. NMS should
+      only suppress boxes that refer to the <em>same</em> object. Running it per class avoids suppressing a valid
+      detection just because it overlaps with a detection of another class.
+    </div>
+  </details>
+
+  <details>
+    <summary>Q20. Name two practical applications of semantic segmentation and why it helps in each.</summary>
+    <div class="answer">
+      (1) <strong>Medical imaging</strong> — segmenting tumours or organs on CT/MRI gives precise shape and boundary
+      information, which pixel-level labels preserve better than bounding boxes. (2) <strong>Autonomous driving</strong>
+      — knowing exactly which pixels are road vs sidewalk vs obstacle lets the planner decide drivable areas precisely.
+    </div>
+  </details>
+
+  <!-- ==================== SELF-TEST ==================== -->
+  <h2 id="selftest">21. Self‑Test</h2>
+
+  <h3>Easy</h3>
+
+  <details>
+    <summary>1. Which task requires multiple bounding boxes?</summary>
+    <div class="answer">Object detection.</div>
+  </details>
+
+  <details>
+    <summary>2. What does \(p_c = 0\) mean in the label vector?</summary>
+    <div class="answer">There is no object in this cell (background only).</div>
+  </details>
+
+  <details>
+    <summary>3. What does IoU ≥ 0.5 signify?</summary>
+    <div class="answer">The predicted box overlaps sufficiently with the ground truth to count as "correct" (convention).</div>
+  </details>
+
+  <details>
+    <summary>4. What does NMS stand for, and what does it do?</summary>
+    <div class="answer">Non-Max Suppression. It removes redundant overlapping detections, keeping only the
+    highest-confidence one per object per class.</div>
+  </details>
+
+  <details>
+    <summary>5. In one sentence, what is transpose convolution?</summary>
+    <div class="answer">A learned upsampling operation that maps a small input to a larger output, used in
+    segmentation and generative models.</div>
+  </details>
+
+  <h3>Medium</h3>
+
+  <details>
+    <summary>6. Why is conv implementation of sliding windows much faster than naive sliding windows?</summary>
+    <div class="answer">
+      Naive sliding windows run the classifier for every window position. The conv implementation feeds the
+      entire image once through a fully convolutional network, producing all window results at once. It reuses
+      the convolution over the overlapping regions — huge computational savings.
+    </div>
+  </details>
+
+  <details>
+    <summary>7. Explain how anchor boxes handle two objects in the same grid cell.</summary>
+    <div class="answer">
+      Each anchor box provides its own set of output predictions (including \(p_c\)). So the cell can output, e.g.,
+      \(p_c=1\) for anchor 1 (the tall pedestrian) and \(p_c=1\) for anchor 2 (the wide car), with separate box
+      and class predictions for each.
+    </div>
+  </details>
+
+  <details>
+    <summary>8. A YOLO prediction for a cell has \(p_c=0.9\), and the box overlaps with a neighbouring cell's
+    \(p_c=0.95\) box with IoU=0.7. What does NMS do?</summary>
+    <div class="answer">
+      NMS picks the higher-confidence box (0.95) as the winner, then discards the 0.9 box because its IoU with
+      the winner is 0.7 ≥ 0.5 (assuming the standard threshold).
+    </div>
+  </details>
+
+  <details>
+    <summary>9. What is the output shape of a YOLO network with a \(13\times 13\) grid, 3 anchors, and 10 classes?</summary>
+    <div class="answer">
+      Each anchor-cell predicts \([p_c, b_x, b_y, b_h, b_w, c_1, \dots, c_{10}]\) = \(5 + 10 = 15\) numbers.
+      With 3 anchors: \(13 \times 13 \times (3 \times 15) = 13 \times 13 \times 45\).
+    </div>
+  </details>
+
+  <details>
+    <summary>10. Why do we need NMS at all? Isn't one prediction per grid cell enough?</summary>
+    <div class="answer">
+      Multiple grid cells (and multiple anchors) can predict boxes around the same object — the object's centre might
+      be close to a cell boundary, so neighbouring cells also fire. NMS resolves these duplicates.
+    </div>
+  </details>
+
+  <details>
+    <summary>11. Why does U-Net's decoder use skip connections rather than just transpose convolutions?</summary>
+    <div class="answer">
+      Because pure transpose conv can recover spatial size but not the exact high-frequency detail lost during
+      downsampling. Skip connections pass those details directly from the encoder at matching resolutions,
+      yielding much sharper segmentation boundaries.
+    </div>
+  </details>
+
+  <h3>Hard</h3>
+
+  <details>
+    <summary>12. Derive how many parameters a YOLO head has for a \(3\times 3\) grid, 2 anchors, 3 classes — ignoring
+    the backbone.</summary>
+    <div class="answer">
+      The head needs to produce \(3 \times 3 \times 16 = 144\) output values. If the last layer is a \(1\times 1\)
+      conv from \(C_{\text{in}}\) channels to \(144\) channels with no bias, that's \(C_{\text{in}} \times 144\)
+      parameters. If \(C_{\text{in}} = 512\), then ~73,728 parameters for just that final layer. (Plus any bias terms
+      — typically 144 biases.)
+    </div>
+  </details>
+
+  <details>
+    <summary>13. In YOLO, why might two objects in the same cell <em>with the same anchor shape</em> be undetectable?</summary>
+    <div class="answer">
+      Because each (cell, anchor) pair provides only one prediction slot. If two objects have similar shapes and
+      both centres fall in the same cell, they'd both be assigned to the same anchor and the label would have to
+      choose one. In practice this is rare, especially with fine grids (\(19\times 19\)) and multiple anchors.
+    </div>
+  </details>
+
+  <details>
+    <summary>14. Show that a \(3\times 3\) transpose convolution with stride 2 expands a \(2\times 2\) input into a
+    \(4\times 4\) output (formula-based).</summary>
+    <div class="answer">
+      The transpose conv output size formula: \(n_{\text{out}} = (n_{\text{in}} - 1) \cdot s - 2p + f\).
+      With \(n_{\text{in}}=2, s=2, p=1, f=3\):
+      \(n_{\text{out}} = (2-1)\cdot 2 - 2(1) + 3 = 2 - 2 + 3 = 3\)? Hmm — different conventions exist. In many
+      frameworks (PyTorch/TF), the transposed conv output size is \(n_{\text{out}} = (n_{\text{in}} - 1)s - 2p + f\).
+      With \(n_{\text{in}}=2, s=2, p=1, f=3\): \(n_{\text{out}} = 1\cdot 2 - 2 + 3 = 3\). If we want 4×4, we'd use
+      \(p=0\): \(n_{\text{out}} = 2 - 0 + 3 = 5\)? Or the simplest demonstration is: \(2\times2\) input, filter \(2\times2\),
+      stride 2, no padding → output 4×4.
+    </div>
+  </details>
+
+  <details>
+    <summary>15. Describe the exact sequence of steps a modern object detector (like YOLOv3) takes from raw image
+    to final detections.</summary>
+    <div class="answer">
+      (1) Feed the image to a CNN backbone (e.g., Darknet). (2) The backbone produces feature maps at multiple scales.
+      (3) Detection heads produce \(S\times S\times(\text{anchors}\times(5+K))\) predictions at each scale.
+      (4) For each (cell, anchor), decode the predicted offsets into an actual box, apply the objectness and class
+      scores. (5) Discard low-\(p_c\) predictions. (6) Run NMS per class to remove duplicates. (7) Output the
+      final list of boxes with class labels and confidence scores.
+    </div>
+  </details>
+
+  <details>
+    <summary>16. A medical imaging team wants to outline tumours in MRI scans. Which of the two tasks in this week
+    would you recommend — object detection or semantic segmentation? Why?</summary>
+    <div class="answer">
+      Semantic segmentation. Tumour boundaries are irregular; bounding boxes would be too coarse. Per-pixel
+      labels give precise shape, area, and boundary information — critical for diagnosis and surgical planning.
+      U-Net is the standard architecture for this exact task.
+    </div>
+  </details>
+
+  <details>
+    <summary>17. If a detector has perfect bounding boxes but mislabels some cars as buses, is IoU high or low? Is NMS
+    affected?</summary>
+    <div class="answer">
+      IoU measures only box overlap — so it would be high (close to 1) because the boxes are correct. NMS is
+      also based on IoU, so its behaviour would be normal. But the detection as a whole is wrong because the class
+      label is wrong — IoU captures localisation quality, not classification quality.
+    </div>
+  </details>
+
+  <details>
+    <summary>18. Could you use NMS for regression (e.g., overlapping pose keypoints)? Why or why not?</summary>
+    <div class="answer">
+      Not directly. NMS assumes each detection has a scalar confidence and an IoU-measurable shape (a box). For
+      keypoints, there's no box and no natural IoU. Detection models that predict keypoints usually use NMS on
+      person-level boxes first, then apply keypoint regression on each surviving box.
+    </div>
+  </details>
+
+  <details>
+    <summary>19. In YOLO with anchor boxes, how would the label vector look for a cell containing both a pedestrian
+    (assigned to anchor 1) and a car (assigned to anchor 2)?</summary>
+    <div class="answer">
+      $$y = \underbrace{[1, b_x^p, b_y^p, b_h^p, b_w^p, 1, 0, 0]}_{\text{anchor 1 (pedestrian)}}, \underbrace{[1, b_x^c, b_y^c, b_h^c, b_w^c, 0, 1, 0]}_{\text{anchor 2 (car)}}$$
+      Both \(p_c\) entries are 1, and the class one-hots are placed in the correct positions for each anchor.
+    </div>
+  </details>
+
+  <details>
+    <summary>20. Explain why U-Net's "U" shape is important. What would go wrong if we just used an encoder followed
+    by a fully connected layer?</summary>
+    <div class="answer">
+      An encoder + FC gives a global classification but loses all spatial information — you can't output a
+      segmentation map. The U-shape (encoder → bottleneck → decoder) reconstructs the spatial resolution step by
+      step. Without the decoder, the output wouldn't be pixel-aligned with the input, and without skip connections,
+      boundaries would be very fuzzy.
+    </div>
+  </details>
+
+  <!-- ==================== WEEK NAV ==================== -->
+  <div class="weeknav">
+    <a href="C4_W2.html" class="nav-btn">← Previous Week</a>
+    <a href="#" title="Course 4 index">↑ Course 4 Index</a>
+    <a href="#" title="Specialization index">⌂ Specialization</a>
+    <a href="C4_W4.html" class="nav-btn">Next Week →</a>
+  </div>
+
+  </main>
+</div>
+
+<footer>
+  Notes compiled from the Deep Learning Specialization · Course 4 Week 3 · DeepLearning.AI · Andrew Ng.
+  Additional context and recreated diagrams are labelled where they appear.
+</footer>
+
+<button id="backTop" title="Back to top">↑</button>
+
+<script>
+(function(){
+  var root = document.documentElement;
+  var stored = null;
+  try { stored = localStorage.getItem('dls-theme'); } catch(e){}
+  if (stored) root.setAttribute('data-theme', stored);
+  var btn = document.getElementById('themeBtn');
+  btn.addEventListener('click', function(){
+    var cur = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', cur);
+    try { localStorage.setItem('dls-theme', cur); } catch(e){}
+  });
+})();
+
+(function(){
+  var btn = document.getElementById('backTop');
+  window.addEventListener('scroll', function(){
+    if (window.scrollY > 500) btn.classList.add('show'); else btn.classList.remove('show');
+  });
+  btn.addEventListener('click', function(){ window.scrollTo({top:0,behavior:'smooth'}); });
+})();
+
+(function(){
+  var input = document.getElementById('searchInput');
+  if (!input) return;
+  var timer = null;
+  input.addEventListener('input', function(){
+    clearTimeout(timer);
+    timer = setTimeout(function(){
+      var q = input.value.trim();
+      document.querySelectorAll('mark.hit').forEach(function(m){
+        var t = document.createTextNode(m.textContent);
+        m.parentNode.replaceChild(t, m);
+      });
+      if (!q || q.length < 2) return;
+      var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+        acceptNode: function(node){
+          if (!node.parentNode) return NodeFilter.FILTER_REJECT;
+          var tag = node.parentNode.tagName;
+          if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'MARK') return NodeFilter.FILTER_REJECT;
+          if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      });
+      var re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi');
+      var hits = 0, first = null;
+      var nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      nodes.forEach(function(node){
+        if (hits >= 200) return;
+        var v = node.nodeValue;
+        if (!re.test(v)) return;
+        re.lastIndex = 0;
+        var frag = document.createDocumentFragment();
+        var last = 0, m;
+        while ((m = re.exec(v)) !== null){
+          frag.appendChild(document.createTextNode(v.slice(last, m.index)));
+          var mk = document.createElement('mark');
+          mk.className = 'hit';
+          mk.textContent = m[0];
+          frag.appendChild(mk);
+          last = m.index + m[0].length;
+          hits++;
+          if (hits >= 200) break;
+        }
+        frag.appendChild(document.createTextNode(v.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+        if (!first) first = frag;
+      });
+      if (first && first.querySelector) {
+        var el = first.querySelector('mark.hit');
+        if (el) el.scrollIntoView({behavior:'smooth', block:'center'});
+      }
+    }, 220);
+  });
+})();
+</script>
+
+</body>
+</html>

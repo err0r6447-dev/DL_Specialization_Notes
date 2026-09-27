@@ -1,0 +1,2018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Course 5 Week 3 — Sequence Models &amp; Attention | Deep Learning Specialization Notes</title>
+
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']],
+      processEscapes: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+:root {
+  --bg: #f7f9fc; --bg-card: #ffffff; --bg-alt: #eef2f7; --bg-code: #1e293b;
+  --text: #1f2937; --text-muted: #4b5563; --heading: #0f172a;
+  --border: #dbe2ea; --border-strong: #b9c4d1;
+  --accent: #2563eb; --accent-soft: #dbeafe; --accent-hover: #1d4ed8;
+  --def-bg: #e0f2fe; --def-border: #0284c7;
+  --int-bg: #dcfce7; --int-border: #16a34a;
+  --imp-bg: #fef3c7; --imp-border: #d97706;
+  --warn-bg: #fee2e2; --warn-border: #dc2626;
+  --ex-bg: #f3e8ff; --ex-border: #9333ea;
+  --impl-bg: #ecfeff; --impl-border: #0891b2;
+  --ins-bg: #fff7ed; --ins-border: #ea580c;
+  --rem-bg: #f1f5f9; --rem-border: #64748b;
+  --cm-bg: #fce7f3; --cm-border: #db2777;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.08);
+  --radius: 10px;
+}
+[data-theme="dark"] {
+  --bg: #0f172a; --bg-card: #1e293b; --bg-alt: #172033; --bg-code: #0b1220;
+  --text: #e2e8f0; --text-muted: #94a3b8; --heading: #f1f5f9;
+  --border: #334155; --border-strong: #475569;
+  --accent: #60a5fa; --accent-soft: #1e3a8a; --accent-hover: #93c5fd;
+  --def-bg: #0c2a3d; --def-border: #38bdf8;
+  --int-bg: #0a2e1a; --int-border: #4ade80;
+  --imp-bg: #3a2a08; --imp-border: #fbbf24;
+  --warn-bg: #3a1010; --warn-border: #f87171;
+  --ex-bg: #2a1240; --ex-border: #c084fc;
+  --impl-bg: #0a2a30; --impl-border: #22d3ee;
+  --ins-bg: #3a1c08; --ins-border: #fb923c;
+  --rem-bg: #1e2637; --rem-border: #94a3b8;
+  --cm-bg: #3a0a24; --cm-border: #f472b6;
+  --shadow: 0 1px 3px rgba(0,0,0,0.4);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.5);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 70px; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 17px; line-height: 1.7;
+  background: var(--bg); color: var(--text);
+  transition: background 0.25s ease, color 0.25s ease;
+}
+.container { max-width: 900px; margin: 0 auto; padding: 0 20px 80px; }
+
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--bg-card); border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow); backdrop-filter: blur(8px);
+}
+.topbar-inner {
+  max-width: 900px; margin: 0 auto; padding: 10px 20px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.topbar-title {
+  font-weight: 700; font-size: 15px; color: var(--heading);
+  flex: 1; min-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.topbar-btn {
+  background: var(--bg-alt); color: var(--text);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 7px 12px; font-size: 14px; cursor: pointer;
+  text-decoration: none; transition: all 0.15s; white-space: nowrap;
+}
+.topbar-btn:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-hover); }
+
+.page-header {
+  margin: 40px 0 30px; padding: 30px 24px;
+  background: linear-gradient(135deg, var(--accent) 0%, #7c3aed 100%);
+  border-radius: var(--radius); color: #ffffff; box-shadow: var(--shadow-lg);
+}
+.page-header .course-tag {
+  font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase;
+  opacity: 0.9; margin-bottom: 8px;
+}
+.page-header h1 { margin: 0 0 10px; font-size: 32px; line-height: 1.25; color: #ffffff; }
+.page-header .subtitle { font-size: 16px; opacity: 0.95; margin: 0; }
+
+h2 {
+  font-size: 26px; color: var(--heading);
+  margin-top: 55px; margin-bottom: 18px; padding-bottom: 8px;
+  border-bottom: 2px solid var(--border); scroll-margin-top: 80px;
+}
+h3 { font-size: 21px; color: var(--heading); margin-top: 36px; margin-bottom: 12px; scroll-margin-top: 80px; }
+h4 { font-size: 17.5px; color: var(--heading); margin-top: 26px; margin-bottom: 10px; }
+p { margin: 12px 0; }
+ul, ol { padding-left: 26px; }
+li { margin: 6px 0; }
+a { color: var(--accent); }
+a:hover { color: var(--accent-hover); }
+
+.toc {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px 24px; margin: 30px 0; box-shadow: var(--shadow);
+}
+.toc h2 { margin-top: 0; font-size: 20px; border-bottom: none; padding-bottom: 0; }
+.toc ol { columns: 2; column-gap: 30px; margin: 12px 0 0; padding-left: 20px; }
+.toc li { break-inside: avoid; margin: 4px 0; font-size: 15px; }
+@media (max-width: 640px) { .toc ol { columns: 1; } }
+
+.callout {
+  border-radius: var(--radius); padding: 16px 20px; margin: 20px 0;
+  border-left: 5px solid; box-shadow: var(--shadow);
+}
+.callout .callout-title {
+  font-weight: 700; font-size: 14px; letter-spacing: 0.5px;
+  text-transform: uppercase; margin-bottom: 8px; display: block;
+}
+.callout p:first-of-type { margin-top: 0; }
+.callout p:last-child { margin-bottom: 0; }
+.callout.definition { background: var(--def-bg); border-color: var(--def-border); }
+.callout.definition .callout-title { color: var(--def-border); }
+.callout.intuition { background: var(--int-bg); border-color: var(--int-border); }
+.callout.intuition .callout-title { color: var(--int-border); }
+.callout.important { background: var(--imp-bg); border-color: var(--imp-border); }
+.callout.important .callout-title { color: var(--imp-border); }
+.callout.warning { background: var(--warn-bg); border-color: var(--warn-border); }
+.callout.warning .callout-title { color: var(--warn-border); }
+.callout.example { background: var(--ex-bg); border-color: var(--ex-border); }
+.callout.example .callout-title { color: var(--ex-border); }
+.callout.implementation { background: var(--impl-bg); border-color: var(--impl-border); }
+.callout.implementation .callout-title { color: var(--impl-border); }
+.callout.insight { background: var(--ins-bg); border-color: var(--ins-border); }
+.callout.insight .callout-title { color: var(--ins-border); }
+.callout.remember { background: var(--rem-bg); border-color: var(--rem-border); }
+.callout.remember .callout-title { color: var(--rem-border); }
+.callout.mistake { background: var(--cm-bg); border-color: var(--cm-border); }
+.callout.mistake .callout-title { color: var(--cm-border); }
+
+.table-wrap {
+  overflow-x: auto; margin: 20px 0;
+  border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow);
+}
+table {
+  border-collapse: collapse; width: 100%; min-width: 480px;
+  background: var(--bg-card); font-size: 15px;
+}
+th, td {
+  padding: 11px 14px; text-align: left;
+  border-bottom: 1px solid var(--border); vertical-align: top;
+}
+th { background: var(--bg-alt); font-weight: 700; color: var(--heading); font-size: 14px; letter-spacing: 0.3px; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg-alt); }
+
+pre {
+  background: var(--bg-code); color: #e2e8f0;
+  padding: 16px 20px; border-radius: var(--radius);
+  overflow-x: auto; font-size: 14px; line-height: 1.55;
+  margin: 18px 0; box-shadow: var(--shadow);
+}
+code { font-family: "SF Mono", Monaco, Menlo, Consolas, "Courier New", monospace; font-size: 0.92em; }
+p code, li code, td code {
+  background: var(--bg-alt); color: var(--accent);
+  padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border);
+}
+pre code { background: transparent; color: inherit; padding: 0; border: none; }
+.kw { color: #c792ea; } .str { color: #c3e88d; } .num { color: #f78c6c; }
+.com { color: #6b7a99; font-style: italic; } .fn { color: #82aaff; }
+
+.diagram {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; margin: 24px 0;
+  text-align: center; overflow-x: auto; box-shadow: var(--shadow);
+}
+.diagram svg { max-width: 100%; height: auto; }
+.diagram-caption {
+  margin-top: 12px; font-size: 14px; color: var(--text-muted);
+  font-style: italic; text-align: center; line-height: 1.5;
+}
+.eq { overflow-x: auto; padding: 8px 0; margin: 14px 0; }
+mjx-container { font-size: 105% !important; }
+
+details {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px 16px; margin: 10px 0;
+  box-shadow: var(--shadow); transition: all 0.15s;
+}
+details[open] { border-color: var(--accent); }
+details summary {
+  cursor: pointer; font-weight: 600; color: var(--heading);
+  list-style: none; outline: none; position: relative;
+  padding-right: 26px; font-size: 15.5px;
+}
+details summary::-webkit-details-marker { display: none; }
+details summary::after {
+  content: "▸"; position: absolute; right: 0; top: 0;
+  font-size: 14px; color: var(--accent); transition: transform 0.15s;
+}
+details[open] summary::after { content: "▾"; }
+details .answer {
+  margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border);
+  color: var(--text); font-weight: normal; font-size: 15.5px;
+}
+details .answer p:first-child { margin-top: 0; }
+details .answer p:last-child { margin-bottom: 0; }
+
+.page-nav {
+  display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between;
+  margin: 50px 0 20px; padding: 20px 0; border-top: 1px solid var(--border);
+}
+.nav-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--bg-card); color: var(--accent);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 10px 16px; font-size: 14.5px; font-weight: 600;
+  text-decoration: none; box-shadow: var(--shadow); transition: all 0.15s;
+}
+.nav-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+.nav-btn.disabled { opacity: 0.4; pointer-events: none; }
+
+#backToTop {
+  position: fixed; bottom: 24px; right: 24px; width: 46px; height: 46px;
+  border-radius: 50%; background: var(--accent); color: #ffffff;
+  border: none; font-size: 20px; cursor: pointer;
+  box-shadow: var(--shadow-lg); display: none; z-index: 90;
+  transition: transform 0.15s, background 0.15s;
+}
+#backToTop:hover { background: var(--accent-hover); transform: translateY(-2px); }
+#backToTop.visible { display: block; }
+
+.search-wrap { margin: 20px 0; position: relative; }
+.search-wrap input {
+  width: 100%; padding: 12px 16px; font-size: 15px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--bg-card); color: var(--text);
+  box-shadow: var(--shadow); outline: none; transition: border 0.15s;
+}
+.search-wrap input:focus { border-color: var(--accent); }
+.search-info { font-size: 13px; color: var(--text-muted); margin-top: 6px; padding-left: 4px; }
+.highlight { background: #fde68a; color: #1f2937; border-radius: 3px; padding: 0 2px; }
+[data-theme="dark"] .highlight { background: #a16207; color: #fef3c7; }
+
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.small-note { font-size: 13.5px; color: var(--text-muted); font-style: italic; }
+
+@media (max-width: 640px) {
+  body { font-size: 16px; }
+  .container { padding: 0 14px 60px; }
+  .page-header { padding: 22px 18px; margin-top: 22px; }
+  .page-header h1 { font-size: 24px; }
+  h2 { font-size: 22px; margin-top: 42px; }
+  h3 { font-size: 18.5px; }
+  .topbar-title { font-size: 13px; }
+  .topbar-btn { padding: 6px 10px; font-size: 13px; }
+  .callout { padding: 14px 16px; }
+  pre { padding: 12px 14px; font-size: 13px; }
+  details { padding: 10px 14px; }
+}
+@media print {
+  .topbar, #backToTop, .page-nav, .search-wrap { display: none; }
+  body { background: white; color: black; font-size: 12pt; }
+  .callout { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <span class="topbar-title">C5 · W3 — Sequence Models &amp; Attention</span>
+    <a href="#toc" class="topbar-btn">📖 TOC</a>
+    <button class="topbar-btn" id="themeToggle" title="Toggle dark mode">🌙 Dark</button>
+  </div>
+</div>
+
+<div class="container">
+
+<div class="page-header">
+  <div class="course-tag">Deep Learning Specialization · Course 5 · Week 3</div>
+  <h1>Sequence Models &amp; Attention</h1>
+  <p class="subtitle">Sequence-to-sequence models, beam search, BLEU score, attention mechanism, speech recognition, and trigger word detection.</p>
+</div>
+
+<div class="search-wrap">
+  <input type="text" id="searchInput" placeholder="🔍 Search this week's notes…" aria-label="Search notes">
+  <div class="search-info" id="searchInfo"></div>
+</div>
+
+<div class="toc" id="toc">
+  <h2>📑 Table of Contents</h2>
+  <ol>
+    <li><a href="#intro">Introduction &amp; Big Picture</a></li>
+    <li><a href="#basic-models">Sequence-to-Sequence Models</a></li>
+    <li><a href="#image-caption">Image Captioning</a></li>
+    <li><a href="#conditional">Machine Translation as a Conditional Language Model</a></li>
+    <li><a href="#most-likely">Finding the Most Likely Translation</a></li>
+    <li><a href="#greedy">Why Not Greedy Search?</a></li>
+    <li><a href="#beam">Beam Search Algorithm</a></li>
+    <li><a href="#beam-refine">Refinements to Beam Search</a></li>
+    <li><a href="#beam-width">Beam Width Discussion</a></li>
+    <li><a href="#error-analysis">Error Analysis on Beam Search</a></li>
+    <li><a href="#bleu">BLEU Score</a></li>
+    <li><a href="#attention-intuition">Attention Model Intuition</a></li>
+    <li><a href="#attention">Attention Model</a></li>
+    <li><a href="#attention-math">Computing Attention α</a></li>
+    <li><a href="#attention-examples">Attention Visualizations</a></li>
+    <li><a href="#speech">Speech Recognition</a></li>
+    <li><a href="#ctc">CTC Cost Function</a></li>
+    <li><a href="#trigger">Trigger Word Detection</a></li>
+    <li><a href="#summary">Weekly Summary</a></li>
+    <li><a href="#mustknow">Must-Know Concepts</a></li>
+    <li><a href="#equations">Important Equations</a></li>
+    <li><a href="#confusions">Common Confusions</a></li>
+    <li><a href="#review">Quick Review (Q&amp;A)</a></li>
+    <li><a href="#selftest">Self-Test</a></li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="intro">1. Introduction &amp; Big Picture</h2>
+
+<p>In Week 1 we learned the basic RNN. In Week 2 we learned how to represent words with embeddings. This week we put these pieces together to build the models that power modern machine translation, speech recognition, and image captioning: <strong>sequence-to-sequence (seq2seq) models</strong>.</p>
+
+<p>The central idea is simple: use one RNN (the <em>encoder</em>) to read the input sequence, and a second RNN (the <em>decoder</em>) to generate the output sequence. When the input is very long, we add an <strong>attention mechanism</strong> that lets the decoder look back at specific parts of the input rather than relying on a single fixed-size vector.</p>
+
+<div class="callout intuition">
+  <span class="callout-title">🟢 Intuition — Encoder + Decoder</span>
+  <p>Imagine translating a French sentence. You read the whole French sentence first and build a mental understanding of it (encoder). Then you start writing the English translation word by word (decoder), glancing back at different parts of the French sentence as needed. The <em>glancing back</em> is exactly what attention does.</p>
+</div>
+
+<p>This week covers:</p>
+<ol>
+  <li>Sequence-to-sequence (seq2seq) models and image captioning.</li>
+  <li>How to choose the <em>best</em> output sequence — beam search.</li>
+  <li>How to evaluate machine translation — BLEU score.</li>
+  <li>The attention mechanism and how it fixes long-sequence problems.</li>
+  <li>Speech recognition and the CTC loss.</li>
+  <li>Trigger word detection (e.g., "Hey Siri", "Okay Google").</li>
+</ol>
+
+<!-- ============================================================ -->
+<h2 id="basic-models">2. Sequence-to-Sequence Models</h2>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 Definition — Sequence-to-Sequence (Seq2Seq) Model</span>
+  <p>A seq2seq model is a neural network architecture that takes a sequence as input and produces a sequence as output. It is composed of two RNNs: an <strong>encoder</strong> that reads the input sequence, and a <strong>decoder</strong> that generates the output sequence.</p>
+</div>
+
+<h3>2.1 Machine Translation Example</h3>
+
+<p>Input (French): "Jane visite l'Afrique en septembre."<br>
+Output (English): "Jane is visiting Africa in September."</p>
+
+<div class="diagram">
+<svg viewBox="0 0 900 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Encoder-decoder architecture for machine translation">
+  <!-- Encoder region -->
+  <rect x="20" y="40" width="340" height="220" fill="#dcfce7" stroke="#16a34a" stroke-width="2" rx="12" opacity="0.35"/>
+  <text x="190" y="30" font-size="14" font-weight="700" text-anchor="middle" fill="#16a34a">Encoder (reads French)</text>
+
+  <!-- Encoder RNN cells -->
+  <g fill="#dcfce7" stroke="#16a34a" stroke-width="2">
+    <rect x="60" y="120" width="50" height="50" rx="6"/>
+    <rect x="150" y="120" width="50" height="50" rx="6"/>
+    <text x="270" y="150" font-size="18" text-anchor="middle" fill="#0f172a">…</text>
+    <rect x="290" y="120" width="50" height="50" rx="6"/>
+  </g>
+
+  <!-- Encoder horizontal arrows -->
+  <g stroke="#16a34a" stroke-width="2" fill="none" marker-end="url(#arrowG3)">
+    <path d="M110 145 L150 145"/>
+    <path d="M200 145 L280 145"/>
+    <path d="M340 145 L400 145"/>
+  </g>
+
+  <!-- Encoder inputs -->
+  <g font-size="12" text-anchor="middle" fill="#0f172a">
+    <text x="85" y="200">Jane</text>
+    <text x="175" y="200">visite</text>
+    <text x="315" y="200">septembre</text>
+  </g>
+  <g stroke="#16a34a" stroke-width="1.5">
+    <path d="M85 180 L85 170"/>
+    <path d="M175 180 L175 170"/>
+    <path d="M315 180 L315 170"/>
+  </g>
+
+  <!-- Initial state arrow -->
+  <text x="20" y="150" font-size="12" font-weight="700" fill="#0f172a">a⟨0⟩</text>
+  <path d="M45 145 L60 145" stroke="#0f172a" stroke-width="1.5" fill="none"/>
+
+  <!-- Decoder region -->
+  <rect x="420" y="40" width="460" height="220" fill="#e0f2fe" stroke="#2563eb" stroke-width="2" rx="12" opacity="0.35"/>
+  <text x="650" y="30" font-size="14" font-weight="700" text-anchor="middle" fill="#2563eb">Decoder (writes English)</text>
+
+  <!-- Decoder RNN cells -->
+  <g fill="#dbeafe" stroke="#2563eb" stroke-width="2">
+    <rect x="450" y="120" width="55" height="50" rx="6"/>
+    <rect x="560" y="120" width="55" height="50" rx="6"/>
+    <rect x="670" y="120" width="55" height="50" rx="6"/>
+    <text x="790" y="150" font-size="18" text-anchor="middle" fill="#0f172a">…</text>
+  </g>
+
+  <!-- Decoder horizontal arrows -->
+  <g stroke="#2563eb" stroke-width="2" fill="none" marker-end="url(#arrowB3)">
+    <path d="M505 145 L560 145"/>
+    <path d="M615 145 L670 145"/>
+    <path d="M725 145 L780 145"/>
+  </g>
+
+  <!-- Decoder inputs from previous outputs -->
+  <g stroke="#2563eb" stroke-width="1.5" stroke-dasharray="4 2" fill="none">
+    <path d="M477 175 Q 477 210, 560 210 Q 587 210, 587 175"/>
+    <path d="M587 175 Q 587 215, 697 215 Q 697 210, 697 175"/>
+  </g>
+
+  <!-- Output labels -->
+  <g font-size="12" text-anchor="middle" font-weight="700" fill="#dc2626">
+    <text x="477" y="105">ŷ⟨1⟩</text>
+    <text x="587" y="105">ŷ⟨2⟩</text>
+    <text x="697" y="105">ŷ⟨3⟩</text>
+  </g>
+  <g stroke="#dc2626" stroke-width="1.5">
+    <path d="M477 115 L477 120"/>
+    <path d="M587 115 L587 120"/>
+    <path d="M697 115 L697 120"/>
+  </g>
+
+  <!-- Output words -->
+  <g font-size="12" text-anchor="middle" fill="#0f172a">
+    <text x="477" y="220">Jane</text>
+    <text x="587" y="220">is</text>
+    <text x="697" y="220">visiting</text>
+  </g>
+
+  <!-- Encoder-to-decoder link -->
+  <path d="M400 145 L450 145" stroke="#7c3aed" stroke-width="2.5" fill="none"/>
+
+  <defs>
+    <marker id="arrowG3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <polygon points="0,0 8,3 0,6" fill="#16a34a"/>
+    </marker>
+    <marker id="arrowB3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <polygon points="0,0 8,3 0,6" fill="#2563eb"/>
+    </marker>
+  </defs>
+</svg>
+<p class="diagram-caption"><strong>Figure 1.</strong> Seq2seq model for machine translation. The encoder (green) reads the French sentence and produces a final hidden state that summarizes it. The decoder (blue) takes that summary and generates the English translation word by word, feeding each output back as the next input. The purple arrow shows the handoff from encoder to decoder.</p>
+</div>
+
+<div class="callout important">
+  <span class="callout-title">🟡 Important — Many-to-Many with Tx ≠ Ty</span>
+  <p>This is the "many-to-many with \(T_x \neq T_y\)" architecture from Week 1. The input and output sequences can have different lengths. The encoder consumes the whole input; the decoder generates the output.</p>
+</div>
+
+<div class="callout insight">
+  <span class="callout-title">💡 Insight — Origin</span>
+  <p>The seq2seq model was introduced by Sutskever, Vinyals, and Le (2014) and by Cho et al. (2014). It dramatically improved machine translation quality and is the foundation of modern translation and text summarization systems.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="image-caption">3. Image Captioning</h2>
+
+<p>A powerful application of the same seq2seq idea: given an image, produce a caption.</p>
+
+<div class="diagram">
+<svg viewBox="0 0 900 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Image captioning architecture using CNN encoder and RNN decoder">
+  <!-- Input image representation (placeholder) -->
+  <rect x="20" y="40" width="120" height="120" fill="#fde68a" stroke="#d97706" stroke-width="2" rx="6"/>
+  <text x="80" y="90" font-size="13" text-anchor="middle" fill="#0f172a">Image of a</text>
+  <text x="80" y="110" font-size="13" text-anchor="middle" fill="#0f172a">cat sitting</text>
+  <text x="80" y="130" font-size="13" text-anchor="middle" fill="#0f172a">on a chair</text>
+
+  <path d="M145 100 L200 100" stroke="#94a3b8" stroke-width="1.5" fill="none"/>
+  <polygon points="200,95 210,100 200,105" fill="#94a3b8"/>
+
+  <!-- CNN box -->
+  <rect x="215" y="60" width="100" height="80" fill="#3b82f6" stroke="#1e40af" stroke-width="2" rx="8"/>
+  <text x="265" y="95" font-size="14" text-anchor="middle" fill="#ffffff" font-weight="700">CNN</text>
+  <text x="265" y="115" font-size="11" text-anchor="middle" fill="#dbeafe">(encoder)</text>
+
+  <path d="M320 100 L370 100" stroke="#94a3b8" stroke-width="1.5" fill="none"/>
+  <polygon points="370,95 380,100 370,105" fill="#94a3b8"/>
+
+  <!-- 4096 vector -->
+  <rect x="390" y="75" width="40" height="50" fill="#e0f2fe" stroke="#0284c7" stroke-width="2" rx="4"/>
+  <text x="410" y="105" font-size="11" text-anchor="middle" font-weight="700" fill="#0f172a">4096</text>
+
+  <path d="M435 100 L490 100" stroke="#7c3aed" stroke-width="2.5" fill="none"/>
+  <polygon points="490,95 500,100 490,105" fill="#7c3aed"/>
+
+  <!-- Decoder RNN -->
+  <rect x="510" y="75" width="55" height="50" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+  <rect x="600" y="75" width="55" height="50" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+  <rect x="690" y="75" width="55" height="50" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+  <text x="785" y="105" font-size="18" text-anchor="middle" fill="#0f172a">…</text>
+
+  <g stroke="#2563eb" stroke-width="2" fill="none" marker-end="url(#arrowB4)">
+    <path d="M565 100 L600 100"/>
+    <path d="M655 100 L690 100"/>
+    <path d="M745 100 L775 100"/>
+  </g>
+
+  <!-- Outputs -->
+  <g font-size="12" text-anchor="middle" font-weight="700" fill="#dc2626">
+    <text x="537" y="60">ŷ⟨1⟩</text>
+    <text x="627" y="60">ŷ⟨2⟩</text>
+    <text x="717" y="60">ŷ⟨3⟩</text>
+  </g>
+  <g stroke="#dc2626" stroke-width="1.5">
+    <path d="M537 70 L537 75"/>
+    <path d="M627 70 L627 75"/>
+    <path d="M717 70 L717 75"/>
+  </g>
+
+  <!-- Output words -->
+  <g font-size="12" text-anchor="middle" fill="#0f172a">
+    <text x="537" y="145">A</text>
+    <text x="627" y="145">cat</text>
+    <text x="717" y="145">sitting</text>
+  </g>
+
+  <!-- Feedback arrows -->
+  <g stroke="#2563eb" stroke-width="1.5" stroke-dasharray="4 2" fill="none">
+    <path d="M537 130 Q 537 165, 627 165 Q 655 165, 655 130"/>
+    <path d="M655 130 Q 655 170, 745 170 Q 745 165, 745 130"/>
+  </g>
+
+  <!-- Reference note -->
+  <text x="450" y="230" font-size="11" text-anchor="middle" fill="#4b5563" font-style="italic">
+    Based on: Mao et al. 2014 (Deep captioning); Vinyals et al. 2014 (Show and tell); Karpathy &amp; Li 2015
+  </text>
+
+  <!-- Labels -->
+  <text x="80" y="180" font-size="12" text-anchor="middle" fill="#4b5563">input image</text>
+  <text x="265" y="155" font-size="12" text-anchor="middle" fill="#4b5563">features</text>
+  <text x="410" y="145" font-size="12" text-anchor="middle" fill="#4b5563">embedding</text>
+  <text x="650" y="200" font-size="12" text-anchor="middle" fill="#4b5563">RNN decoder (English caption)</text>
+
+  <defs>
+    <marker id="arrowB4" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <polygon points="0,0 8,3 0,6" fill="#2563eb"/>
+    </marker>
+  </defs>
+</svg>
+<p class="diagram-caption"><strong>Figure 2.</strong> Image captioning. A CNN (typically a pretrained network like VGG or ResNet) reads the image and produces a feature vector (e.g., 4096 dimensions). This replaces the encoder RNN of the translation model. The RNN decoder then generates a caption word by word: "A cat sitting on a chair."</p>
+</div>
+
+<div class="callout insight">
+  <span class="callout-title">💡 Insight — The Encoder Need Not Be an RNN</span>
+  <p>For image captioning, the "encoder" is a CNN. This shows the flexibility of the seq2seq framework: any model that turns the input into a useful representation can serve as the encoder. What matters is the decoder generates the output sequence.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="conditional">4. Machine Translation as a Conditional Language Model</h2>
+
+<p>To translate well, we need a model that estimates:</p>
+
+<div class="eq">
+$$P(y^{\langle 1 \rangle}, \dots, y^{\langle T_y \rangle} \mid x^{\langle 1 \rangle}, \dots, x^{\langle T_x \rangle})$$
+</div>
+
+<p>This is the probability of the <em>English</em> sentence \(y\) <strong>given</strong> the <em>French</em> sentence \(x\). This is called a <strong>conditional language model</strong>.</p>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 Definition — Conditional Language Model</span>
+  <p>A language model that estimates the probability of a target sequence <em>given</em> some input sequence. Whereas a plain language model learns \(P(y)\), a conditional language model learns \(P(y \mid x)\).</p>
+</div>
+
+<h3>4.1 Language Model vs Conditional Language Model</h3>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>Aspect</th><th>Language Model</th><th>Conditional Language Model</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Learns</td>
+      <td>\(P(y^{\langle 1 \rangle}, \dots, y^{\langle T_y \rangle})\)</td>
+      <td>\(P(y^{\langle 1 \rangle}, \dots, y^{\langle T_y \rangle} \mid x)\)</td>
+    </tr>
+    <tr>
+      <td>Input</td>
+      <td>Nothing (or a start token)</td>
+      <td>An input sequence \(x\) (e.g., French sentence)</td>
+    </tr>
+    <tr>
+      <td>Use case</td>
+      <td>Text generation</td>
+      <td>Machine translation, image captioning</td>
+    </tr>
+    <tr>
+      <td>Encoder</td>
+      <td>Not needed</td>
+      <td>Required to encode \(x\)</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout important">
+  <span class="callout-title">🟡 Important — Why "Conditional"?</span>
+  <p>The model is "conditioned" on \(x\). When we generate a translation, we want it to be fluent <em>and</em> faithful to the meaning of \(x\). The conditional probability \(P(y \mid x)\) captures both — high-probability \(y\) values are both fluent English and reasonable translations of \(x\).</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="most-likely">5. Finding the Most Likely Translation</h2>
+
+<p>Given a French sentence \(x\), we want to find the English sentence \(y\) that maximizes:</p>
+
+<div class="eq">
+$$\arg\max_{y^{\langle 1 \rangle}, \dots, y^{\langle T_y \rangle}} P(y^{\langle 1 \rangle}, \dots, y^{\langle T_y \rangle} \mid x)$$
+</div>
+
+<p>For "Jane visite l'Afrique en septembre," many translations are possible:</p>
+<ul>
+  <li>"Jane is visiting Africa in September." ✔️</li>
+  <li>"Jane is going to be visiting Africa in September." ✔️ (but wordy)</li>
+  <li>"In September, Jane will visit Africa." ✔️ (valid but less natural)</li>
+  <li>"Her African friend welcomed Jane in September." ❌ (wrong meaning)</li>
+</ul>
+
+<p>We want the one with the highest \(P(y \mid x)\).</p>
+
+<div class="callout warning">
+  <span class="callout-title">🔴 Warning — The Search Space Is Enormous</span>
+  <p>If the vocabulary has 10,000 words and the output is 10 words long, there are \(10{,}000^{10} = 10^{40}\) possible sentences. Enumerating them all is impossible. We need a smart search algorithm — that is exactly what <strong>beam search</strong> is for.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="greedy">6. Why Not Greedy Search?</h2>
+
+<p>A naive approach: at each step, pick the single most likely word, then move on. This is called <strong>greedy search</strong>.</p>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 Definition — Greedy Search</span>
+  <p>At each time step, pick the word with the highest probability given all previous words. Then commit to that choice and never revisit it.</p>
+</div>
+
+<h3>6.1 Why Greedy Search Fails</h3>
+
+<div class="callout example">
+  <span class="callout-title">🟣 Example — Greedy Goes Down the Wrong Path</span>
+  <p>Consider translating "Jane visite l'Afrique en septembre."</p>
+  <ul>
+    <li>Greedy: after "Jane", the model thinks "is" is most likely (60%). Picks "Jane is".</li>
+    <li>Then "going" is most likely after "Jane is" — but "Jane is going to be visiting Africa in September" is wordy.</li>
+    <li>Alternative: "Jane visits" starts with a slightly lower-probability word ("visits" instead of "is"), but leads to a much better overall sentence: "Jane visits Africa in September."</li>
+  </ul>
+  <p>Greedy commits to "Jane is" early and cannot backtrack. The final translation is worse than what a smarter search would find.</p>
+</div>
+
+<div class="callout intuition">
+  <span class="callout-title">🟢 Intuition — Greedy Lacks Foresight</span>
+  <p>Greedy search is like choosing each step of a hike by always stepping to the next highest ground. That gets you to a local peak quickly, but not to the highest mountain. You need to look ahead, or at least keep multiple options open.</p>
+</div>
+
+<div class="callout insight">
+  <span class="callout-title">💡 Insight — Greedy Is a Special Case of Beam Search</span>
+  <p>Greedy search is exactly beam search with beam width \(B = 1\). Increasing \(B\) gives better results because more candidates are kept at each step.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="beam">7. Beam Search Algorithm</h2>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 Definition — Beam Search</span>
+  <p>Beam search is a heuristic search algorithm that, at each time step, keeps the \(B\) most promising partial sequences (where \(B\) is the <em>beam width</em>). It is not guaranteed to find the globally optimal sequence, but it is much faster than exhaustive search and works very well in practice.</p>
+</div>
+
+<h3>7.1 Step-by-Step</h3>
+
+<p>Let's work through the French sentence: "Jane visite l'Afrique en septembre."</p>
+
+<div class="diagram">
+<svg viewBox="0 0 900 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Beam search step-by-step illustration with B equals 3">
+  <!-- Step 1 -->
+  <text x="60" y="30" font-size="14" font-weight="700" fill="#0f172a">Step 1</text>
+  <text x="60" y="60" font-size="12" fill="#0f172a">in</text>
+  <text x="60" y="80" font-size="12" fill="#0f172a">jane</text>
+  <text x="60" y="100" font-size="12" fill="#0f172a">september</text>
+  <text x="60" y="125" font-size="11" fill="#4b5563" font-style="italic">B = 3 top picks</text>
+
+  <!-- Step 2 -->
+  <text x="300" y="30" font-size="14" font-weight="700" fill="#0f172a">Step 2</text>
+  <g font-size="12" fill="#0f172a">
+    <text x="300" y="60">in a</text>
+    <text x="300" y="80">in september</text>
+    <text x="300" y="100">jane is</text>
+    <text x="300" y="125" font-size="11" fill="#4b5563" font-style="italic">B = 3 top pairs</text>
+  </g>
+
+  <!-- Step 3 -->
+  <text x="540" y="30" font-size="14" font-weight="700" fill="#0f172a">Step 3</text>
+  <g font-size="12" fill="#0f172a">
+    <text x="540" y="60">jane visits</text>
+    <text x="540" y="80">jane is</text>
+    <text x="540" y="100">jane is</text>
+    <text x="540" y="125" font-size="11" fill="#4b5563" font-style="italic">B = 3 top triples</text>
+  </g>
+
+  <!-- Final -->
+  <text x="750" y="30" font-size="14" font-weight="700" fill="#0f172a">Final</text>
+  <text x="750" y="60" font-size="12" fill="#0f172a">jane visits</text>
+  <text x="750" y="80" font-size="12" fill="#0f172a">africa in</text>
+  <text x="750" y="100" font-size="12" fill="#0f172a">september</text>
+
+  <!-- Arrows Step1 -> Step2 -->
+  <g stroke="#94a3b8" stroke-width="1" fill="none">
+    <path d="M120 55 L290 55"/>
+    <path d="M120 55 L290 80"/>
+    <path d="M120 55 L290 100"/>
+    <path d="M120 75 L290 55"/>
+    <path d="M120 75 L290 80"/>
+    <path d="M120 75 L290 100"/>
+    <path d="M120 95 L290 55"/>
+    <path d="M120 95 L290 80"/>
+    <path d="M120 95 L290 100"/>
+  </g>
+
+  <!-- Arrows Step2 -> Step3 -->
+  <g stroke="#94a3b8" stroke-width="1" fill="none">
+    <path d="M420 55 L530 55"/>
+    <path d="M420 75 L530 55"/>
+    <path d="M420 95 L530 55"/>
+    <path d="M420 55 L530 80"/>
+    <path d="M420 75 L530 80"/>
+    <path d="M420 95 L530 80"/>
+    <path d="M420 55 L530 100"/>
+    <path d="M420 75 L530 100"/>
+    <path d="M420 95 L530 100"/>
+  </g>
+
+  <!-- Arrows Step3 -> Final -->
+  <g stroke="#94a3b8" stroke-width="1" fill="none">
+    <path d="M660 55 L740 55"/>
+    <path d="M660 75 L740 55"/>
+    <path d="M660 95 L740 55"/>
+    <path d="M660 55 L740 80"/>
+    <path d="M660 75 L740 80"/>
+    <path d="M660 95 L740 80"/>
+    <path d="M660 55 L740 100"/>
+    <path d="M660 75 L740 100"/>
+    <path d="M660 95 L740 100"/>
+  </g>
+
+  <!-- Bottom description -->
+  <text x="450" y="180" font-size="13" text-anchor="middle" fill="#4b5563">At each step, expand every candidate with every possible next word and keep top B.</text>
+  <text x="450" y="200" font-size="13" text-anchor="middle" fill="#4b5563">Each candidate has a probability = product of per-step probabilities.</text>
+
+  <!-- RNN illustration at bottom -->
+  <g transform="translate(60, 250)">
+    <text x="0" y="-10" font-size="12" font-weight="700" fill="#0f172a">Underlying RNN (encoder + decoder):</text>
+    <rect x="0" y="0" width="45" height="45" fill="#dcfce7" stroke="#16a34a" stroke-width="2" rx="4"/>
+    <text x="22" y="28" font-size="12" text-anchor="middle" fill="#0f172a">Enc</text>
+    <path d="M45 22 L95 22" stroke="#16a34a" stroke-width="1.5" fill="none"/>
+    <rect x="95" y="0" width="45" height="45" fill="#dcfce7" stroke="#16a34a" stroke-width="2" rx="4"/>
+    <text x="117" y="28" font-size="12" text-anchor="middle" fill="#0f172a">Enc</text>
+    <path d="M140 22 L200 22" stroke="#7c3aed" stroke-width="2" fill="none"/>
+    <polygon points="200,17 210,22 200,27" fill="#7c3aed"/>
+    <rect x="210" y="0" width="45" height="45" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="4"/>
+    <text x="232" y="28" font-size="12" text-anchor="middle" fill="#0f172a">Dec</text>
+    <path d="M255 22 L305 22" stroke="#2563eb" stroke-width="1.5" fill="none"/>
+    <rect x="305" y="0" width="45" height="45" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="4"/>
+    <text x="327" y="28" font-size="12" text-anchor="middle" fill="#0f172a">Dec</text>
+    <path d="M350 22 L400 22" stroke="#2563eb" stroke-width="1.5" fill="none"/>
+    <rect x="400" y="0" width="45" height="45" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="4"/>
+    <text x="422" y="28" font-size="12" text-anchor="middle" fill="#0f172a">Dec</text>
+  </g>
+</svg>
+<p class="diagram-caption"><strong>Figure 3.</strong> Beam search with beam width \(B = 3\). At each step, the algorithm expands every current candidate by all possible next words, scores each extended sequence, and keeps the top \(B\).</p>
+</div>
+
+<h3>7.2 Detailed Algorithm</h3>
+
+<ol>
+  <li><strong>Step 1:</strong> Run the encoder on \(x\). The decoder's first step produces a probability distribution over all \(|V|\) words. Pick the top \(B\) words as the first word candidates. Store each candidate and its probability.</li>
+  <li><strong>Step 2:</strong> For each of the \(B\) candidates, run the decoder one more step to get a probability distribution for the second word. There are \(B \times |V|\) possible (word1, word2) pairs. Score each pair by the product of its two probabilities, and keep the top \(B\).</li>
+  <li><strong>Step 3 and beyond:</strong> Repeat the same expansion and pruning at each subsequent step.</li>
+  <li><strong>Stop</strong> when &lt;EOS&gt; is reached (or a max length is hit). Among the completed sequences, pick the one with the highest total probability (possibly normalized — see next section).</li>
+</ol>
+
+<div class="callout important">
+  <span class="callout-title">🟡 Important — What "Probability" Means Here</span>
+  <p>For a candidate sequence \(y^{\langle 1 \rangle}, \dots, y^{\langle t \rangle}\), its beam-search score is the product of the per-step conditional probabilities:</p>
+  <div class="eq">
+  $$P(y^{\langle 1 \rangle}, \dots, y^{\langle t \rangle} \mid x) = \prod_{k=1}^{t} P\!\left(y^{\langle k \rangle} \mid x, y^{\langle 1 \rangle}, \dots, y^{\langle k-1 \rangle}\right)$$
+  </div>
+  <p>When we write \(\log P\), it becomes a sum — which is numerically more stable and easier to compare.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="beam-refine">8. Refinements to Beam Search</h2>
+
+<h3>8.1 Length Normalization</h3>
+
+<p>Because each step multiplies by a probability ≤ 1, longer sequences automatically get lower total probabilities. This biases beam search toward short sentences — which is usually undesirable.</p>
+
+<div class="callout example">
+  <span class="callout-title">🟣 Example — Short Sequence Bias</span>
+  <p>Suppose <em>every</em> step has a very high probability of 0.9. After 5 steps, the product is \(0.9^5 \approx 0.59\). After 20 steps, it is \(0.9^{20} \approx 0.12\). A 20-word perfect translation would score lower than a 5-word imperfect one simply because it has more factors. This is unfair.</p>
+</div>
+
+<p>Fix: <strong>length normalization</strong>. Divide the log-probability by the length of the sequence (or by a softened power of it):</p>
+
+<div class="eq">
+$$\text{score}(y) = \frac{1}{T_y^{\alpha}} \sum_{t=1}^{T_y} \log P\!\left(y^{\langle t \rangle} \mid x, y^{\langle 1 \rangle}, \dots, y^{\langle t-1 \rangle}\right)$$
+</div>
+
+<p>where:</p>
+<ul>
+  <li>\(T_y\) = length of the candidate sequence \(y\).</li>
+  <li>\(\alpha\) = a hyperparameter that controls how aggressively to normalize (typically \(0.6\) or \(0.7\)).</li>
+  <li>\(\alpha = 1\): full length normalization (divide by length).</li>
+  <li>\(\alpha = 0\): no normalization (raw sum of log-probs).</li>
+</ul>
+
+<div class="callout remember">
+  <span class="callout-title">🔵 Remember — Typical Values</span>
+  <p>In production systems, \(\alpha = 0.7\) is a common choice for machine translation. It was found empirically to give a good balance between short and long sequences.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="beam-width">9. Beam Width Discussion</h2>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>Beam width \(B\)</th><th>Effect</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>\(B = 1\)</td><td>Greedy search — fastest, worst quality</td></tr>
+    <tr><td>\(B = 3\)</td><td>Reasonable small-scale setting</td></tr>
+    <tr><td>\(B = 10\)</td><td>Common for production translation</td></tr>
+    <tr><td>\(B = 100\)</td><td>Better results, ~10× slower</td></tr>
+    <tr><td>\(B = 1000\)</td><td>Diminishing returns, much slower</td></tr>
+    <tr><td>\(B = 3000\)</td><td>Rarely worth the cost</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout important">
+  <span class="callout-title">🟡 Important — Beam Search Is Not Exact</span>
+  <p>Unlike BFS (Breadth-First Search) or DFS (Depth-First Search), beam search is a <em>heuristic</em>. It runs faster but is <strong>not guaranteed</strong> to find the global maximum of \(\arg\max_y P(y \mid x)\). It only finds a good approximation. This is fine for most applications because the exact maximum is not always the best translation anyway (a slightly lower-probability sentence may sound more natural).</p>
+</div>
+
+<div class="callout insight">
+  <span class="callout-title">💡 Insight — Choosing \(B\)</span>
+  <p>For a research prototype or small dataset, \(B = 3\) is fine. For a production system, \(B = 10\) or so is common. For very high-quality needs, larger \(B\) may help, but returns diminish quickly and compute grows linearly with \(B\).</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="error-analysis">10. Error Analysis on Beam Search</h2>
+
+<p>When a model produces a bad translation, we want to know <em>why</em>: is it the RNN model's fault, or is it beam search failing to find the best output?</p>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 Definition — Error Analysis for Beam Search</span>
+  <p>A manual inspection procedure that, for each bad translation, compares the probability the model assigns to the human reference \(y^*\) against the probability it assigns to the algorithm's output \(\hat{y}\). If \(P(y^* \mid x) > P(\hat{y} \mid x)\), beam search is at fault. Otherwise, the RNN model itself is at fault.</p>
+</div>
+
+<h3>10.1 The Two Cases</h3>
+
+<div class="callout example">
+  <span class="callout-title">🟣 Example — Setting Up the Comparison</span>
+  <p>Source: "Jane visite l'Afrique en septembre."</p>
+  <ul>
+    <li>Human reference: \(y^*\) = "Jane visits Africa in September."</li>
+    <li>Algorithm output: \(\hat{y}\) = "Jane visited Africa last September."</li>
+  </ul>
+</div>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>Case</th><th>Condition</th><th>Conclusion</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Case 1</td>
+      <td>\(P(y^* \mid x) > P(\hat{y} \mid x)\)</td>
+      <td><strong>Beam search is at fault</strong> — the model <em>did</em> think \(y^*\) was more likely, but beam search failed to find it.</td>
+    </tr>
+    <tr>
+      <td>Case 2</td>
+      <td>\(P(y^* \mid x) \leq P(\hat{y} \mid x)\)</td>
+      <td><strong>RNN model is at fault</strong> — the model genuinely believes \(\hat{y}\) is more probable than \(y^*\). The model's probability estimate is wrong.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3>10.2 The Error Analysis Table</h3>
+
+<p>Collect these comparisons over many examples. The table looks like this:</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>Human</th><th>Algorithm</th><th>\(P(y^* \mid x)\)</th><th>\(P(\hat{y} \mid x)\)</th><th>At fault?</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Jane visits Africa in September.</td><td>Jane visited Africa last September.</td><td>\(2 \times 10^{-10}\)</td><td>\(1 \times 10^{-10}\)</td><td><strong>B</strong> (Beam)</td></tr>
+    <tr><td>…</td><td>…</td><td>…</td><td>…</td><td><strong>R</strong> (RNN)</td></tr>
+    <tr><td>…</td><td>…</td><td>…</td><td>…</td><td><strong>R</strong> (RNN)</td></tr>
+    <tr><td>…</td><td>…</td><td>…</td><td>…</td><td><strong>B</strong> (Beam)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>After collecting, look at the fractions:</p>
+<ul>
+  <li>If most errors are "B" (beam): increase beam width \(B\).</li>
+  <li>If most errors are "R" (RNN): you need to improve the model itself — more data, better architecture, regularization, etc.</li>
+</ul>
+
+<div class="callout insight">
+  <span class="callout-title">💡 Insight — Diagnosis Guides Action</span>
+  <p>This analysis is valuable because it tells you where to invest effort. If beam search is at fault, throwing more data at the model won't help; you just need a wider beam. If the model is at fault, widening the beam is pointless.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="bleu">11. BLEU Score</h2>
+
+<p>BLEU (<strong>B</strong>ilingual <strong>E</strong>valuation <strong>U</strong>nderstudy) is a metric for automatically evaluating machine translation (and other text generation tasks). It compares the MT output against one or more human reference translations.</p>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 Definition — BLEU Score</span>
+  <p>BLEU measures how many n-grams (contiguous chunks of \(n\) words) in the MT output appear in any of the reference translations. It ranges from 0 (no overlap) to 1 (perfect). A high BLEU score means the MT output is close to human-quality translation.</p>
+</div>
+
+<h3>11.1 The Precision Problem</h3>
+
+<p>Naive precision would be: what fraction of the MT output's words appear in a reference? This is broken.</p>
+
+<div class="callout example">
+  <span class="callout-title">🟣 Example — Why Naive Precision Fails</span>
+  <p>Reference 1: "The cat is on the mat."<br>
+  Reference 2: "There is a cat on the mat."<br>
+  MT output: "<strong>the the the the the the the</strong>"</p>
+  <p>Every word "the" appears in the references. Naive precision = 1.0. But the output is nonsense!</p>
+</div>
+
+<h3>11.2 Modified Precision</h3>
+
+<p>Fix: count each n-gram <em>at most as many times as it appears in the references</em>. This is called <strong>modified precision</strong>.</p>
+
+<div class="eq">
+$$p_n = \frac{\sum_{\text{n-grams in MT}} \min\!\left(\text{count in MT},\ \max_{\text{ref}} \text{count in ref}\right)}{\sum_{\text{n-grams in MT}} \text{count in MT}}$$
+</div>
+
+<p>In the example above, "the" appears 7 times in the MT output but at most 2 times in any single reference. So the modified count is 2, giving a modified precision of \(2/7\). Much more reasonable.</p>
+
+<h3>11.3 Combining n-gram Scores</h3>
+
+<p>BLEU combines precision for \(n = 1, 2, 3, 4\):</p>
+
+<div class="eq">
+$$\text{BLEU} = \text{BP} \cdot \exp\!\left(\frac{1}{4} \sum_{n=1}^{4} p_n\right)$$
+</div>
+
+<p>where:</p>
+<ul>
+  <li>\(p_n\) = modified precision for n-grams of size \(n\).</li>
+  <li>\(\text{BP}\) = brevity penalty (see below).</li>
+</ul>
+
+<h3>11.4 The Brevity Penalty</h3>
+
+<p>BLEU should penalize translations that are too short (since short output trivially has high precision). The brevity penalty is:</p>
+
+<div class="eq">
+$$\text{BP} = \begin{cases} 1 & \text{if MT length} > \text{reference length} \\ \exp\!\left(1 - \dfrac{\text{MT length}}{\text{reference length}}\right) & \text{otherwise} \end{cases}$$
+</div>
+
+<div class="callout important">
+  <span class="callout-title">🟡 Important — Intuition Behind BP</span>
+  <p>If the MT output is as long as or longer than the reference, no penalty (\(\text{BP} = 1\)). If it's shorter, the BP shrinks exponentially. This discourages the model from outputting very short, trivially-precise translations like "the the."</p>
+</div>
+
+<div class="callout insight">
+  <span class="callout-title">💡 Insight — BLEU in Practice</span>
+  <p>BLEU is fast, deterministic, and correlates reasonably well with human judgment for machine translation. It is the standard metric for MT research. It is not perfect — it ignores meaning, grammar, and synonyms — but it's still widely used.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="attention-intuition">12. Attention Model Intuition</h2>
+
+<p>Plain seq2seq models have a serious limitation: they force the encoder to compress the entire input into a single fixed-size vector. For long inputs (30+ words), the model forgets the beginning by the time it reaches the end.</p>
+
+<div class="diagram">
+<svg viewBox="0 0 780 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="BLEU score vs sentence length showing degradation for long sequences">
+  <!-- Axes -->
+  <line x1="80" y1="250" x2="720" y2="250" stroke="#94a3b8" stroke-width="1.5"/>
+  <line x1="80" y1="250" x2="80" y2="40" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="400" y="285" font-size="13" text-anchor="middle" fill="#4b5563">Sentence length</text>
+  <text x="30" y="150" font-size="13" text-anchor="middle" fill="#4b5563" transform="rotate(-90,30,150)">BLEU score</text>
+
+  <!-- X ticks -->
+  <g font-size="11" fill="#4b5563" text-anchor="middle">
+    <text x="140" y="270">10</text>
+    <text x="250" y="270">20</text>
+    <text x="360" y="270">30</text>
+    <text x="470" y="270">40</text>
+    <text x="580" y="270">50</text>
+    <text x="690" y="270">60</text>
+  </g>
+
+  <!-- Green curve: with attention -->
+  <path d="M80 200 Q 150 100, 250 80 Q 400 70, 720 65"
+        stroke="#16a34a" stroke-width="3" fill="none"/>
+  <text x="700" y="55" font-size="13" fill="#16a34a" font-weight="700">with attention</text>
+
+  <!-- Blue curve: without attention (degrades after 20 words) -->
+  <path d="M80 200 Q 150 100, 250 85 Q 320 100, 400 140 Q 500 200, 720 230"
+        stroke="#2563eb" stroke-width="3" fill="none"/>
+  <text x="560" y="220" font-size="13" fill="#2563eb" font-weight="700">without attention</text>
+</svg>
+<p class="diagram-caption"><strong>Figure 4.</strong> BLEU score vs sentence length. Without attention (blue curve), translation quality rises until ~20 words, then degrades sharply as the encoder cannot remember the whole sequence. With attention (green curve), quality stays high even for very long sentences.</p>
+</div>
+
+<div class="callout intuition">
+  <span class="callout-title">🟢 Intuition — A Human Translator's Gaze</span>
+  <p>When a human translates a long sentence, they don't memorize the whole thing first and then write. They glance back at the specific part of the source that corresponds to what they are about to write. Attention gives the RNN the same ability — at each step of generation, the decoder can look back at any part of the input.</p>
+</div>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 Definition — Attention Mechanism</span>
+  <p>At each decoder step \(t\), the attention mechanism computes a weighted sum of all encoder hidden states \(a^{\langle t' \rangle}\), where the weights \(\alpha^{\langle t, t' \rangle}\) represent how much attention the decoder should pay to input position \(t'\). The weighted sum is the context vector \(c^{\langle t \rangle}\), which is fed to the decoder.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="attention">13. Attention Model</h2>
+
+<p>The attention model (Bahdanau, Cho, Bengio 2014) adds a small neural network that, for each decoder step \(t\), computes weights for every encoder step \(t'\).</p>
+
+<div class="diagram">
+<svg viewBox="0 0 900 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Attention model with bidirectional encoder and attention-weighted decoder">
+  <!-- Encoder (bidirectional) -->
+  <text x="450" y="25" font-size="14" font-weight="700" text-anchor="middle" fill="#16a34a">Bidirectional encoder (green = forward, purple = backward)</text>
+
+  <g>
+    <rect x="80" y="300" width="50" height="50" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5" rx="4"/>
+    <rect x="180" y="300" width="50" height="50" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5" rx="4"/>
+    <rect x="280" y="300" width="50" height="50" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5" rx="4"/>
+    <rect x="380" y="300" width="50" height="50" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5" rx="4"/>
+    <rect x="480" y="300" width="50" height="50" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5" rx="4"/>
+    <rect x="580" y="300" width="50" height="50" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5" rx="4"/>
+    <rect x="680" y="300" width="50" height="50" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5" rx="4"/>
+  </g>
+
+  <!-- Backward arrows -->
+  <g stroke="#7c3aed" stroke-width="1.5" fill="none" marker-end="url(#arrP)">
+    <path d="M680 355 L630 355" stroke-dasharray="0"/>
+    <path d="M580 355 L530 355" stroke-dasharray="0"/>
+    <path d="M480 355 L430 355" stroke-dasharray="0"/>
+    <path d="M380 355 L330 355" stroke-dasharray="0"/>
+    <path d="M280 355 L230 355" stroke-dasharray="0"/>
+    <path d="M180 355 L130 355" stroke-dasharray="0"/>
+  </g>
+
+  <!-- Inputs -->
+  <g font-size="12" text-anchor="middle" fill="#0f172a">
+    <text x="105" y="380">jane</text>
+    <text x="205" y="380">visite</text>
+    <text x="305" y="380">l'Afrique</text>
+    <text x="405" y="380">en</text>
+    <text x="505" y="380">septembre</text>
+    <text x="605" y="380">…</text>
+    <text x="705" y="380">…</text>
+  </g>
+
+  <!-- a<t'> labels -->
+  <g font-size="11" text-anchor="middle" fill="#0f172a">
+    <text x="105" y="295">a⟨1⟩</text>
+    <text x="205" y="295">a⟨2⟩</text>
+    <text x="305" y="295">a⟨3⟩</text>
+    <text x="405" y="295">a⟨4⟩</text>
+    <text x="505" y="295">a⟨5⟩</text>
+    <text x="605" y="295">…</text>
+    <text x="705" y="295">…</text>
+  </g>
+
+  <!-- Arrows from encoder to attention layer -->
+  <g stroke="#94a3b8" stroke-width="1.2" fill="none">
+    <path d="M105 295 L105 220"/>
+    <path d="M205 295 L205 220"/>
+    <path d="M305 295 L305 220"/>
+    <path d="M405 295 L405 220"/>
+    <path d="M505 295 L505 220"/>
+    <path d="M605 295 L605 220"/>
+  </g>
+
+  <!-- Attention layer -->
+  <rect x="60" y="180" width="680" height="40" fill="#fef3c7" stroke="#d97706" stroke-width="1.5" rx="8"/>
+  <text x="400" y="205" font-size="13" text-anchor="middle" fill="#0f172a" font-weight="700">Attention weights α⟨t,t'⟩ (normalized softmax)</text>
+
+  <!-- Context vector computation -->
+  <g stroke="#dc2626" stroke-width="1.5" fill="none">
+    <path d="M400 180 L400 145"/>
+  </g>
+  <circle cx="400" cy="140" r="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+  <text x="400" y="145" font-size="14" text-anchor="middle" fill="#dc2626" font-weight="700">Σ</text>
+  <text x="450" y="140" font-size="12" fill="#dc2626" font-weight="700">= c⟨t⟩ (context)</text>
+
+  <!-- Decoder -->
+  <text x="400" y="95" font-size="13" font-weight="700" text-anchor="middle" fill="#2563eb">Decoder</text>
+
+  <g>
+    <rect x="200" y="60" width="55" height="45" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" rx="4"/>
+    <rect x="290" y="60" width="55" height="45" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" rx="4"/>
+    <rect x="380" y="60" width="55" height="45" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" rx="4"/>
+    <rect x="470" y="60" width="55" height="45" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" rx="4"/>
+    <rect x="560" y="60" width="55" height="45" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" rx="4"/>
+  </g>
+
+  <g stroke="#2563eb" stroke-width="1.5" fill="none" marker-end="url(#arrB5)">
+    <path d="M255 82 L290 82"/>
+    <path d="M345 82 L380 82"/>
+    <path d="M435 82 L470 82"/>
+    <path d="M525 82 L560 82"/>
+  </g>
+
+  <!-- Outputs -->
+  <g font-size="12" text-anchor="middle" font-weight="700" fill="#dc2626">
+    <text x="227" y="42">Jane</text>
+    <text x="317" y="42">is</text>
+    <text x="407" y="42">visiting</text>
+    <text x="497" y="42">Africa</text>
+    <text x="587" y="42">in</text>
+  </g>
+  <g stroke="#dc2626" stroke-width="1.2">
+    <path d="M227 52 L227 60"/>
+    <path d="M317 52 L317 60"/>
+    <path d="M407 52 L407 60"/>
+    <path d="M497 52 L497 60"/>
+    <path d="M587 52 L587 60"/>
+  </g>
+
+  <!-- Feedback arrows -->
+  <g stroke="#2563eb" stroke-width="1.2" stroke-dasharray="4 2" fill="none">
+    <path d="M227 105 Q 227 130, 317 130 Q 345 130, 345 105"/>
+    <path d="M345 105 Q 345 135, 435 135 Q 435 130, 435 105"/>
+  </g>
+
+  <defs>
+    <marker id="arrP" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <polygon points="0,0 8,3 0,6" fill="#7c3aed"/>
+    </marker>
+    <marker id="arrB5" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <polygon points="0,0 8,3 0,6" fill="#2563eb"/>
+    </marker>
+  </defs>
+</svg>
+<p class="diagram-caption"><strong>Figure 5.</strong> The attention model. The bidirectional encoder produces a hidden state \(a^{\langle t' \rangle}\) for every input position \(t'\). The attention layer computes weights \(\alpha^{\langle t, t' \rangle}\), which are used to form a context vector \(c^{\langle t \rangle}\) — a weighted sum of all encoder states. The decoder uses this context at each step.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="attention-math">14. Computing Attention α</h2>
+
+<p>The attention weight \(\alpha^{\langle t, t' \rangle}\) says: <em>how much should the decoder at output step \(t\) pay attention to encoder step \(t'\)?</em></p>
+
+<h3>14.1 The Computation</h3>
+
+<ol>
+  <li>Use the decoder's previous hidden state \(s^{\langle t-1 \rangle}\) and the encoder's hidden state \(a^{\langle t' \rangle}\) to compute an unnormalized score \(e^{\langle t, t' \rangle}\):
+    <div class="eq">
+    $$e^{\langle t, t' \rangle} = \text{smallNN}\!\left(s^{\langle t-1 \rangle},\ a^{\langle t' \rangle}\right)$$
+    </div>
+    The small NN is usually just a single hidden layer.
+  </li>
+  <li>Normalize the scores across all \(t'\) using a softmax:
+    <div class="eq">
+    $$\alpha^{\langle t, t' \rangle} = \frac{\exp\!\left(e^{\langle t, t' \rangle}\right)}{\sum_{t'=1}^{T_x} \exp\!\left(e^{\langle t, t' \rangle}\right)}$$
+    </div>
+    This ensures \(\sum_{t'} \alpha^{\langle t, t' \rangle} = 1\).
+  </li>
+  <li>Compute the context vector as a weighted sum:
+    <div class="eq">
+    $$c^{\langle t \rangle} = \sum_{t'=1}^{T_x} \alpha^{\langle t, t' \rangle}\, a^{\langle t' \rangle}$$
+    </div>
+  </li>
+</ol>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Symbol</th><th>Shape</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>\(a^{\langle t' \rangle}\)</td><td>\(n_a \times 1\)</td><td>Encoder hidden state at input position \(t'\)</td></tr>
+    <tr><td>\(s^{\langle t-1 \rangle}\)</td><td>\(n_s \times 1\)</td><td>Decoder hidden state at output position \(t-1\)</td></tr>
+    <tr><td>\(e^{\langle t, t' \rangle}\)</td><td>scalar</td><td>Unnormalized attention score</td></tr>
+    <tr><td>\(\alpha^{\langle t, t' \rangle}\)</td><td>scalar</td><td>Normalized attention weight</td></tr>
+    <tr><td>\(c^{\langle t \rangle}\)</td><td>\(n_a \times 1\)</td><td>Context vector for decoder step \(t\)</td></tr>
+    <tr><td>\(T_x\)</td><td>scalar</td><td>Length of input sequence</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>14.2 The Decoder Update</h3>
+
+<p>The decoder's hidden state is updated using both the previous hidden state and the context vector:</p>
+
+<div class="eq">
+$$s^{\langle t \rangle} = g\!\left( W_s \begin{bmatrix} s^{\langle t-1 \rangle} \\ c^{\langle t \rangle} \end{bmatrix} + b_s \right)$$
+</div>
+
+<p>Then the output word is predicted from \(s^{\langle t \rangle}\) as usual.</p>
+
+<div class="callout insight">
+  <span class="callout-title">💡 Insight — Computational Cost</span>
+  <p>If the input has \(T_x\) words and the output has \(T_y\) words, attention computes \(T_x \times T_y\) scores. For translation tasks where \(T_x, T_y \sim 50\), that's 2,500 scores — cheap. Attention adds a tiny overhead but dramatically improves quality for long sequences.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="attention-examples">15. Attention Visualizations</h2>
+
+<p>Attention weights \(\alpha^{\langle t, t' \rangle}\) can be visualized as a heatmap. This is useful both for debugging and for building trust in the model.</p>
+
+<div class="diagram">
+<svg viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Attention heatmap showing alignment between French and English words">
+  <!-- Grid labels -->
+  <g font-size="12" fill="#0f172a">
+    <!-- English output (rows) -->
+    <text x="80" y="55" text-anchor="end" font-weight="700">Jane</text>
+    <text x="80" y="85" text-anchor="end" font-weight="700">visits</text>
+    <text x="80" y="115" text-anchor="end" font-weight="700">Africa</text>
+    <text x="80" y="145" text-anchor="end" font-weight="700">in</text>
+    <text x="80" y="175" text-anchor="end" font-weight="700">September</text>
+    <text x="80" y="205" text-anchor="end" font-weight="700">&lt;EOS&gt;</text>
+  </g>
+
+  <!-- French input (columns) -->
+  <g font-size="12" fill="#0f172a" text-anchor="middle">
+    <text x="130" y="240">Jane</text>
+    <text x="200" y="240">visite</text>
+    <text x="280" y="240">l'Afrique</text>
+    <text x="360" y="240">en</text>
+    <text x="440" y="240">septembre</text>
+  </g>
+
+  <!-- Heatmap grid -->
+  <g>
+    <!-- Row 1: Jane -->
+    <rect x="105" y="40" width="50" height="25" fill="#1e293b" opacity="0.9"/>
+    <rect x="175" y="40" width="50" height="25" fill="#1e293b" opacity="0.1"/>
+    <rect x="255" y="40" width="50" height="25" fill="#1e293b" opacity="0.1"/>
+    <rect x="335" y="40" width="50" height="25" fill="#1e293b" opacity="0.1"/>
+    <rect x="415" y="40" width="50" height="25" fill="#1e293b" opacity="0.1"/>
+
+    <!-- Row 2: visits -->
+    <rect x="105" y="70" width="50" height="25" fill="#1e293b" opacity="0.1"/>
+    <rect x="175" y="70" width="50" height="25" fill="#1e293b" opacity="0.9"/>
+    <rect x="255" y="70" width="50" height="25" fill="#1e293b" opacity="0.2"/>
+    <rect x="335" y="70" width="50" height="25" fill="#1e293b" opacity="0.1"/>
+    <rect x="415" y="70" width="50" height="25" fill="#1e293b" opacity="0.1"/>
+
+    <!-- Row 3: Africa -->
+    <rect x="105" y="100" width="50" height="25" fill="#1e293b" opacity="0.1"/>
+    <rect x="175" y="100" width="50" height="25" fill="#1e293b" opacity="0.2"/>
+    <rect x="255" y="100" width="50" height="25" fill="#1e293b" opacity="0.9"/>
+    <rect x="335" y="100" width="50" height="25" fill="#1e293b" opacity="0.1"/>
+    <rect x="415" y="100" width="50" height="25" fill="#1e293b" opacity="0.1"/>
+
+    <!-- Row 4: in -->
+    <rect x="105" y="130" width="50" height="25" fill="#1e293b" opacity="0.1"/>
+    <rect x="175" y="130" width="50" height="25" fill="#1e293b" opacity="0.1"/>
+    <rect x="255" y="130" width="50" height="25" fill="#1e293b" opacity="0.1"/>
+    <rect x="335" y="130" width="50" height="25" fill="#1e293b" opacity="0.9"/>
+    <rect x="415" y="130" width="50" height="25" fill="#1e293b" opacity="0.1"/>
+
+    <!-- Row 5: September -->
+    <rect x="105" y="160" width="50" height="25" fill="#1e293b" opacity="0.1"/>
+    <rect x="175" y="160" width="50" height="25" fill="#1e293b" opacity="0.1"/>
+    <rect x="255" y="160" width="50" height="25" fill="#1e293b" opacity="0.1"/>
+    <rect x="335" y="160" width="50" height="25" fill="#1e293b" opacity="0.2"/>
+    <rect x="415" y="160" width="50" height="25" fill="#1e293b" opacity="0.9"/>
+
+    <!-- Row 6: EOS -->
+    <rect x="105" y="190" width="50" height="25" fill="#1e293b" opacity="0.2"/>
+    <rect x="175" y="190" width="50" height="25" fill="#1e293b" opacity="0.2"/>
+    <rect x="255" y="190" width="50" height="25" fill="#1e293b" opacity="0.2"/>
+    <rect x="335" y="190" width="50" height="25" fill="#1e293b" opacity="0.2"/>
+    <rect x="415" y="190" width="50" height="25" fill="#1e293b" opacity="0.3"/>
+  </g>
+
+  <!-- Legend -->
+  <rect x="500" y="150" width="150" height="15" fill="url(#gradient)"/>
+  <text x="500" y="145" font-size="11" fill="#4b5563">low attention</text>
+  <text x="630" y="145" font-size="11" fill="#4b5563">high attention</text>
+
+  <defs>
+    <linearGradient id="gradient">
+      <stop offset="0%" stop-color="#1e293b" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#1e293b" stop-opacity="0.9"/>
+    </linearGradient>
+  </defs>
+
+  <text x="300" y="290" font-size="13" text-anchor="middle" fill="#4b5563" font-style="italic">Each row: attention weights for one output word. Each column: one input word.</text>
+</svg>
+<p class="diagram-caption"><strong>Figure 6.</strong> Attention heatmap for "Jane visite l'Afrique en septembre" → "Jane visits Africa in September." Bright cells indicate high attention. The map shows a rough diagonal alignment: "Jane" attends to "Jane", "visits" to "visite", "Africa" to "l'Afrique", "in" to "en", "September" to "septembre." This is what we hope to see — the model has learned a soft alignment between languages.</p>
+</div>
+
+<div class="callout important">
+  <span class="callout-title">🟡 Important — Other Attention Examples</span>
+  <p>The lecture also shows date normalization examples:</p>
+  <ul>
+    <li>"July 20th 1969" → "1969-07-20" — attention reveals which input words map to each output character.</li>
+    <li>"23 April, 1564" → "1564-04-23" — same idea, with the year moving to the front of the output.</li>
+  </ul>
+  <p>These demonstrate that attention works for arbitrary sequence-to-sequence alignment, not just translation.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="speech">16. Speech Recognition</h2>
+
+<p>Speech recognition is the task of converting an audio waveform into text.</p>
+
+<div class="diagram">
+<svg viewBox="0 0 780 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Speech recognition pipeline">
+  <!-- Audio waveform -->
+  <text x="100" y="25" font-size="14" font-weight="700" text-anchor="middle" fill="#0f172a">x (audio clip)</text>
+  <rect x="30" y="40" width="200" height="80" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5" rx="6"/>
+  <path d="M40 80 Q 60 60, 70 80 T 90 80 T 110 80 T 130 80 T 150 80 T 170 80 T 190 80 T 210 80"
+        stroke="#0284c7" stroke-width="2" fill="none"/>
+
+  <!-- Arrow -->
+  <path d="M235 80 L310 80" stroke="#94a3b8" stroke-width="2" fill="none"/>
+  <polygon points="310,75 320,80 310,85" fill="#94a3b8"/>
+
+  <!-- Spectrogram -->
+  <text x="450" y="25" font-size="14" font-weight="700" text-anchor="middle" fill="#0f172a">spectrogram</text>
+  <rect x="330" y="40" width="240" height="80" fill="#fef3c7" stroke="#d97706" stroke-width="1.5" rx="6"/>
+  <!-- Some spectrogram-like cells -->
+  <g fill="#dc2626" opacity="0.6">
+    <rect x="340" y="55" width="10" height="60"/>
+    <rect x="360" y="70" width="10" height="45"/>
+    <rect x="380" y="60" width="10" height="55"/>
+    <rect x="400" y="80" width="10" height="35"/>
+    <rect x="420" y="65" width="10" height="50"/>
+    <rect x="440" y="75" width="10" height="40"/>
+    <rect x="460" y="55" width="10" height="60"/>
+    <rect x="480" y="70" width="10" height="45"/>
+    <rect x="500" y="60" width="10" height="55"/>
+    <rect x="520" y="80" width="10" height="35"/>
+    <rect x="540" y="65" width="10" height="50"/>
+  </g>
+
+  <!-- Arrow -->
+  <path d="M575 80 L650 80" stroke="#94a3b8" stroke-width="2" fill="none"/>
+  <polygon points="650,75 660,80 650,85" fill="#94a3b8"/>
+
+  <!-- Transcript -->
+  <text x="695" y="25" font-size="14" font-weight="700" text-anchor="middle" fill="#0f172a">y (transcript)</text>
+  <rect x="670" y="40" width="95" height="80" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5" rx="6"/>
+  <text x="717" y="85" font-size="13" text-anchor="middle" fill="#0f172a">"the quick</text>
+  <text x="717" y="105" font-size="13" text-anchor="middle" fill="#0f172a">brown fox"</text>
+
+  <!-- Alternative representation: phonemes -->
+  <text x="390" y="180" font-size="13" text-anchor="middle" fill="#4b5563">Alternatively: y = sequence of phonemes</text>
+  <text x="390" y="200" font-size="12" text-anchor="middle" fill="#4b5563">e.g., "de"  "kwik"  "braun"</text>
+
+  <!-- Dataset sizes -->
+  <text x="390" y="240" font-size="12" text-anchor="middle" fill="#4b5563" font-style="italic">
+    Speech datasets: 300 hours → 3000 hours → 100,000 hours
+  </text>
+</svg>
+<p class="diagram-caption"><strong>Figure 7.</strong> Speech recognition. The input \(x\) is an audio clip (raw waveform) or its spectrogram representation. The output \(y\) is the transcript (a sequence of words). Some systems use an intermediate representation of phonemes before producing words. Modern datasets range from 300 hours (small) to 100,000 hours (large).</p>
+</div>
+
+<div class="callout example">
+  <span class="callout-title">🟣 Example — Input and Output</span>
+  <p>Input: an audio clip of someone saying "the quick brown fox."</p>
+  <p>Output: the string "the quick brown fox."</p>
+  <p>Challenges: the audio may be 1000 time steps (samples), while the transcript is only 4 words. Aligning them is not obvious — which is why we need the CTC loss.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="ctc">17. CTC Cost Function</h2>
+
+<p>Speech recognition has a tricky alignment problem: an audio clip might be 1000 time steps long, but the transcript might be only a few words. We cannot simply say "the first 250 samples correspond to 'the'." The lengths are wildly different, and the alignment is unknown.</p>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 Definition — CTC (Connectionist Temporal Classification)</span>
+  <p>CTC is a loss function for sequence-to-sequence tasks where the input and output lengths differ and the alignment is unknown. It introduces a special "blank" token and collapses repeated characters that are not separated by a blank. This allows the RNN to output a character at every input time step, and the loss automatically figures out the right alignment.</p>
+</div>
+
+<h3>17.1 The Blank Token and Collapse Rule</h3>
+
+<p>The RNN outputs a character (or blank) at every input time step. Then we apply the collapse rule:</p>
+
+<blockquote style="border-left: 3px solid var(--accent); padding-left: 12px; margin: 10px 0; font-style: italic;">
+  Collapse repeated characters <em>not</em> separated by a blank. Remove all blanks.
+</blockquote>
+
+<div class="callout example">
+  <span class="callout-title">🟣 Example — CTC Collapse</span>
+  <p>Suppose the RNN outputs a sequence of 19 characters:</p>
+  <p><code>t t t _ h _ e e e _ _ _ _ _ q q q _ _</code></p>
+  <p>where <code>_</code> is the blank token. Applying the collapse rule:</p>
+  <ul>
+    <li><code>t t t</code> → <code>t</code> (consecutive t's collapse)</li>
+    <li><code>_</code> → remove</li>
+    <li><code>h</code> → <code>h</code></li>
+    <li><code>_</code> → remove</li>
+    <li><code>e e e</code> → <code>e</code></li>
+    <li><code>_ _ _ _ _</code> → remove</li>
+    <li><code>q q q</code> → <code>q</code></li>
+    <li><code>_ _</code> → remove</li>
+  </ul>
+  <p>Result: <code>t h e q ...</code> — which spells "the q..." starting the phrase "the quick brown fox."</p>
+</div>
+
+<div class="callout insight">
+  <span class="callout-title">💡 Insight — Why Blanks Matter</span>
+  <p>Without a blank, "thee" would collapse to "the" — we couldn't distinguish "the" from "thee". The blank token lets us separate repeated characters. For example, <code>h _ e _ e</code> collapses to <code>hee</code>, while <code>h e e</code> collapses to <code>he</code>. This gives the model the expressive power to represent repeated letters.</p>
+</div>
+
+<h3>17.2 The CTC Loss</h3>
+
+<p>The CTC loss marginalizes over all alignments that collapse to the correct output. It computes the probability that the RNN's per-time-step outputs collapse to the target sequence, summed over all possible valid alignments.</p>
+
+<div class="callout warning">
+  <span class="callout-title">🔴 Warning — The Full CTC Loss is Complex</span>
+  <p>The full mathematical derivation of the CTC loss is beyond the scope of this course. What matters for our purposes is:</p>
+  <ul>
+    <li>The RNN outputs a distribution over (characters + blank) at every time step.</li>
+    <li>CTC defines a loss that sums over all alignments consistent with the target.</li>
+    <li>This allows training without ever specifying the exact alignment.</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="trigger">18. Trigger Word Detection</h2>
+
+<p>Trigger word detection is the task of detecting a specific wake word in an audio stream — like "Hey Siri," "Okay Google," or "Alexa."</p>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 Definition — Trigger Word Detection</span>
+  <p>Given a continuous audio stream, detect when a specific trigger phrase (e.g., "Hey Siri") has been spoken. When detected, the system activates a downstream action (e.g., start listening for a command).</p>
+</div>
+
+<div class="callout example">
+  <span class="callout-title">🟣 Example — Real Products</span>
+  <ul>
+    <li>Amazon Echo → "Alexa"</li>
+    <li>Baidu DuerOS → "Xiaodunihao"</li>
+    <li>Apple Siri → "Hey Siri"</li>
+    <li>Google Home → "Okay Google"</li>
+  </ul>
+</div>
+
+<h3>18.1 The Algorithm</h3>
+
+<p>The system processes an audio stream with an RNN. At each time step, the RNN outputs:</p>
+<ul>
+  <li>\(y = 0\): no trigger word has just been said</li>
+  <li>\(y = 1\): the trigger word was said just before this time step</li>
+</ul>
+
+<div class="diagram">
+<svg viewBox="0 0 900 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Trigger word detection with an RNN">
+  <!-- RNN cells -->
+  <g fill="#dbeafe" stroke="#2563eb" stroke-width="1.5">
+    <rect x="80" y="100" width="50" height="50" rx="4"/>
+    <rect x="170" y="100" width="50" height="50" rx="4"/>
+    <rect x="260" y="100" width="50" height="50" rx="4"/>
+    <rect x="350" y="100" width="50" height="50" rx="4"/>
+    <rect x="440" y="100" width="50" height="50" rx="4"/>
+    <rect x="530" y="100" width="50" height="50" rx="4"/>
+    <rect x="620" y="100" width="50" height="50" rx="4"/>
+    <rect x="710" y="100" width="50" height="50" rx="4"/>
+  </g>
+
+  <!-- Horizontal arrows -->
+  <g stroke="#2563eb" stroke-width="1.5" fill="none" marker-end="url(#arrB6)">
+    <path d="M130 125 L170 125"/>
+    <path d="M220 125 L260 125"/>
+    <path d="M310 125 L350 125"/>
+    <path d="M400 125 L440 125"/>
+    <path d="M490 125 L530 125"/>
+    <path d="M580 125 L620 125"/>
+    <path d="M670 125 L710 125"/>
+  </g>
+
+  <!-- Outputs -->
+  <g font-size="11" text-anchor="middle" font-weight="700" fill="#dc2626">
+    <text x="105" y="90">0</text>
+    <text x="195" y="90">0</text>
+    <text x="285" y="90">0</text>
+    <text x="375" y="90">0</text>
+    <text x="465" y="90">1</text>
+    <text x="555" y="90">1</text>
+    <text x="645" y="90">0</text>
+    <text x="735" y="90">0</text>
+  </g>
+  <g stroke="#dc2626" stroke-width="1.2">
+    <path d="M105 95 L105 100"/>
+    <path d="M195 95 L195 100"/>
+    <path d="M285 95 L285 100"/>
+    <path d="M375 95 L375 100"/>
+    <path d="M465 95 L465 100"/>
+    <path d="M555 95 L555 100"/>
+    <path d="M645 95 L645 100"/>
+    <path d="M735 95 L735 100"/>
+  </g>
+
+  <!-- x(t) labels -->
+  <g font-size="11" text-anchor="middle" fill="#0f172a">
+    <text x="105" y="175">x⟨1⟩</text>
+    <text x="195" y="175">x⟨2⟩</text>
+    <text x="285" y="175">x⟨3⟩</text>
+    <text x="375" y="175">x⟨4⟩</text>
+    <text x="465" y="175">x⟨5⟩</text>
+    <text x="555" y="175">x⟨6⟩</text>
+    <text x="645" y="175">x⟨7⟩</text>
+    <text x="735" y="175">x⟨8⟩</text>
+  </g>
+  <g stroke="#94a3b8" stroke-width="1.2">
+    <path d="M105 160 L105 150"/>
+    <path d="M195 160 L195 150"/>
+    <path d="M285 160 L285 150"/>
+    <path d="M375 160 L375 150"/>
+    <path d="M465 160 L465 150"/>
+    <path d="M555 160 L555 150"/>
+    <path d="M645 160 L645 150"/>
+    <path d="M735 160 L735 150"/>
+  </g>
+
+  <!-- Audio waveform -->
+  <rect x="60" y="210" width="740" height="80" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5" rx="6"/>
+  <path d="M70 250 Q 90 220, 110 250 T 150 250 T 190 250 T 230 250 T 270 250 T 310 250 T 350 250 T 390 250 T 430 250 T 470 250 T 510 250 T 550 250 T 590 250 T 630 250 T 670 250 T 710 250 T 750 250 T 790 250"
+        stroke="#0284c7" stroke-width="1.5" fill="none"/>
+
+  <!-- Trigger word marker -->
+  <line x1="420" y1="210" x2="420" y2="100" stroke="#dc2626" stroke-width="2" stroke-dasharray="4 2"/>
+  <line x1="600" y1="210" x2="600" y2="100" stroke="#dc2626" stroke-width="2" stroke-dasharray="4 2"/>
+  <text x="510" y="220" font-size="12" text-anchor="middle" fill="#dc2626" font-weight="700">"Hey Siri"</text>
+
+  <!-- Initial state -->
+  <text x="30" y="125" font-size="11" font-weight="700" fill="#0f172a">a⟨0⟩</text>
+  <path d="M55 125 L80 125" stroke="#0f172a" stroke-width="1.5" fill="none"/>
+
+  <defs>
+    <marker id="arrB6" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <polygon points="0,0 8,3 0,6" fill="#2563eb"/>
+    </marker>
+  </defs>
+</svg>
+<p class="diagram-caption"><strong>Figure 8.</strong> Trigger word detection. The RNN processes the audio stream one time step at a time. At each step, it outputs 0 (no trigger) or 1 (trigger just occurred). The model is trained to output 1 for a short window <em>after</em> the trigger phrase ends. This is a many-to-many RNN with a simple binary label at each step.</p>
+</div>
+
+<div class="callout important">
+  <span class="callout-title">🟡 Important — Training Labels</span>
+  <p>For a positive audio clip containing "Hey Siri", we set \(y^{\langle t \rangle} = 0\) for all time steps <em>before</em> the trigger, then \(y^{\langle t \rangle} = 1\) for a short window <em>after</em> the trigger ends, then back to 0. This gives the model a positive training signal for the trigger window.</p>
+</div>
+
+<div class="callout insight">
+  <span class="callout-title">💡 Insight — Why Not Just Classify the Whole Audio?</span>
+  <p>Because we need <em>streaming</em> detection: the model must be able to fire whenever the trigger occurs, not just at the end of the clip. Per-time-step classification (with a many-to-many RNN) handles this naturally.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="summary">19. Weekly Summary</h2>
+
+<p>This week covered the major sequence-to-sequence architectures and techniques that power modern NLP:</p>
+
+<ul>
+  <li><strong>Seq2seq models</strong> use an encoder RNN to read an input sequence and a decoder RNN to generate an output sequence. They handle input and output sequences of different lengths.</li>
+  <li><strong>Image captioning</strong> is a seq2seq task where the encoder is a CNN instead of an RNN.</li>
+  <li><strong>Machine translation</strong> is a conditional language model: it estimates \(P(y \mid x)\) rather than \(P(y)\).</li>
+  <li>We want to find \(\arg\max_y P(y \mid x)\). Brute force is infeasible because the search space is exponential in sequence length.</li>
+  <li><strong>Greedy search</strong> picks the single most probable word at each step; it is fast but myopic and often suboptimal.</li>
+  <li><strong>Beam search</strong> keeps the top \(B\) partial sequences at each step. Beam width \(B\) controls the quality/speed trade-off.</li>
+  <li><strong>Length normalization</strong> (dividing log-prob by \(T_y^\alpha\)) counteracts the bias toward short sequences.</li>
+  <li><strong>Error analysis</strong> on beam search compares \(P(y^* \mid x)\) vs. \(P(\hat{y} \mid x)\) to identify whether the model or the search is at fault.</li>
+  <li><strong>BLEU score</strong> evaluates machine translation by n-gram overlap with reference translations, with a brevity penalty for short outputs.</li>
+  <li><strong>Attention</strong> lets the decoder look back at every encoder state at every output step, dramatically improving long-sequence performance.</li>
+  <li><strong>Speech recognition</strong> uses an RNN to map an audio spectrogram to a character sequence.</li>
+  <li><strong>CTC loss</strong> handles the alignment problem in speech recognition using a blank token and a collapse rule.</li>
+  <li><strong>Trigger word detection</strong> uses a per-time-step RNN to fire a 1 when the wake word is heard.</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2 id="mustknow">20. Must-Know Concepts</h2>
+
+<div class="callout important">
+  <span class="callout-title">🟡 If You Remember Only Ten Things From This Week…</span>
+  <ol>
+    <li>Seq2seq = encoder RNN + decoder RNN.</li>
+    <li>Machine translation is a conditional language model: \(P(y \mid x)\).</li>
+    <li>We want \(\arg\max_y P(y \mid x)\), but greedy search fails.</li>
+    <li>Beam search keeps the top \(B\) candidates at each step.</li>
+    <li>Length normalization matters for long sequences.</li>
+    <li>Error analysis distinguishes "beam search is at fault" from "RNN is at fault."</li>
+    <li>BLEU score: n-gram precision with brevity penalty.</li>
+    <li>Attention lets the decoder "glance back" at the input.</li>
+    <li>CTC loss with blank tokens handles variable-length alignments.</li>
+    <li>Trigger word detection is per-time-step binary classification.</li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="equations">21. Important Equations (Reference)</h2>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 1. Conditional Language Model</span>
+  <div class="eq">$$P(y^{\langle 1 \rangle}, \dots, y^{\langle T_y \rangle} \mid x^{\langle 1 \rangle}, \dots, x^{\langle T_x \rangle})$$</div>
+  <p>The probability of an output sequence given an input sequence.</p>
+</div>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 2. Most Likely Translation</span>
+  <div class="eq">$$\arg\max_{y^{\langle 1 \rangle}, \dots, y^{\langle T_y \rangle}} P(y^{\langle 1 \rangle}, \dots, y^{\langle T_y \rangle} \mid x)$$</div>
+  <p>The output we want beam search to find.</p>
+</div>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 3. Beam Search Score</span>
+  <div class="eq">$$\text{score}(y) = \prod_{t=1}^{T_y} P\!\left(y^{\langle t \rangle} \mid x, y^{\langle 1 \rangle}, \dots, y^{\langle t-1 \rangle}\right)$$</div>
+  <p>Product of per-step probabilities. In practice, we use the log of this (a sum) for numerical stability.</p>
+</div>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 4. Length-Normalized Score</span>
+  <div class="eq">$$\text{score}(y) = \frac{1}{T_y^{\alpha}} \sum_{t=1}^{T_y} \log P\!\left(y^{\langle t \rangle} \mid x, y^{\langle 1 \rangle}, \dots, y^{\langle t-1 \rangle}\right)$$</div>
+  <p>\(\alpha \in [0, 1]\) controls how aggressively to penalize long sequences. Typical \(\alpha \approx 0.7\).</p>
+</div>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 5. BLEU Score</span>
+  <div class="eq">$$\text{BLEU} = \text{BP} \cdot \exp\!\left(\frac{1}{4} \sum_{n=1}^{4} p_n\right)$$</div>
+  <p>\(p_n\) = modified n-gram precision, BP = brevity penalty.</p>
+</div>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 6. Brevity Penalty</span>
+  <div class="eq">$$\text{BP} = \begin{cases} 1 & \text{if MT length} > \text{ref length} \\ \exp\!\left(1 - \frac{\text{MT length}}{\text{ref length}}\right) & \text{otherwise} \end{cases}$$</div>
+</div>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 7. Attention Weights</span>
+  <div class="eq">$$\alpha^{\langle t, t' \rangle} = \frac{\exp\!\left(e^{\langle t, t' \rangle}\right)}{\sum_{t'=1}^{T_x} \exp\!\left(e^{\langle t, t' \rangle}\right)}$$</div>
+  <p>Softmax-normalized attention scores, summing to 1 over input positions.</p>
+</div>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 8. Context Vector</span>
+  <div class="eq">$$c^{\langle t \rangle} = \sum_{t'=1}^{T_x} \alpha^{\langle t, t' \rangle}\, a^{\langle t' \rangle}$$</div>
+  <p>Weighted sum of encoder hidden states; fed to the decoder at step \(t\).</p>
+</div>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 9. Attention Scoring Function</span>
+  <div class="eq">$$e^{\langle t, t' \rangle} = \text{smallNN}\!\left(s^{\langle t-1 \rangle},\ a^{\langle t' \rangle}\right)$$</div>
+  <p>A small neural network that scores how relevant encoder position \(t'\) is to decoder position \(t\).</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="confusions">22. Common Confusions</h2>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>Concept A</th><th>Concept B</th><th>Key difference</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Language model \(P(y)\)</td>
+      <td>Conditional language model \(P(y \mid x)\)</td>
+      <td>Plain LM generates text; conditional LM translates/generates given an input.</td>
+    </tr>
+    <tr>
+      <td>Greedy search</td>
+      <td>Beam search</td>
+      <td>Greedy = beam with \(B = 1\). Beam keeps top \(B\) candidates.</td>
+    </tr>
+    <tr>
+      <td>BFS / DFS</td>
+      <td>Beam search</td>
+      <td>BFS/DFS are exact; beam search is a heuristic (faster but not guaranteed optimal).</td>
+    </tr>
+    <tr>
+      <td>Beam at fault</td>
+      <td>Model at fault</td>
+      <td>Beam at fault: \(P(y^* \mid x) > P(\hat{y} \mid x)\). Model at fault: \(P(y^* \mid x) \leq P(\hat{y} \mid x)\).</td>
+    </tr>
+    <tr>
+      <td>Precision</td>
+      <td>BLEU score</td>
+      <td>BLEU combines modified precision over n=1,2,3,4 grams plus brevity penalty.</td>
+    </tr>
+    <tr>
+      <td>Encoder RNN</td>
+      <td>Decoder RNN</td>
+      <td>Encoder reads the input; decoder generates the output.</td>
+    </tr>
+    <tr>
+      <td>Attention weight \(\alpha^{\langle t, t' \rangle}\)</td>
+      <td>Context vector \(c^{\langle t \rangle}\)</td>
+      <td>\(\alpha\) = scalars normalized to sum to 1. \(c\) = weighted sum of encoder states.</td>
+    </tr>
+    <tr>
+      <td>CTC</td>
+      <td>Seq2seq with attention</td>
+      <td>CTC uses a blank token and collapse rule; attention uses soft weights over encoder states.</td>
+    </tr>
+    <tr>
+      <td>Trigger word detection</td>
+      <td>Speech recognition</td>
+      <td>Trigger: binary per time step. Speech recognition: full transcript sequence.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="review">23. Quick Review (Q&amp;A)</h2>
+
+<p class="small-note">Click each question to reveal its answer.</p>
+
+<details>
+  <summary>Q1. What is a sequence-to-sequence (seq2seq) model?</summary>
+  <div class="answer"><p>A neural network that takes an input sequence and produces an output sequence. It consists of an encoder (reads the input) and a decoder (generates the output). The two sequences can have different lengths.</p></div>
+</details>
+
+<details>
+  <summary>Q2. In image captioning, what plays the role of the encoder?</summary>
+  <div class="answer"><p>A CNN (typically a pretrained network like VGG or ResNet). It produces a fixed-size feature vector that summarizes the image, which is then fed to the RNN decoder.</p></div>
+</details>
+
+<details>
+  <summary>Q3. What does a conditional language model estimate?</summary>
+  <div class="answer"><p>\(P(y^{\langle 1 \rangle}, \dots, y^{\langle T_y \rangle} \mid x^{\langle 1 \rangle}, \dots, x^{\langle T_x \rangle})\) — the probability of an output sequence given an input sequence.</p></div>
+</details>
+
+<details>
+  <summary>Q4. Why is the search space for translation so large?</summary>
+  <div class="answer"><p>If the output vocabulary is 10,000 words and the target sentence is 10 words long, there are \(10{,}000^{10} = 10^{40}\) possible sentences. Enumerating them all is impossible.</p></div>
+</details>
+
+<details>
+  <summary>Q5. What is greedy search, and why is it suboptimal?</summary>
+  <div class="answer"><p>Greedy search picks the single most probable word at each step. It is suboptimal because an early high-probability choice may lead to a worse overall sequence than a slightly lower-probability alternative.</p></div>
+</details>
+
+<details>
+  <summary>Q6. How does beam search work?</summary>
+  <div class="answer"><p>At each step, it expands every current candidate sequence with every possible next word, scores each extended sequence, and keeps the top \(B\) (beam width). It is a heuristic — fast but not guaranteed to find the global maximum.</p></div>
+</details>
+
+<details>
+  <summary>Q7. What is beam width, and what trade-off does it control?</summary>
+  <div class="answer"><p>\(B\) is the number of candidate sequences kept at each step. Larger \(B\) → better quality but slower. Smaller \(B\) → faster but worse. \(B = 1\) is exactly greedy search.</p></div>
+</details>
+
+<details>
+  <summary>Q8. Why do we need length normalization in beam search?</summary>
+  <div class="answer"><p>Because each step multiplies by a probability ≤ 1, longer sequences automatically get lower total probabilities. Length normalization divides the log-prob by \(T_y^\alpha\) (typically \(\alpha = 0.7\)) to counteract this bias.</p></div>
+</details>
+
+<details>
+  <summary>Q9. What is the difference between Case 1 and Case 2 in beam search error analysis?</summary>
+  <div class="answer">
+  <ul>
+    <li><strong>Case 1:</strong> \(P(y^* \mid x) > P(\hat{y} \mid x)\) — beam search is at fault (the model knew the right answer but search missed it).</li>
+    <li><strong>Case 2:</strong> \(P(y^* \mid x) \leq P(\hat{y} \mid x)\) — the RNN model is at fault (the model genuinely believed the wrong answer was more likely).</li>
+  </ul>
+  </div>
+</details>
+
+<details>
+  <summary>Q10. What is BLEU score, and what does it measure?</summary>
+  <div class="answer"><p>BLEU (Bilingual Evaluation Understudy) measures how many n-grams of the machine translation output appear in the reference translations. It uses modified precision (capping counts at reference occurrences) and a brevity penalty for short outputs.</p></div>
+</details>
+
+<details>
+  <summary>Q11. What is the brevity penalty in BLEU?</summary>
+  <div class="answer"><p>It penalizes translations shorter than the reference. If the MT output is longer than the reference, \(\text{BP} = 1\). Otherwise, \(\text{BP} = \exp(1 - \text{MT length}/\text{ref length})\).</p></div>
+</details>
+
+<details>
+  <summary>Q12. Why is attention useful for long sequences?</summary>
+  <div class="answer"><p>Without attention, the encoder must compress the entire input into a single fixed-size vector, which is hard for long inputs. Attention lets the decoder look at <em>all</em> encoder hidden states at every output step, so it can selectively focus on the relevant part of the input without needing to remember everything in a single vector.</p></div>
+</details>
+
+<details>
+  <summary>Q13. What is the context vector \(c^{\langle t \rangle}\)?</summary>
+  <div class="answer"><p>The attention-weighted sum of all encoder hidden states: \(c^{\langle t \rangle} = \sum_{t'} \alpha^{\langle t, t' \rangle} a^{\langle t' \rangle}\). It is fed to the decoder at step \(t\) alongside the previous hidden state.</p></div>
+</details>
+
+<details>
+  <summary>Q14. How are attention weights \(\alpha^{\langle t, t' \rangle}\) computed?</summary>
+  <div class="answer"><p>First, an unnormalized score \(e^{\langle t, t' \rangle}\) is computed by a small neural network taking the decoder's previous hidden state \(s^{\langle t-1 \rangle}\) and the encoder's hidden state \(a^{\langle t' \rangle}\). Then a softmax over all \(t'\) normalizes the scores so they sum to 1.</p></div>
+</details>
+
+<details>
+  <summary>Q15. What does the attention heatmap tell us?</summary>
+  <div class="answer"><p>It shows which input positions the model attends to when generating each output word. A bright cell at \((t, t')\) means high attention. For translation, the heatmap often shows a rough diagonal alignment (each English word attends to the corresponding French word).</p></div>
+</details>
+
+<details>
+  <summary>Q16. Why is speech recognition hard from an alignment perspective?</summary>
+  <div class="answer"><p>Because the input (audio samples) is much longer than the output (words or characters), and we don't know which input samples correspond to which output characters. The CTC loss solves this by introducing a blank token and a collapse rule.</p></div>
+</details>
+
+<details>
+  <summary>Q17. What is the CTC collapse rule?</summary>
+  <div class="answer"><p>Collapse repeated characters not separated by a blank, then remove all blanks. For example, <code>t t t _ h _ e e e _ _ _ _ _ q q q _ _</code> collapses to <code>t h e q</code>.</p></div>
+</details>
+
+<details>
+  <summary>Q18. How does trigger word detection work?</summary>
+  <div class="answer"><p>An RNN processes the audio stream one time step at a time. At each step, it outputs 0 (no trigger) or 1 (trigger just occurred). It is trained as a many-to-many RNN with binary labels per time step.</p></div>
+</details>
+
+<details>
+  <summary>Q19. Why not just classify the whole audio clip for trigger word detection?</summary>
+  <div class="answer"><p>Because we need <em>streaming</em> detection — the model must fire as soon as the trigger word is spoken, not at the end of the clip. Per-time-step classification handles this.</p></div>
+</details>
+
+<details>
+  <summary>Q20. What are the two main components of a seq2seq model?</summary>
+  <div class="answer"><p>The encoder (reads the input sequence and produces a representation) and the decoder (generates the output sequence). For image captioning, the encoder is a CNN; for translation, it is an RNN.</p></div>
+</details>
+
+<!-- ============================================================ -->
+<h2 id="selftest">24. Self-Test</h2>
+
+<p class="small-note">Conceptual questions from easy → hard. Click to reveal.</p>
+
+<h3>Easy</h3>
+
+<details>
+  <summary>ST1. Give two real-world applications of seq2seq models.</summary>
+  <div class="answer"><p>Machine translation (French → English) and image captioning (image → English description). Also text summarization, question answering, and chatbot response generation.</p></div>
+</details>
+
+<details>
+  <summary>ST2. What is the difference between \(P(y)\) and \(P(y \mid x)\)?</summary>
+  <div class="answer"><p>\(P(y)\) is the probability of an output sequence on its own (a plain language model). \(P(y \mid x)\) is the probability of the output <em>given</em> the input \(x\) (a conditional language model). The latter is used for translation.</p></div>
+</details>
+
+<details>
+  <summary>ST3. What is the beam width \(B\), and what is \(B = 1\) equivalent to?</summary>
+  <div class="answer"><p>\(B\) is the number of candidate sequences kept at each step of beam search. \(B = 1\) is exactly greedy search — pick the single best word at each step and never look back.</p></div>
+</details>
+
+<h3>Medium</h3>
+
+<details>
+  <summary>ST4. Why is length normalization important in beam search? Give a numerical intuition.</summary>
+  <div class="answer"><p>Because multiplying by probabilities ≤ 1 shrinks the total score as the sequence lengthens. For example, a perfectly good 20-word translation with per-step probability 0.9 has total probability \(0.9^{20} \approx 0.12\), while a mediocre 5-word translation with per-step probability 0.9 has \(0.9^{5} \approx 0.59\). Length normalization divides by \(T_y^\alpha\), giving longer sentences a fairer chance.</p></div>
+</details>
+
+<details>
+  <summary>ST5. You observe that a translation system often produces wrong translations, and you suspect it may be beam search's fault. Describe the error analysis you would perform.</summary>
+  <div class="answer"><p>For each bad translation:</p>
+  <ol>
+    <li>Record the human reference \(y^*\) and the algorithm output \(\hat{y}\).</li>
+    <li>Compute \(P(y^* \mid x)\) and \(P(\hat{y} \mid x)\).</li>
+    <li>If \(P(y^* \mid x) > P(\hat{y} \mid x)\), beam search is at fault (case 1).</li>
+    <li>If \(P(y^* \mid x) \leq P(\hat{y} \mid x)\), the model is at fault (case 2).</li>
+  </ol>
+  <p>After analyzing many examples, count the fraction of case-1 vs case-2 errors. If beam search dominates, increase \(B\). If the model dominates, invest in better training data or architecture.</p>
+  </div>
+</details>
+
+<details>
+  <summary>ST6. Why does BLEU use modified precision rather than raw precision?</summary>
+  <div class="answer"><p>Because raw precision would reward outputs like "the the the the the the the" — every word appears in the reference, so raw precision = 1.0 even though the output is nonsense. Modified precision caps each n-gram count at its maximum occurrence in any reference, so "the" counted 7 times but appearing at most 2 times in any reference gets a modified count of 2. This gives a much lower (and more honest) precision.</p></div>
+</details>
+
+<details>
+  <summary>ST7. Why is attention especially useful when input sequences are long?</summary>
+  <div class="answer"><p>Without attention, the encoder must compress the entire input into a single fixed-size vector, which loses information for long inputs. With attention, the decoder can look at <em>any</em> encoder hidden state at each decoding step. This lets it selectively focus on the relevant part of the input, no matter how long the input is.</p></div>
+</details>
+
+<h3>Hard</h3>
+
+<details>
+  <summary>ST8. Derive the intuition for why the softmax normalization in attention is important.</summary>
+  <div class="answer"><p>Without normalization, the "attention weights" would be arbitrary real numbers, and the context vector's magnitude would depend on how many input positions there are. The softmax ensures:</p>
+  <ul>
+    <li>All weights are in \((0, 1)\).</li>
+    <li>The weights sum to 1.</li>
+    <li>The context vector is a genuine weighted average of the encoder states, so its magnitude is comparable across different input lengths.</li>
+  </ul>
+  <p>Additionally, the softmax makes the attention distribution differentiable, so we can train it with backpropagation.</p>
+  </div>
+</details>
+
+<details>
+  <summary>ST9. In the CTC collapse rule, why is the blank token necessary? What would happen without it?</summary>
+  <div class="answer"><p>Without the blank, repeated characters would always collapse, so we could never distinguish "he" from "hee" or "the" from "thee." The blank separates adjacent identical characters: <code>h e e</code> collapses to "he", while <code>h e _ e</code> collapses to "hee". The blank gives the model the ability to represent repeated letters.</p></div>
+</details>
+
+<details>
+  <summary>ST10. Suppose you have a seq2seq model that translates reasonably but struggles with long sentences. You want to improve it. Describe two options: one that keeps the current architecture and one that changes it.</summary>
+  <div class="answer">
+  <p><strong>Option 1 (keep architecture):</strong> Improve the data — collect more long-sentence training examples. Optionally, increase the beam width at inference time to search more candidates.</p>
+  <p><strong>Option 2 (change architecture):</strong> Add an attention mechanism. Instead of forcing the encoder to compress the entire input into a fixed-size vector, attention lets the decoder query any part of the encoder state at any output step. This dramatically improves performance on long sequences without needing an enormous amount of extra data.</p>
+  </div>
+</details>
+
+<details>
+  <summary>ST11. In a speech recognition system using CTC, the RNN outputs a character distribution at each of 1000 input time steps. The output transcript is "cat." Explain how CTC can handle this without needing to know which time steps correspond to which characters.</summary>
+  <div class="answer"><p>CTC marginalizes over all possible alignments. Suppose the RNN outputs something like <code>c c _ a a a _ t t _ _ _ ...</code>. Collapsing gives "cat." Other alignments like <code>_ c _ a _ t _</code> also collapse to "cat." The CTC loss sums the probability of <em>all</em> alignments that collapse to the target, so the model learns to assign high probability to <em>some</em> valid alignment without us specifying which one. This is why CTC can train without alignment labels.</p></div>
+</details>
+
+<details>
+  <summary>ST12. Why is beam search not guaranteed to find the global maximum of \(\arg\max_y P(y \mid x)\)? Is that a problem in practice?</summary>
+  <div class="answer"><p>Beam search prunes candidates at each step — it only keeps the top \(B\). A sequence that starts with a low-probability word but has very high probability for subsequent words might be pruned early and never recovered. So beam search is not guaranteed to find the exact global maximum.</p>
+  <p>In practice this is usually fine: (1) with reasonable \(B\), beam search finds sequences very close to the global maximum; (2) the true global maximum is not always the best translation anyway — a slightly lower-probability sentence may sound more natural.</p>
+  </div>
+</details>
+
+<!-- ============================================================ -->
+<div class="page-nav">
+  <a href="C5_W2.html" class="nav-btn">← Previous Week</a>
+  <a href="#toc" class="nav-btn">↑ Table of Contents</a>
+  <a href="C5_W4.html" class="nav-btn">Next Week →</a>
+</div>
+
+<p class="small-note" style="text-align:center; margin-top: 30px;">
+  Notes prepared from the DeepLearning.AI Deep Learning Specialization — Course 5, Week 3 ("Sequence Models &amp; Attention").<br>
+  All explanations, examples, and diagrams are expanded for beginner-friendly study and faithful to the original lecture material.
+</p>
+
+</div>
+
+<button id="backToTop" aria-label="Back to top">↑</button>
+
+<script>
+(function() {
+  const root = document.documentElement;
+  const toggle = document.getElementById('themeToggle');
+  const stored = localStorage.getItem('dl-theme');
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const initial = stored || (prefersDark ? 'dark' : 'light');
+  setTheme(initial);
+  function setTheme(theme) {
+    if (theme === 'dark') {
+      root.setAttribute('data-theme', 'dark');
+      toggle.textContent = '☀️ Light';
+    } else {
+      root.removeAttribute('data-theme');
+      toggle.textContent = '🌙 Dark';
+    }
+    localStorage.setItem('dl-theme', theme);
+  }
+  toggle.addEventListener('click', function() {
+    const current = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    setTheme(current === 'dark' ? 'light' : 'dark');
+  });
+})();
+
+(function() {
+  const btn = document.getElementById('backToTop');
+  window.addEventListener('scroll', function() {
+    if (window.scrollY > 600) btn.classList.add('visible');
+    else btn.classList.remove('visible');
+  });
+  btn.addEventListener('click', function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+})();
+
+(function() {
+  const input = document.getElementById('searchInput');
+  const info = document.getElementById('searchInfo');
+  const container = document.querySelector('.container');
+  const original = container.innerHTML;
+  let timer = null;
+  function escapeRegExp(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  function doSearch(query) {
+    container.innerHTML = original;
+    if (!query) { info.textContent = ''; return; }
+    const q = query.trim();
+    if (q.length < 2) { info.textContent = 'Type at least 2 characters.'; return; }
+    const targets = container.querySelectorAll('p, li, td, h2, h3, h4, summary, .answer, .callout-title');
+    const re = new RegExp('(' + escapeRegExp(q) + ')', 'gi');
+    let count = 0;
+    targets.forEach(function(el) {
+      if (el.closest('pre') || el.closest('code')) return;
+      const html = el.innerHTML;
+      if (!re.test(html)) return;
+      if (html.includes('<span class="highlight">')) return;
+      el.innerHTML = html.replace(re, '<span class="highlight">$1</span>');
+      count++;
+    });
+    info.textContent = count > 0
+      ? `Found ${count} section(s) matching "${q}".`
+      : `No results for "${q}".`;
+  }
+  input.addEventListener('input', function() {
+    clearTimeout(timer);
+    timer = setTimeout(function() { doSearch(input.value); }, 220);
+  });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Course 2 Week 3 — Hyperparameter Tuning, Batch Norm, and Softmax</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+  svg: { fontCache: 'global' },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+:root{
+  --bg:#f7f8fa; --card:#ffffff; --text:#1a1a1a; --muted:#5b6470;
+  --accent:#2b6cb0; --accent2:#2c7a7b; --border:#e2e8f0;
+  --def:#2b6cb0; --intu:#2c7a7b; --imp:#b7791f; --warn:#c53030;
+  --ex:#6b46c1; --impl:#2f855a; --insight:#805ad5;
+  --code-bg:#1e293b; --code-text:#e2e8f0;
+  --table-head:#edf2f7; --table-alt:#f7fafc;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
+  --radius:10px;
+}
+[data-theme="dark"]{
+  --bg:#0f1419; --card:#1a2028; --text:#e6e9ee; --muted:#9aa5b1;
+  --accent:#63b3ed; --accent2:#4fd1c5; --border:#2d3748;
+  --def:#63b3ed; --intu:#4fd1c5; --imp:#f6c177; --warn:#fc8181;
+  --ex:#b794f4; --impl:#68d391; --insight:#d6bcfa;
+  --code-bg:#0b0f14; --code-text:#e2e8f0;
+  --table-head:#243040; --table-alt:#1f2a37;
+  --shadow:0 1px 3px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:17px; line-height:1.7; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:920px; margin:0 auto; padding:0 18px 80px}
+header.top{
+  position:sticky; top:0; z-index:50; background:var(--card);
+  border-bottom:1px solid var(--border); box-shadow:var(--shadow);
+}
+.topbar{
+  max-width:920px; margin:0 auto; display:flex; align-items:center; gap:10px;
+  padding:10px 18px; flex-wrap:wrap;
+}
+.topbar .title{font-weight:700; font-size:.95rem; color:var(--accent); margin-right:auto}
+.topbar button, .topbar a.navbtn{
+  background:transparent; border:1px solid var(--border); color:var(--text);
+  padding:6px 10px; border-radius:8px; font-size:.82rem; cursor:pointer;
+  text-decoration:none; white-space:nowrap;
+}
+.topbar button:hover, .topbar a.navbtn:hover{background:var(--table-head)}
+#searchBox{
+  border:1px solid var(--border); background:var(--bg); color:var(--text);
+  padding:6px 10px; border-radius:8px; font-size:.82rem; width:150px;
+}
+h1{font-size:1.9rem; line-height:1.25; margin:28px 0 6px}
+h2{font-size:1.45rem; margin:44px 0 12px; padding-bottom:6px; border-bottom:2px solid var(--border)}
+h3{font-size:1.15rem; margin:28px 0 10px; color:var(--accent)}
+h4{font-size:1rem; margin:20px 0 8px}
+p{margin:10px 0}
+a{color:var(--accent)}
+code{background:var(--table-head); padding:2px 6px; border-radius:5px; font-size:.9em;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+pre{
+  background:var(--code-bg); color:var(--code-text); padding:14px 16px;
+  border-radius:var(--radius); overflow-x:auto; font-size:.86rem; line-height:1.55;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+pre code{background:none; padding:0; color:inherit; font-size:inherit}
+ul,ol{margin:10px 0; padding-left:26px}
+li{margin:4px 0}
+.card{
+  background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:16px 0; box-shadow:var(--shadow);
+}
+.callout{
+  border-left:4px solid var(--border); border-radius:8px;
+  padding:12px 16px; margin:16px 0; background:var(--card);
+}
+.callout .label{
+  font-weight:700; font-size:.78rem; letter-spacing:.06em; text-transform:uppercase;
+  display:block; margin-bottom:4px;
+}
+.callout.def{border-left-color:var(--def)} .callout.def .label{color:var(--def)}
+.callout.intu{border-left-color:var(--intu)} .callout.intu .label{color:var(--intu)}
+.callout.imp{border-left-color:var(--imp)} .callout.imp .label{color:var(--imp)}
+.callout.warn{border-left-color:var(--warn)} .callout.warn .label{color:var(--warn)}
+.callout.ex{border-left-color:var(--ex)} .callout.ex .label{color:var(--ex)}
+.callout.impl{border-left-color:var(--impl)} .callout.impl .label{color:var(--impl)}
+.callout.insight{border-left-color:var(--insight)} .callout.insight .label{color:var(--insight)}
+
+table{width:100%; border-collapse:collapse; margin:16px 0; font-size:.92rem;
+  display:block; overflow-x:auto; white-space:nowrap}
+table.tbl-fixed{display:table; white-space:normal}
+th,td{border:1px solid var(--border); padding:8px 12px; text-align:left; vertical-align:top}
+th{background:var(--table-head); font-weight:600}
+tr:nth-child(even) td{background:var(--table-alt)}
+
+figure{margin:22px 0; text-align:center}
+figure svg{max-width:100%; height:auto}
+figcaption{font-size:.86rem; color:var(--muted); margin-top:8px; text-align:left;
+  border-left:3px solid var(--accent); padding-left:10px}
+
+.toc{background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+  padding:14px 20px; margin:20px 0}
+.toc h3{margin-top:4px}
+.toc ol{columns:2; column-gap:30px; margin:6px 0}
+@media(max-width:640px){.toc ol{columns:1}}
+
+details{border:1px solid var(--border); border-radius:8px; padding:10px 14px;
+  margin:10px 0; background:var(--card)}
+details summary{cursor:pointer; font-weight:600; color:var(--accent)}
+details[open] summary{margin-bottom:8px}
+.qa details{margin:8px 0}
+
+.eqbox{background:var(--card); border:1px dashed var(--border); border-radius:8px;
+  padding:10px 16px; margin:14px 0; overflow-x:auto}
+
+#topBtn{
+  position:fixed; right:18px; bottom:18px; z-index:60;
+  background:var(--accent); color:#fff; border:none; border-radius:50%;
+  width:46px; height:46px; font-size:1.2rem; cursor:pointer;
+  box-shadow:0 4px 12px rgba(0,0,0,.25); display:none;
+}
+#topBtn.show{display:block}
+
+mark.hit{background:#fde68a; color:#1a1a1a; border-radius:3px}
+[data-theme="dark"] mark.hit{background:#b7791f; color:#fff}
+
+.weeknav{display:flex; justify-content:space-between; gap:10px; margin:30px 0; flex-wrap:wrap}
+.weeknav a{flex:1; min-width:140px; text-align:center; padding:10px;
+  border:1px solid var(--border); border-radius:8px; text-decoration:none;
+  background:var(--card); color:var(--text); font-size:.9rem}
+.weeknav a:hover{background:var(--table-head)}
+hr.soft{border:none; border-top:1px solid var(--border); margin:36px 0}
+.small{font-size:.85rem; color:var(--muted)}
+.tag{display:inline-block; background:var(--table-head); border:1px solid var(--border);
+  border-radius:999px; padding:1px 10px; font-size:.75rem; color:var(--muted); margin-left:6px}
+@media(max-width:600px){
+  body{font-size:16px}
+  h1{font-size:1.55rem}
+  h2{font-size:1.25rem}
+  .topbar .title{width:100%; margin-bottom:4px}
+  #searchBox{width:120px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="topbar">
+    <span class="title">C2·W3 — Hyperparameter Tuning, Batch Norm &amp; Softmax</span>
+    <input id="searchBox" type="search" placeholder="Search this page…" aria-label="Search notes">
+    <button id="themeBtn" title="Toggle dark mode">🌙</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+<h1>Course 2 · Week 3<br>Hyperparameter Tuning, Batch Norm &amp; Softmax</h1>
+<p class="small">Deep Learning Specialization — beginner-friendly standalone notes.
+Every concept is explained from first principles. Additional Context is labelled where the
+course slides assume prior knowledge.</p>
+
+<nav class="toc">
+  <h3>Table of Contents</h3>
+  <ol>
+    <li><a href="#intro">Why This Week Matters</a></li>
+    <li><a href="#which">Which Hyperparameters Matter Most</a></li>
+    <li><a href="#random">Random Search vs Grid Search</a></li>
+    <li><a href="#coarse">Coarse to Fine</a></li>
+    <li><a href="#scale">Using the Right Scale</a></li>
+    <li><a href="#ewascale">Scale for β in Exponentially Weighted Averages</a></li>
+    <li><a href="#pandas">Pandas vs Caviar</a></li>
+    <li><a href="#bn">Batch Normalization — The Idea</a></li>
+    <li><a href="#bnimpl">Implementing Batch Norm</a></li>
+    <li><a href="#bnnet">Fitting Batch Norm into a Neural Network</a></li>
+    <li><a href="#bnmini">Working with Mini-batches</a></li>
+    <li><a href="#bnwhy">Why Does Batch Norm Work?</a></li>
+    <li><a href="#bncov">Covariate Shift</a></li>
+    <li><a href="#bnreg">Batch Norm as Regularization</a></li>
+    <li><a href="#softmax">Multi-class Classification — Softmax Regression</a></li>
+    <li><a href="#softmaxloss">Softmax Loss and Examples</a></li>
+    <li><a href="#frameworks">Deep Learning Frameworks</a></li>
+    <li><a href="#tf">TensorFlow and the Motivating Problem</a></li>
+    <li><a href="#summary">Weekly Summary</a></li>
+    <li><a href="#review">Review Questions</a></li>
+    <li><a href="#selftest">Self-Test</a></li>
+  </ol>
+</nav>
+
+<!-- ============================================================= -->
+<h2 id="intro">1. Why This Week Matters</h2>
+
+<p>Weeks 1 and 2 gave you the tools to make a model <em>generalize</em> and to make it
+<em>train fast</em>. This week gives you the tools to make it <em>actually work</em> in
+practice:</p>
+<ul>
+<li><strong>How to tune hyperparameters</strong> efficiently — so you don't waste weeks
+searching blindly.</li>
+<li><strong>Batch Normalization</strong> — a technique that stabilizes training and speeds
+up learning dramatically.</li>
+<li><strong>Softmax regression</strong> — how to extend neural networks from binary
+classification to multi-class classification.</li>
+<li><strong>Deep learning frameworks</strong> — the software tools that make all of this
+practical.</li>
+</ul>
+
+<div class="callout insight">
+<span class="label">💡 Insight</span>
+Deep learning is fundamentally empirical. There is rarely a single "correct"
+hyperparameter. What matters is having a <strong>systematic process</strong> for finding
+good hyperparameters efficiently, and having techniques like batch norm and softmax in
+your toolkit that work reliably across many problems.
+</div>
+
+<!-- ============================================================= -->
+<h2 id="which">2. Which Hyperparameters Matter Most</h2>
+
+<p>Not all hyperparameters are equally important. Andrew Ng's guidance ranks them roughly
+by how much impact they typically have on final performance.</p>
+
+<figure>
+<svg viewBox="0 0 620 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hyperparameter importance ranking">
+  <text x="310" y="25" text-anchor="middle" font-size="14" font-family="sans-serif" fill="#1a202c" font-weight="bold">Hyperparameter importance (rough order)</text>
+
+  <rect x="40" y="45" width="540" height="45" rx="8" fill="#fed7d7" stroke="#c53030" stroke-width="2"/>
+  <text x="60" y="73" font-size="15" font-family="sans-serif" fill="#1a202c" font-weight="bold">1. Learning rate α</text>
+  <text x="410" y="73" font-size="12" font-family="sans-serif" fill="#c53030">most important by far</text>
+
+  <rect x="40" y="100" width="540" height="45" rx="8" fill="#fefcbf" stroke="#b7791f" stroke-width="2"/>
+  <text x="60" y="128" font-size="14" font-family="sans-serif" fill="#1a202c">2. Momentum β (~0.9)</text>
+  <text x="60" y="128" font-size="14" font-family="sans-serif" fill="#1a202c" dy="0"></text>
+  <text x="300" y="128" font-size="14" font-family="sans-serif" fill="#1a202c">3. # hidden units</text>
+  <text x="500" y="128" font-size="14" font-family="sans-serif" fill="#1a202c">4. mini-batch size</text>
+
+  <rect x="40" y="155" width="540" height="45" rx="8" fill="#bee3f8" stroke="#2b6cb0" stroke-width="2"/>
+  <text x="60" y="183" font-size="14" font-family="sans-serif" fill="#1a202c">5. # layers L</text>
+  <text x="280" y="183" font-size="14" font-family="sans-serif" fill="#1a202c">6. learning rate decay</text>
+  <text x="500" y="183" font-size="14" font-family="sans-serif" fill="#1a202c">7. Adam: β₁, β₂, ε</text>
+
+  <rect x="40" y="210" width="540" height="45" rx="8" fill="#c6f6d5" stroke="#2f855a" stroke-width="2"/>
+  <text x="60" y="238" font-size="14" font-family="sans-serif" fill="#1a202c">8. Regularization λ</text>
+  <text x="280" y="238" font-size="14" font-family="sans-serif" fill="#1a202c">9. Activation function</text>
+  <text x="500" y="238" font-size="12" font-family="sans-serif" fill="#5b6470">(rarely tuned)</text>
+
+  <line x1="40" y1="275" x2="580" y2="275" stroke="#5b6470" stroke-dasharray="4 3"/>
+  <text x="310" y="300" text-anchor="middle" font-size="13" font-family="sans-serif" fill="#5b6470">The top items are worth the most tuning effort.</text>
+  <text x="310" y="322" text-anchor="middle" font-size="13" font-family="sans-serif" fill="#5b6470">The bottom items are usually fine with sensible defaults.</text>
+
+  <text x="40" y="360" font-size="12" font-family="sans-serif" fill="#5b6470">(Andrew Ng's practical advice: focus on α, β, #hidden units, mini-batch size first.)</text>
+  <text x="40" y="385" font-size="12" font-family="sans-serif" fill="#5b6470">Values like β₁ = 0.9, β₂ = 0.999, ε = 10⁻⁸ rarely need changing.</text>
+</svg>
+<figcaption><strong>Figure 1.</strong> Not all hyperparameters are equally important. The
+learning rate \(\alpha\) has the largest impact and should be tuned first. Others
+(momentum \(\beta\), hidden units, mini-batch size) matter too. Adam's
+\(\beta_1, \beta_2, \varepsilon\) and activation functions rarely need tuning.</figcaption>
+</figure>
+
+<div class="callout imp">
+<span class="label">🟡 Important — practical priorities</span>
+<ol>
+<li><strong>Learning rate \(\alpha\)</strong> — tune this first, and most carefully. Small
+changes can mean the difference between a model that trains and one that diverges.</li>
+<li><strong>Momentum \(\beta\)</strong> (typically 0.9), <strong># hidden units</strong>,
+<strong>mini-batch size</strong> — tune next.</li>
+<li><strong># layers</strong>, <strong>learning rate decay</strong> — tune if you have time.</li>
+<li><strong>Adam \(\beta_1, \beta_2, \varepsilon\)</strong> — leave at defaults (0.9, 0.999,
+\(10^{-8}\)) unless you have a specific reason.</li>
+<li><strong>Regularization \(\lambda\)</strong> — tune as needed.</li>
+</ol>
+</div>
+
+<!-- ============================================================= -->
+<h2 id="random">3. Random Search vs Grid Search</h2>
+
+<h3>3.1 The problem with grid search</h3>
+<p>An intuitive approach is <strong>grid search</strong>: define a grid of values for each
+hyperparameter and try every combination. But in deep learning this is wasteful.</p>
+
+<figure>
+<svg viewBox="0 0 720 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Grid search vs random search">
+  <!-- grid search -->
+  <g transform="translate(20,30)">
+    <text x="150" y="-10" text-anchor="middle" font-size="13" font-family="sans-serif" fill="#1a202c">Grid search</text>
+    <rect x="20" y="20" width="260" height="200" fill="#fff" stroke="#1a202c" stroke-width="1.5"/>
+    <text x="10" y="120" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470" transform="rotate(-90 10 120)">Hyperparameter 1</text>
+    <text x="150" y="240" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470">Hyperparameter 2</text>
+    <g fill="#2b6cb0">
+      <circle cx="45" cy="45" r="4"/><circle cx="110" cy="45" r="4"/><circle cx="175" cy="45" r="4"/><circle cx="240" cy="45" r="4"/>
+      <circle cx="45" cy="90" r="4"/><circle cx="110" cy="90" r="4"/><circle cx="175" cy="90" r="4"/><circle cx="240" cy="90" r="4"/>
+      <circle cx="45" cy="135" r="4"/><circle cx="110" cy="135" r="4"/><circle cx="175" cy="135" r="4"/><circle cx="240" cy="135" r="4"/>
+      <circle cx="45" cy="180" r="4"/><circle cx="110" cy="180" r="4"/><circle cx="175" cy="180" r="4"/><circle cx="240" cy="180" r="4"/>
+    </g>
+    <text x="150" y="270" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#c53030">only 4 distinct values tried per axis</text>
+  </g>
+  <!-- random search -->
+  <g transform="translate(380,30)">
+    <text x="150" y="-10" text-anchor="middle" font-size="13" font-family="sans-serif" fill="#1a202c">Random search</text>
+    <rect x="20" y="20" width="260" height="200" fill="#fff" stroke="#1a202c" stroke-width="1.5"/>
+    <text x="10" y="120" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470" transform="rotate(-90 10 120)">Hyperparameter 1</text>
+    <text x="150" y="240" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470">Hyperparameter 2</text>
+    <g fill="#2f855a">
+      <circle cx="58" cy="52" r="4"/><circle cx="142" cy="38" r="4"/><circle cx="200" cy="78" r="4"/>
+      <circle cx="88" cy="105" r="4"/><circle cx="230" cy="130" r="4"/><circle cx="75" cy="160" r="4"/>
+      <circle cx="155" cy="175" r="4"/><circle cx="45" cy="195" r="4"/><circle cx="215" cy="195" r="4"/>
+      <circle cx="110" cy="60" r="4"/><circle cx="185" cy="145" r="4"/><circle cx="135" cy="115" r="4"/>
+      <circle cx="60" cy="120" r="4"/><circle cx="245" cy="60" r="4"/><circle cx="175" cy="205" r="4"/>
+      <circle cx="250" cy="170" r="4"/><circle cx="95" cy="80" r="4"/><circle cx="130" cy="30" r="4"/>
+    </g>
+    <text x="150" y="270" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#2f855a">many distinct values per axis</text>
+  </g>
+</svg>
+<figcaption><strong>Figure 2.</strong> Left: grid search tries only a fixed set of values
+per axis. Right: random search samples values uniformly. Because we usually don't know
+which hyperparameter matters most, random search explores more distinct values per axis
+for the same number of experiments.</figcaption>
+</figure>
+
+<div class="callout intu">
+<span class="label">🟢 Intuition — why random beats grid</span>
+Suppose you have two hyperparameters, and only one of them actually matters for the problem.
+Grid search with a 5×5 grid tries only 5 distinct values of the important hyperparameter.
+Random search with 25 samples tries (on average) 25 distinct values — five times as many.
+When you don't know which hyperparameters are the important ones, random search is simply
+a more efficient use of your time.
+</div>
+
+<div class="callout imp">
+<span class="label">🟡 Important — practical recommendation</span>
+Use <strong>random search</strong>, not grid search. Sample hyperparameters randomly from
+ranges you choose. If you later identify a promising region, narrow your search (see
+Coarse to Fine below).
+</div>
+
+<!-- ============================================================= -->
+<h2 id="coarse">4. Coarse to Fine</h2>
+
+<p>After a first round of random search, you may notice that certain regions of the
+hyperparameter space do better than others. Instead of continuing to sample uniformly over
+the whole space, <strong>zoom in</strong> on the promising region and sample more densely
+there.</p>
+
+<figure>
+<svg viewBox="0 0 620 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Coarse to fine search">
+  <text x="310" y="20" text-anchor="middle" font-size="13" font-family="sans-serif" fill="#1a202c">Coarse to fine: narrow the search after finding a good region</text>
+  <rect x="60" y="40" width="500" height="240" fill="#fff" stroke="#1a202c" stroke-width="1.5"/>
+  <text x="45" y="160" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470" transform="rotate(-90 45 160)">Hyperparameter 1</text>
+  <text x="310" y="300" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470">Hyperparameter 2</text>
+  <!-- first-stage samples -->
+  <g fill="#2b6cb0">
+    <circle cx="100" cy="70" r="5"/><circle cx="180" cy="100" r="5"/><circle cx="120" cy="150" r="5"/>
+    <circle cx="240" cy="80" r="5"/><circle cx="300" cy="130" r="5"/><circle cx="350" cy="90" r="5"/>
+    <circle cx="410" cy="120" r="5"/><circle cx="480" cy="80" r="5"/><circle cx="520" cy="140" r="5"/>
+    <circle cx="150" cy="200" r="5"/><circle cx="220" cy="240" r="5"/><circle cx="300" cy="220" r="5"/>
+    <circle cx="400" cy="230" r="5"/><circle cx="500" cy="220" r="5"/><circle cx="80" cy="230" r="5"/>
+    <circle cx="450" cy="180" r="5"/>
+  </g>
+  <!-- zoom region -->
+  <rect x="270" y="90" width="200" height="140" fill="none" stroke="#2f855a" stroke-width="3" stroke-dasharray="5 4"/>
+  <text x="370" y="82" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#2f855a">promising region</text>
+  <!-- second-stage samples -->
+  <g fill="#2f855a">
+    <circle cx="290" cy="110" r="4"/><circle cx="310" cy="130" r="4"/><circle cx="330" cy="105" r="4"/>
+    <circle cx="350" cy="125" r="4"/><circle cx="370" cy="145" r="4"/><circle cx="390" cy="120" r="4"/>
+    <circle cx="410" cy="140" r="4"/><circle cx="430" cy="160" r="4"/><circle cx="450" cy="130" r="4"/>
+    <circle cx="300" cy="150" r="4"/><circle cx="320" cy="170" r="4"/><circle cx="340" cy="155" r="4"/>
+    <circle cx="360" cy="180" r="4"/><circle cx="380" cy="165" r="4"/><circle cx="400" cy="190" r="4"/>
+    <circle cx="420" cy="175" r="4"/><circle cx="440" cy="200" r="4"/><circle cx="350" cy="195" r="4"/>
+  </g>
+</svg>
+<figcaption><strong>Figure 3.</strong> First, sample broadly (blue dots). Identify the
+region where performance looks best (green dashed box). Then sample more densely in that
+region (green dots). Repeat if needed — each pass focuses the search.</figcaption>
+</figure>
+
+<div class="callout impl">
+<span class="label">⚙️ Implementation — the coarse-to-fine process</span>
+<ol>
+<li>Define a broad range for each hyperparameter.</li>
+<li>Sample randomly (e.g. 20–50 configurations) and evaluate each on the dev set.</li>
+<li>Look at which region performed best. Shrink the ranges accordingly.</li>
+<li>Sample again more densely within the narrower range.</li>
+<li>Repeat until you're satisfied with the dev performance or your compute budget is
+exhausted.</li>
+</ol>
+</div>
+
+<div class="callout insight">
+<span class="label">💡 Insight — one experiment at a time</span>
+You don't need to grid the space. Even <strong>one random configuration at a time</strong>,
+adjusted based on the previous results, works well. This is called
+"babysitting a model" and is appropriate when compute is limited.
+</div>
+
+<!-- ============================================================= -->
+<h2 id="scale">5. Using the Right Scale</h2>
+
+<p>Not all hyperparameters should be sampled uniformly on a linear scale. Some — like the
+learning rate — are best sampled on a <strong>logarithmic scale</strong>.</p>
+
+<h3>5.1 The problem with linear sampling for the learning rate</h3>
+<p>Suppose the reasonable range for \(\alpha\) is \(0.0001\) to \(1\). If you sample
+uniformly on a linear scale, 90% of your samples fall between \(0.1\) and \(1\), and only
+10% fall between \(0.0001\) and \(0.1\) — even though the range that matters most for fine
+tuning is the lower end.</p>
+
+<figure>
+<svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Linear vs log scale">
+  <!-- linear -->
+  <g transform="translate(30,30)">
+    <text x="150" y="-5" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#1a202c">Linear scale</text>
+    <line x1="20" y1="100" x2="300" y2="100" stroke="#1a202c" stroke-width="1.5"/>
+    <line x1="20" y1="95" x2="20" y2="105" stroke="#1a202c"/><text x="20" y="125" font-size="10" text-anchor="middle" fill="#5b6470">0.0001</text>
+    <line x1="160" y1="95" x2="160" y2="105" stroke="#1a202c"/><text x="160" y="125" font-size="10" text-anchor="middle" fill="#5b6470">0.5</text>
+    <line x1="300" y1="95" x2="300" y2="105" stroke="#1a202c"/><text x="300" y="125" font-size="10" text-anchor="middle" fill="#5b6470">1</text>
+    <g fill="#c53030">
+      <circle cx="240" cy="75" r="4"/><circle cx="260" cy="75" r="4"/><circle cx="275" cy="75" r="4"/>
+      <circle cx="285" cy="75" r="4"/><circle cx="250" cy="75" r="4"/><circle cx="265" cy="75" r="4"/>
+      <circle cx="230" cy="75" r="4"/><circle cx="290" cy="75" r="4"/><circle cx="295" cy="75" r="4"/>
+      <circle cx="255" cy="75" r="4"/>
+    </g>
+    <text x="150" y="160" text-anchor="middle" font-size="10" fill="#c53030">90% of samples land here →</text>
+  </g>
+  <!-- log -->
+  <g transform="translate(390,30)">
+    <text x="150" y="-5" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#1a202c">Log scale</text>
+    <line x1="20" y1="100" x2="300" y2="100" stroke="#1a202c" stroke-width="1.5"/>
+    <line x1="20" y1="95" x2="20" y2="105" stroke="#1a202c"/><text x="20" y="125" font-size="10" text-anchor="middle" fill="#5b6470">10⁻⁴</text>
+    <line x1="90" y1="95" x2="90" y2="105" stroke="#1a202c"/><text x="90" y="125" font-size="10" text-anchor="middle" fill="#5b6470">10⁻³</text>
+    <line x1="160" y1="95" x2="160" y2="105" stroke="#1a202c"/><text x="160" y="125" font-size="10" text-anchor="middle" fill="#5b6470">10⁻²</text>
+    <line x1="230" y1="95" x2="230" y2="105" stroke="#1a202c"/><text x="230" y="125" font-size="10" text-anchor="middle" fill="#5b6470">10⁻¹</text>
+    <line x1="300" y1="95" x2="300" y2="105" stroke="#1a202c"/><text x="300" y="125" font-size="10" text-anchor="middle" fill="#5b6470">10⁰</text>
+    <g fill="#2f855a">
+      <circle cx="40" cy="75" r="4"/><circle cx="80" cy="75" r="4"/><circle cx="130" cy="75" r="4"/>
+      <circle cx="180" cy="75" r="4"/><circle cx="220" cy="75" r="4"/><circle cx="60" cy="75" r="4"/>
+      <circle cx="110" cy="75" r="4"/><circle cx="150" cy="75" r="4"/><circle cx="200" cy="75" r="4"/>
+      <circle cx="260" cy="75" r="4"/>
+    </g>
+    <text x="150" y="160" text-anchor="middle" font-size="10" fill="#2f855a">samples spread evenly across decades</text>
+  </g>
+</svg>
+<figcaption><strong>Figure 4.</strong> Left: uniform linear sampling concentrates most
+samples near the upper end of the range. Right: log-uniform sampling spreads samples across
+orders of magnitude, which is what you want for the learning rate.</figcaption>
+</figure>
+
+<h3>5.2 Sampling on a log scale</h3>
+<p>Instead of sampling \(\alpha\) directly, sample its exponent \(r\) uniformly and then
+compute \(\alpha = 10^r\).</p>
+
+<div class="eqbox">
+\[
+r \sim \text{Uniform}(a, b), \qquad \alpha = 10^{r}
+\]
+</div>
+
+<p>For example, to search \(\alpha\) in the range \([10^{-4}, 10^{0}]\):</p>
+<pre><code>r = -4 * np.random.rand()   # r is uniform in [-4, 0]
+alpha = 10 ** r             # alpha is log-uniform in [10^-4, 1]
+</code></pre>
+
+<div class="callout ex">
+<span class="label">🟣 Example — sampling α for a neural network</span>
+<p>Suppose you believe the reasonable range for \(\alpha\) is \(10^{-4}\) to \(10^{-1}\).
+You set \(a = -4\) and \(b = -1\). Then:</p>
+<ul>
+<li>Sample \(r_1 = -3.2\) → \(\alpha_1 = 10^{-3.2} \approx 6.3 \times 10^{-4}\)</li>
+<li>Sample \(r_2 = -1.4\) → \(\alpha_2 = 10^{-1.4} \approx 0.04\)</li>
+<li>Sample \(r_3 = -2.7\) → \(\alpha_3 = 10^{-2.7} \approx 0.002\)</li>
+</ul>
+<p>Each decade \(10^{-4}\) to \(10^{-3}\), \(10^{-3}\) to \(10^{-2}\), and \(10^{-2}\) to
+\(10^{-1}\) is equally likely. This gives fine-grained exploration at the lower end where
+small differences matter.</p>
+</div>
+
+<div class="callout imp">
+<span class="label">🟡 Important — which hyperparameters to sample on a log scale?</span>
+<ul>
+<li><strong>Learning rate \(\alpha\)</strong> — definitely log scale.</li>
+<li><strong>Regularization \(\lambda\)</strong> — log scale.</li>
+<li><strong>\(\beta\) for exponentially weighted averages (including momentum and Adam's
+\(\beta_1, \beta_2\)\)</strong> — special treatment, see the next section.</li>
+<li><strong># hidden units</strong> — linear scale (or small steps).</li>
+<li><strong># layers</strong> — integer linear scale.</li>
+<li><strong>Mini-batch size</strong> — powers of 2, so sample from that discrete set.</li>
+</ul>
+</div>
+
+<!-- ============================================================= -->
+<h2 id="ewascale">6. Scale for β in Exponentially Weighted Averages</h2>
+
+<h3>6.1 The problem with uniform sampling for β</h3>
+<p>Suppose you want to tune \(\beta\) for momentum or for the exponential weighted average.
+The typical range is \(0.9\) to \(0.999\). If you sample uniformly, the range
+\(0.9\) to \(0.99\) gets \(90\%\) of the samples, while the range \(0.99\) to \(0.999\)
+gets only \(10\%\).</p>
+
+<p>But look at the <strong>effective window</strong> \(\frac{1}{1-\beta}\):</p>
+
+<table class="tbl-fixed">
+<thead><tr><th>\(\beta\)</th><th>Effective window \(1/(1-\beta)\)</th></tr></thead>
+<tbody>
+<tr><td>0.9</td><td>10</td></tr>
+<tr><td>0.99</td><td>100</td></tr>
+<tr><td>0.999</td><td>1000</td></tr>
+</tbody>
+</table>
+
+<p>The values \(0.9\), \(0.99\), and \(0.999\) are equally spaced in terms of their
+<em>effect on the averaging window</em>, but linearly uniform sampling treats
+\(0.9\) to \(0.99\) as a much larger region than \(0.99\) to \(0.999\).</p>
+
+<h3>6.2 The fix — sample \(1-\beta\) on a log scale</h3>
+<div class="eqbox">
+\[
+1 - \beta \sim 10^{r}, \qquad r \sim \text{Uniform}(a, b)
+\]
+</div>
+
+<p>For example, to search \(1-\beta\) in the range \([10^{-3}, 10^{-1}]\) (so
+\(\beta \in [0.9, 0.999]\)):</p>
+<pre><code>r = -3 * np.random.rand() - 1     # r is uniform in [-4, -1]
+one_minus_beta = 10 ** r
+beta = 1 - one_minus_beta
+</code></pre>
+
+<div class="callout ex">
+<span class="label">🟣 Example</span>
+<ul>
+<li>\(r = -3\) → \(1-\beta = 10^{-3}\) → \(\beta = 0.999\) → window ≈ 1000</li>
+<li>\(r = -2\) → \(1-\beta = 10^{-2}\) → \(\beta = 0.99\) → window ≈ 100</li>
+<li>\(r = -1\) → \(1-\beta = 10^{-1}\) → \(\beta = 0.9\) → window ≈ 10</li>
+</ul>
+<p>Each decade of the window size gets equal sampling probability.</p>
+</div>
+
+<!-- ============================================================= -->
+<h2 id="pandas">7. Pandas vs Caviar — Two Modes of Hyperparameter Tuning</h2>
+
+<p>Depending on your computational resources, there are two main strategies for tuning
+hyperparameters.</p>
+
+<figure>
+<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pandas vs Caviar">
+  <!-- pandas -->
+  <g transform="translate(20,20)">
+    <text x="160" y="20" text-anchor="middle" font-size="14" font-family="sans-serif" fill="#1a202c" font-weight="bold">"Panda" — babysit one model</text>
+    <text x="160" y="45" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470">(typical when compute is limited)</text>
+    <rect x="40" y="70" width="240" height="140" rx="10" fill="#fefcbf" stroke="#b7791f"/>
+    <text x="160" y="105" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#1a202c">Run one model at a time.</text>
+    <text x="160" y="130" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#1a202c">Watch the learning curve.</text>
+    <text x="160" y="155" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#1a202c">Adjust hyperparameters</text>
+    <text x="160" y="175" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#1a202c">based on what you see.</text>
+    <text x="160" y="198" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470">Limited to 1–2 experiments at a time.</text>
+  </g>
+  <!-- caviar -->
+  <g transform="translate(380,20)">
+    <text x="160" y="20" text-anchor="middle" font-size="14" font-family="sans-serif" fill="#1a202c" font-weight="bold">"Caviar" — train many in parallel</text>
+    <text x="160" y="45" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470">(typical when compute is abundant)</text>
+    <rect x="40" y="70" width="240" height="140" rx="10" fill="#c6f6d5" stroke="#2f855a"/>
+    <text x="80" y="105" font-size="12" font-family="sans-serif" fill="#1a202c">▶ Model A</text>
+    <text x="80" y="130" font-size="12" font-family="sans-serif" fill="#1a202c">▶ Model B</text>
+    <text x="80" y="155" font-size="12" font-family="sans-serif" fill="#1a202c">▶ Model C</text>
+    <text x="80" y="180" font-size="12" font-family="sans-serif" fill="#1a202c">▶ Model D</text>
+    <text x="160" y="200" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470">Many experiments in parallel.</text>
+  </g>
+</svg>
+<figcaption><strong>Figure 5.</strong> Two strategies. Left ("Panda"): with limited compute,
+babysit one model and adjust it based on its learning curve. Right ("Caviar"): with
+abundant compute, run many models in parallel and pick the best. Most people today use a
+bit of both.</figcaption>
+</figure>
+
+<div class="callout imp">
+<span class="label">🟡 Important — re-evaluate your intuitions periodically</span>
+Andrew Ng's advice: hyperparameters that were best a few years ago may not be best now.
+Datasets change, model architectures change, and hardware changes. <strong>Re-evaluate
+your hyperparameters occasionally</strong>, even for problems you think you understand.
+Intuitions do get stale.
+</div>
+
+<!-- ============================================================= -->
+<h2 id="bn">8. Batch Normalization — The Idea</h2>
+
+<h3>8.1 The motivation</h3>
+<p>In Week 1, you saw that <strong>normalizing the input features</strong> to have zero
+mean and unit variance speeds up gradient descent dramatically. But in a deep network,
+the inputs to intermediate layers are the activations of previous layers — and those
+change as training progresses. Can we apply the same normalization trick to
+<em>intermediate</em> layers too?</p>
+
+<div class="callout def">
+<span class="label">🔵 Definition — Batch Normalization (Batch Norm)</span>
+<strong>Batch Normalization</strong> is a technique that normalizes the pre-activations
+(or activations) of each layer to have approximately zero mean and unit variance,
+computed over each mini-batch. It stabilizes training, allows larger learning rates,
+and speeds up convergence.
+</div>
+
+<figure>
+<svg viewBox="0 0 720 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Batch norm in a network">
+  <text x="360" y="20" text-anchor="middle" font-size="13" font-family="sans-serif" fill="#1a202c">Can we normalize the intermediate activations?</text>
+  <!-- simple network -->
+  <g fill="#fff" stroke="#1a202c" stroke-width="1.5">
+    <circle cx="80" cy="90" r="14"/><circle cx="80" cy="150" r="14"/><circle cx="80" cy="210" r="14"/>
+    <circle cx="240" cy="90" r="14"/><circle cx="240" cy="150" r="14"/><circle cx="240" cy="210" r="14"/>
+    <circle cx="400" cy="90" r="14"/><circle cx="400" cy="150" r="14"/><circle cx="400" cy="210" r="14"/>
+    <circle cx="560" cy="150" r="14"/>
+  </g>
+  <g stroke="#5b6470" stroke-width="1">
+    <line x1="94" y1="90" x2="226" y2="90"/><line x1="94" y1="90" x2="226" y2="150"/><line x1="94" y1="90" x2="226" y2="210"/>
+    <line x1="94" y1="150" x2="226" y2="90"/><line x1="94" y1="150" x2="226" y2="150"/><line x1="94" y1="150" x2="226" y2="210"/>
+    <line x1="94" y1="210" x2="226" y2="90"/><line x1="94" y1="210" x2="226" y2="150"/><line x1="94" y1="210" x2="226" y2="210"/>
+    <line x1="254" y1="90" x2="386" y2="90"/><line x1="254" y1="90" x2="386" y2="150"/><line x1="254" y1="90" x2="386" y2="210"/>
+    <line x1="254" y1="150" x2="386" y2="90"/><line x1="254" y1="150" x2="386" y2="150"/><line x1="254" y1="150" x2="386" y2="210"/>
+    <line x1="254" y1="210" x2="386" y2="90"/><line x1="254" y1="210" x2="386" y2="150"/><line x1="254" y1="210" x2="386" y2="210"/>
+    <line x1="414" y1="90" x2="546" y2="150"/><line x1="414" y1="150" x2="546" y2="150"/><line x1="414" y1="210" x2="546" y2="150"/>
+  </g>
+  <text x="60" y="85" font-size="11" font-family="sans-serif" fill="#1a202c">x₁</text>
+  <text x="60" y="145" font-size="11" font-family="sans-serif" fill="#1a202c">x₂</text>
+  <text x="60" y="205" font-size="11" font-family="sans-serif" fill="#1a202c">x₃</text>
+  <text x="580" y="155" font-size="11" font-family="sans-serif" fill="#1a202c">ŷ</text>
+  <!-- callouts -->
+  <g font-size="11" font-family="sans-serif" fill="#5b6470">
+    <text x="240" y="245" text-anchor="middle">Layer 1 → activations a⁽¹⁾</text>
+    <text x="400" y="245" text-anchor="middle">Layer 2 → activations a⁽²⁾</text>
+  </g>
+  <rect x="200" y="255" width="80" height="30" rx="4" fill="#fefcbf" stroke="#b7791f"/>
+  <text x="240" y="274" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#1a202c">Batch Norm</text>
+  <rect x="360" y="255" width="80" height="30" rx="4" fill="#fefcbf" stroke="#b7791f"/>
+  <text x="400" y="274" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#1a202c">Batch Norm</text>
+  <text x="360" y="305" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470">Insert Batch Norm between layers to normalize their inputs.</text>
+</svg>
+<figcaption><strong>Figure 6.</strong> Batch Norm is inserted between layers. Instead of
+feeding the raw pre-activations \(z^{[l]}\) into the activation function, we first normalize
+them (over the mini-batch), then apply a learnable scale and shift.</figcaption>
+</figure>
+
+<!-- ============================================================= -->
+<h2 id="bnimpl">9. Implementing Batch Norm</h2>
+
+<h3>9.1 The core algorithm</h3>
+<p>Given intermediate values \(z^{(1)}, z^{(2)}, \dots, z^{(m)}\) for a mini-batch of
+size \(m\) (typically the pre-activations of some layer):</p>
+
+<ol>
+<li><strong>Compute the mean:</strong>
+\[
+\mu = \frac{1}{m} \sum_{i=1}^{m} z^{(i)}
+\]</li>
+<li><strong>Compute the variance:</strong>
+\[
+\sigma^2 = \frac{1}{m} \sum_{i=1}^{m} (z^{(i)} - \mu)^2
+\]</li>
+<li><strong>Normalize:</strong>
+\[
+z_{\text{norm}}^{(i)} = \frac{z^{(i)} - \mu}{\sqrt{\sigma^2 + \varepsilon}}
+\]
+Here \(\varepsilon\) is a tiny number (e.g. \(10^{-8}\)) that prevents division by zero.</li>
+<li><strong>Scale and shift with learnable parameters:</strong>
+\[
+\tilde{z}^{(i)} = \gamma \, z_{\text{norm}}^{(i)} + \beta
+\]
+Here \(\gamma\) and \(\beta\) are <em>learnable</em> parameters of the layer, not fixed
+constants.</li>
+<li><strong>Use \(\tilde{z}^{(i)}\) in place of \(z^{(i)}\)</strong> in the rest of the
+network (e.g. pass \(\tilde{z}^{(i)}\) through the activation function).</li>
+</ol>
+
+<div class="callout imp">
+<span class="label">🟡 Important — \(\beta\) is a learnable parameter, not the momentum β</span>
+In Batch Norm, \(\beta\) is a learnable shift parameter (like a bias). This is
+<em>completely different</em> from the momentum hyperparameter \(\beta\) you saw earlier.
+The course uses the same Greek letter for both; keep track of context.
+</div>
+
+<div class="callout intu">
+<span class="label">🟢 Intuition — why γ and β?</span>
+If we always forced activations to have exactly zero mean and unit variance, we would
+restrict the network's representational power. By allowing a learnable scale \(\gamma\)
+and shift \(\beta\), the network can recover any mean and variance it wants. The
+normalization simply gives it a <em>well-conditioned starting point</em> before it
+adjusts.
+</div>
+
+<div class="callout ex">
+<span class="label">🟣 Example — a simple numerical case</span>
+<p>Suppose a mini-batch has three pre-activations: \(z = (1, 3, 5)\). Then:</p>
+<ul>
+<li>\(\mu = (1+3+5)/3 = 3\)</li>
+<li>\(\sigma^2 = ((1-3)^2 + (3-3)^2 + (5-3)^2)/3 = (4 + 0 + 4)/3 \approx 2.67\)</li>
+<li>\(z_{\text{norm}} = ((1-3)/\sqrt{2.67}, (3-3)/\sqrt{2.67}, (5-3)/\sqrt{2.67}) \approx (-1.22, 0, 1.22)\)</li>
+</ul>
+<p>Now the batch has zero mean and unit variance. If \(\gamma = 2\) and \(\beta = 1\),
+then \(\tilde{z} \approx (-1.44, 1, 3.44)\). The network learns \(\gamma\) and \(\beta\)
+during backpropagation.</p>
+</div>
+
+<!-- ============================================================= -->
+<h2 id="bnnet">10. Fitting Batch Norm into a Neural Network</h2>
+
+<h3>10.1 Where does it go?</h3>
+<p>In a standard deep network, each layer computes:</p>
+\[
+z^{[l]} = W^{[l]} a^{[l-1]} + b^{[l]}, \quad a^{[l]} = g^{[l]}(z^{[l]})
+\]
+<p>With Batch Norm, we insert a normalization step between \(z^{[l]}\) and \(g^{[l]}\):</p>
+\[
+z^{[l]} = W^{[l]} a^{[l-1]} + b^{[l]}
+\]
+\[
+\tilde{z}^{[l]} = \text{BN}_{\gamma^{[l]}, \beta^{[l]}}(z^{[l]})
+\]
+\[
+a^{[l]} = g^{[l]}(\tilde{z}^{[l]})
+\]
+
+<div class="callout warn">
+<span class="label">🔴 Warning — the bias \(b^{[l]}\) becomes redundant</span>
+Because Batch Norm subtracts the mini-batch mean \(\mu\) from \(z^{[l]}\), any constant
+offset added via \(b^{[l]}\) is immediately removed. So \(b^{[l]}\) has no effect on the
+output. Common practice is to <strong>drop \(b^{[l]}\) entirely</strong> when using Batch
+Norm, or set it to zero. The learnable \(\beta^{[l]}\) of Batch Norm takes over the role
+of the bias.
+</div>
+
+<h3>10.2 The full forward pass with Batch Norm</h3>
+<pre><code># For layer l:
+Z = W @ A_prev + b        # (b is usually omitted when using BN)
+Z_tilde = BatchNorm(Z, gamma, beta)
+A = g(Z_tilde)
+</code></pre>
+
+<h3>10.3 Parameters of the layer</h3>
+<p>Each layer now has four sets of parameters:</p>
+<ul>
+<li>\(W^{[l]}\) — weights (learned via backprop)</li>
+<li>\(b^{[l]}\) — bias (usually dropped when using BN)</li>
+<li>\(\gamma^{[l]}\) — learnable scale for Batch Norm</li>
+<li>\(\beta^{[l]}\) — learnable shift for Batch Norm</li>
+</ul>
+
+<p>The update rules (using gradient descent) become:</p>
+<div class="eqbox">
+\[
+W^{[l]} := W^{[l]} - \alpha \, dW^{[l]}, \quad
+\gamma^{[l]} := \gamma^{[l]} - \alpha \, d\gamma^{[l]}, \quad
+\beta^{[l]} := \beta^{[l]} - \alpha \, d\beta^{[l]}
+\]
+</div>
+
+<!-- ============================================================= -->
+<h2 id="bnmini">11. Working with Mini-batches</h2>
+
+<p>Batch Norm's statistics are computed <strong>per mini-batch</strong>. This is what
+gives the technique its name — it normalizes over a "batch" of examples at a time.</p>
+
+<figure>
+<svg viewBox="0 0 720 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Batch norm per mini-batch">
+  <text x="360" y="20" text-anchor="middle" font-size="13" font-family="sans-serif" fill="#1a202c">Each mini-batch uses its own mean and variance</text>
+  <g>
+    <rect x="40" y="50" width="140" height="70" rx="8" fill="#bee3f8" stroke="#2b6cb0"/>
+    <text x="110" y="80" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#1a202c">X⁽¹⁾</text>
+    <text x="110" y="100" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470">mini-batch 1</text>
+    <text x="110" y="140" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#2b6cb0">μ₁, σ₁² → z̃</text>
+  </g>
+  <g>
+    <rect x="220" y="50" width="140" height="70" rx="8" fill="#fefcbf" stroke="#b7791f"/>
+    <text x="290" y="80" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#1a202c">X⁽²⁾</text>
+    <text x="290" y="100" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470">mini-batch 2</text>
+    <text x="290" y="140" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#b7791f">μ₂, σ₂² → z̃</text>
+  </g>
+  <g>
+    <rect x="400" y="50" width="140" height="70" rx="8" fill="#c6f6d5" stroke="#2f855a"/>
+    <text x="470" y="80" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#1a202c">X⁽³⁾</text>
+    <text x="470" y="100" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470">mini-batch 3</text>
+    <text x="470" y="140" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#2f855a">μ₃, σ₃² → z̃</text>
+  </g>
+  <text x="360" y="190" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#1a202c">Different mini-batches → different normalization.</text>
+  <text x="360" y="215" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#5b6470">This introduces a slight noise, but training still converges.</text>
+  <text x="360" y="240" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#5b6470">At test time, use the running average of μ and σ² from training.</text>
+</svg>
+<figcaption><strong>Figure 7.</strong> Batch Norm computes \(\mu\) and \(\sigma^2\) from
+each mini-batch. Different mini-batches get different normalization, which is a slight
+source of noise but does not prevent convergence. At test time, we use a running average
+of \(\mu\) and \(\sigma^2\) gathered during training.</figcaption>
+</figure>
+
+<div class="callout imp">
+<span class="label">🟡 Important — test-time behavior</span>
+At test time, we don't have a mini-batch to compute statistics from — we process one
+example at a time. Instead, we use exponentially weighted running averages of \(\mu\) and
+\(\sigma^2\) that were accumulated during training. This is why Batch Norm is said to have
+a <em>training mode</em> and a <em>test mode</em>.
+</div>
+
+<!-- ============================================================= -->
+<h2 id="bnwhy">12. Why Does Batch Norm Work?</h2>
+
+<h3>12.1 The "changing inputs" problem</h3>
+<p>Consider a deep network. Layer 3 receives the activations from Layer 2 as input. As
+training progresses, the weights of Layer 2 change, so the distribution of inputs to
+Layer 3 shifts. Layer 3 constantly has to re-adapt to a moving target.</p>
+
+<div class="callout intu">
+<span class="label">🟢 Intuition — a shifting target</span>
+Imagine trying to learn to catch a ball, but the ball's weight and speed change every
+time you practice. Your learning would be very slow — you'd have to re-learn each time
+the parameters changed. Batch Norm stabilizes the input distribution to each layer, so
+each layer sees a more consistent input distribution and can learn faster.
+</div>
+
+<h3>12.2 Two benefits</h3>
+<ul>
+<li><strong>Stabilizes learning:</strong> Each layer's inputs remain roughly normalized,
+so gradient descent has a well-conditioned surface to work with.</li>
+<li><strong>Allows larger learning rates:</strong> With normalized inputs, the optimizer
+can take larger steps without diverging. This directly speeds up training.</li>
+</ul>
+
+<div class="callout insight">
+<span class="label">💡 Insight — Batch Norm's main practical effect</span>
+The main effect of Batch Norm is that it <strong>makes the network much less sensitive
+to the exact initialization</strong> and <strong>allows a much larger learning rate</strong>.
+In practice, this often makes the difference between a model that trains and one that
+doesn't.
+</div>
+
+<!-- ============================================================= -->
+<h2 id="bncov">13. Covariate Shift</h2>
+
+<div class="callout def">
+<span class="label">🔵 Definition — Covariate shift</span>
+<strong>Covariate shift</strong> is the phenomenon where the distribution of the inputs
+\(X\) changes, even though the underlying function \(X \to Y\) stays the same. A model
+trained on one input distribution may perform poorly on a shifted distribution, even
+though the task is unchanged.
+</div>
+
+<figure>
+<svg viewBox="0 0 620 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Covariate shift example">
+  <text x="310" y="20" text-anchor="middle" font-size="13" font-family="sans-serif" fill="#1a202c">Covariate shift: the input distribution changes</text>
+  <!-- old distribution -->
+  <g transform="translate(40,40)">
+    <text x="110" y="15" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#1a202c">Old data (training)</text>
+    <rect x="20" y="30" width="180" height="120" fill="#bee3f8" stroke="#2b6cb0"/>
+    <g fill="#1a202c" font-size="18" text-anchor="middle">
+      <text x="70" y="80">🐱</text><text x="110" y="70">🐱</text><text x="150" y="85">🐱</text>
+      <text x="70" y="115">🐶</text><text x="110" y="125">🐶</text><text x="150" y="115">🐶</text>
+    </g>
+  </g>
+  <text x="260" y="110" font-size="22" fill="#2b6cb0" text-anchor="middle">→</text>
+  <!-- new distribution -->
+  <g transform="translate(340,40)">
+    <text x="110" y="15" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#1a202c">New data (deployment)</text>
+    <rect x="20" y="30" width="180" height="120" fill="#fed7d7" stroke="#c53030"/>
+    <g fill="#1a202c" font-size="18" text-anchor="middle">
+      <text x="70" y="80">🐱</text><text x="110" y="70">🐱</text><text x="150" y="85">🐱</text>
+      <text x="70" y="115">🐱</text><text x="110" y="125">🐶</text><text x="150" y="115">🐱</text>
+    </g>
+  </g>
+  <text x="310" y="205" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470">Same task, different input distribution.</text>
+</svg>
+<figcaption><strong>Figure 8.</strong> Covariate shift. The task (classify cats vs dogs) is
+the same, but the distribution of inputs has changed. A model trained on the old
+distribution may struggle on the new one.</figcaption>
+</figure>
+
+<h3>13.1 How Batch Norm relates to covariate shift</h3>
+<p>Within a deep network, each layer's inputs are the previous layer's activations. As
+training progresses, those activations change — a form of internal covariate shift.
+Batch Norm directly combats this by re-normalizing the inputs at every layer, keeping
+them in a stable range.</p>
+
+<div class="callout imp">
+<span class="label">🟡 Important — an honest note</span>
+The precise reasons Batch Norm works are still actively discussed in the research
+literature. The covariate-shift explanation is intuitive and commonly cited, but
+researchers have pointed out that the story is not the whole picture. What is
+unambiguous is that <strong>Batch Norm makes deep networks much easier to train</strong>
+— this is confirmed in practice across many architectures.
+</div>
+
+<!-- ============================================================= -->
+<h2 id="bnreg">14. Batch Norm as Regularization</h2>
+
+<h3>14.1 The regularization effect</h3>
+<p>Each mini-batch's mean and variance are slightly different, so the normalized
+activations \(\tilde{z}\) are slightly noisy. This noise is similar in spirit to dropout —
+it makes the network less able to rely on any specific activation value, which has a
+mild regularizing effect.</p>
+
+<figure>
+<svg viewBox="0 0 620 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Batch norm as regularization">
+  <rect x="40" y="40" width="200" height="80" rx="8" fill="#bee3f8" stroke="#2b6cb0"/>
+  <text x="140" y="75" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#1a202c">Mini-batch of size 64</text>
+  <text x="140" y="100" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470">slightly different μ, σ²</text>
+
+  <text x="290" y="85" font-size="22" fill="#2b6cb0" text-anchor="middle">→</text>
+
+  <rect x="360" y="40" width="200" height="80" rx="8" fill="#fefcbf" stroke="#b7791f"/>
+  <text x="460" y="75" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#1a202c">Next mini-batch of 64</text>
+  <text x="460" y="100" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470">different μ, σ² again</text>
+
+  <text x="310" y="160" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#1a202c">Each mini-batch normalizes with its own statistics.</text>
+  <text x="310" y="185" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#5b6470">This adds noise, giving a mild regularization effect — similar in spirit to dropout.</text>
+</svg>
+<figcaption><strong>Figure 9.</strong> Because each mini-batch normalizes with its own
+statistics, the normalized activations are slightly noisy. This noise acts as a mild
+regularizer. Larger mini-batches → less noise → weaker regularization effect.
+</figcaption>
+</figure>
+
+<div class="callout warn">
+<span class="label">🔴 Warning — Batch Norm is not a replacement for regularization</span>
+Batch Norm's regularization effect is <strong>mild</strong>. It is not a substitute for
+L2 or dropout. If you are overfitting, use a proper regularization method. Batch Norm
+just happens to add a small amount of noise on top.
+</div>
+
+<div class="callout insight">
+<span class="label">💡 Insight — interaction with mini-batch size</span>
+The smaller the mini-batch, the more noise there is (because the mean and variance are
+computed from fewer examples), so the stronger the regularization effect. Conversely,
+larger mini-batches give more stable statistics but weaker regularization. This is one
+of the many subtle interactions that make deep learning an empirical discipline.
+</div>
+
+<!-- ============================================================= -->
+<h2 id="softmax">15. Multi-class Classification — Softmax Regression</h2>
+
+<h3>15.1 From binary to multi-class</h3>
+<p>So far we have focused on binary classification (is this a cat, yes or no?). But many
+real problems have <strong>more than two classes</strong> — for example, recognizing
+cats, dogs, and baby chicks. This is called <strong>multi-class classification</strong>.</p>
+
+<figure>
+<svg viewBox="0 0 720 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Multi-class examples">
+  <text x="360" y="20" text-anchor="middle" font-size="13" font-family="sans-serif" fill="#1a202c">Classify into 3 classes: cat, dog, chick</text>
+  <g font-size="40" text-anchor="middle">
+    <text x="120" y="80">🐱</text>
+    <text x="240" y="80">🐶</text>
+    <text x="360" y="80">🐤</text>
+    <text x="480" y="80">🐱</text>
+    <text x="600" y="80">🐶</text>
+  </g>
+</svg>
+<figcaption><strong>Figure 10.</strong> In multi-class classification, each input belongs
+to exactly one of \(C\) classes (\(C = 3\) here). Unlike multi-label classification, the
+classes are mutually exclusive.</figcaption>
+</figure>
+
+<h3>15.2 The softmax layer</h3>
+<div class="callout def">
+<span class="label">🔵 Definition — Softmax</span>
+The <strong>softmax function</strong> takes a vector of real numbers \(z^{[L]} \in
+\mathbb{R}^C\) and produces a probability distribution over \(C\) classes:
+\[
+a^{[L]}_i = \frac{e^{z^{[L]}_i}}{\sum_{j=1}^{C} e^{z^{[L]}_j}}
+\]
+Each output is between 0 and 1, and all outputs sum to 1.
+</div>
+
+<figure>
+<svg viewBox="0 0 720 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Softmax layer">
+  <text x="360" y="20" text-anchor="middle" font-size="13" font-family="sans-serif" fill="#1a202c">Softmax output layer</text>
+  <!-- network -->
+  <g fill="#fff" stroke="#1a202c" stroke-width="1.5">
+    <circle cx="100" cy="100" r="12"/><circle cx="100" cy="150" r="12"/><circle cx="100" cy="200" r="12"/>
+    <circle cx="240" cy="100" r="12"/><circle cx="240" cy="150" r="12"/><circle cx="240" cy="200" r="12"/>
+    <circle cx="380" cy="100" r="12"/><circle cx="380" cy="150" r="12"/><circle cx="380" cy="200" r="12"/>
+    <circle cx="520" cy="100" r="12"/><circle cx="520" cy="150" r="12"/><circle cx="520" cy="200" r="12"/>
+  </g>
+  <g stroke="#5b6470" stroke-width="1">
+    <line x1="112" y1="100" x2="228" y2="100"/><line x1="112" y1="100" x2="228" y2="150"/><line x1="112" y1="100" x2="228" y2="200"/>
+    <line x1="112" y1="150" x2="228" y2="100"/><line x1="112" y1="150" x2="228" y2="150"/><line x1="112" y1="150" x2="228" y2="200"/>
+    <line x1="112" y1="200" x2="228" y2="100"/><line x1="112" y1="200" x2="228" y2="150"/><line x1="112" y1="200" x2="228" y2="200"/>
+    <line x1="252" y1="100" x2="368" y2="100"/><line x1="252" y1="100" x2="368" y2="150"/><line x1="252" y1="100" x2="368" y2="200"/>
+    <line x1="252" y1="150" x2="368" y2="100"/><line x1="252" y1="150" x2="368" y2="150"/><line x1="252" y1="150" x2="368" y2="200"/>
+    <line x1="252" y1="200" x2="368" y2="100"/><line x1="252" y1="200" x2="368" y2="150"/><line x1="252" y1="200" x2="368" y2="200"/>
+    <line x1="392" y1="100" x2="508" y2="100"/><line x1="392" y1="150" x2="508" y2="150"/><line x1="392" y1="200" x2="508" y2="200"/>
+  </g>
+  <text x="70" y="95" font-size="11" font-family="sans-serif" fill="#1a202c">x₁</text>
+  <text x="70" y="145" font-size="11" font-family="sans-serif" fill="#1a202c">x₂</text>
+  <text x="70" y="195" font-size="11" font-family="sans-serif" fill="#1a202c">x₃</text>
+  <!-- softmax box -->
+  <rect x="555" y="75" width="120" height="150" rx="8" fill="#fefcbf" stroke="#b7791f" stroke-width="2"/>
+  <text x="615" y="100" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#1a202c" font-weight="bold">Softmax</text>
+  <text x="615" y="130" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#1a202c">ŷ₁ = 0.85</text>
+  <text x="615" y="155" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#1a202c">ŷ₂ = 0.10</text>
+  <text x="615" y="180" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#1a202c">ŷ₃ = 0.05</text>
+  <text x="615" y="210" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470">Σ = 1</text>
+</svg>
+<figcaption><strong>Figure 11.</strong> The output layer of a multi-class network uses
+softmax. It takes the \(C\) pre-activations and converts them into a probability
+distribution over the \(C\) classes. The predicted class is the one with the highest
+probability.</figcaption>
+</figure>
+
+<h3>15.3 Why softmax?</h3>
+<div class="callout intu">
+<span class="label">🟢 Intuition — from scores to probabilities</span>
+The final layer produces raw scores \(z^{[L]}_1, \dots, z^{[L]}_C\). We want these to
+represent probabilities, which requires two things: (1) they are all non-negative, and
+(2) they sum to 1. The exponential function \(e^{z}\) makes everything positive, and
+dividing by the sum enforces the sum-to-1 property. Higher scores → exponentially
+higher probabilities.
+</div>
+
+<div class="callout imp">
+<span class="label">🟡 Important — hard max vs soft max</span>
+A "hard max" would set the largest score to 1 and the rest to 0. Softmax instead gives
+a <em>soft</em> probability distribution — the largest class gets the highest
+probability, but others still get non-zero probability. This is useful because it
+provides a gradable signal during training.
+</div>
+
+<!-- ============================================================= -->
+<h2 id="softmaxloss">16. Softmax Loss and Examples</h2>
+
+<h3>16.1 The loss function</h3>
+<p>For multi-class classification with softmax output, the loss is the
+<strong>categorical cross-entropy</strong>:</p>
+
+<div class="eqbox">
+\[
+\mathcal{L}(y, \hat{y}) = -\sum_{i=1}^{C} y_i \log(\hat{y}_i)
+\]
+</div>
+
+<p>Where:</p>
+<ul>
+<li>\(y\) — the true label, a one-hot vector (e.g. \([1, 0, 0]\) if the true class is 1).</li>
+<li>\(\hat{y}\) — the predicted probabilities from softmax.</li>
+<li>\(C\) — the number of classes.</li>
+</ul>
+
+<p>Because \(y\) is one-hot, only one term is nonzero. If the true class is \(i\), then:</p>
+<div class="eqbox">
+\[
+\mathcal{L}(y, \hat{y}) = -\log(\hat{y}_i)
+\]
+</div>
+
+<div class="callout ex">
+<span class="label">🟣 Example — 3-class problem</span>
+<p>Suppose the true label is class 1 (so \(y = [1, 0, 0]\)) and the network predicts
+\(\hat{y} = [0.7, 0.2, 0.1]\). Then:</p>
+\[
+\mathcal{L} = -(1 \cdot \log 0.7 + 0 \cdot \log 0.2 + 0 \cdot \log 0.1) = -\log 0.7 \approx 0.357
+\]
+<p>If the network predicted \(\hat{y} = [0.9, 0.05, 0.05]\):</p>
+\[
+\mathcal{L} = -\log 0.9 \approx 0.105
+\]
+<p>The second prediction is better (closer to the true class), so the loss is smaller.
+This is exactly what we want.</p>
+</div>
+
+<h3>16.2 Softmax with more classes — decision boundaries</h3>
+
+<figure>
+<svg viewBox="0 0 720 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Softmax decision boundaries">
+  <text x="360" y="20" text-anchor="middle" font-size="13" font-family="sans-serif" fill="#1a202c">Softmax decision boundaries for different numbers of classes</text>
+  <!-- row 1 -->
+  <g transform="translate(20,40)">
+    <rect x="0" y="0" width="200" height="180" fill="#f7fafc" stroke="#1a202c"/>
+    <polygon points="0,100 200,120 200,180 0,180" fill="#c53030" opacity="0.5"/>
+    <polygon points="0,0 200,0 200,120 0,100" fill="#2b6cb0" opacity="0.5"/>
+    <g fill="none" stroke="#1a202c" stroke-width="1">
+      <circle cx="50" cy="60" r="4"/><circle cx="100" cy="70" r="4"/><circle cx="150" cy="50" r="4"/>
+      <circle cx="60" cy="130" r="4"/><circle cx="110" cy="140" r="4"/><circle cx="160" cy="150" r="4"/>
+    </g>
+    <text x="100" y="205" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470">2 classes</text>
+  </g>
+  <g transform="translate(250,40)">
+    <rect x="0" y="0" width="200" height="180" fill="#f7fafc" stroke="#1a202c"/>
+    <polygon points="0,0 200,0 200,60 0,80" fill="#2b6cb0" opacity="0.5"/>
+    <polygon points="0,80 200,60 200,130 0,150" fill="#2f855a" opacity="0.5"/>
+    <polygon points="0,150 200,130 200,180 0,180" fill="#c53030" opacity="0.5"/>
+    <text x="100" y="205" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470">3 classes</text>
+  </g>
+  <g transform="translate(480,40)">
+    <rect x="0" y="0" width="200" height="180" fill="#f7fafc" stroke="#1a202c"/>
+    <polygon points="0,0 100,0 100,180 0,180" fill="#2b6cb0" opacity="0.5"/>
+    <polygon points="100,0 200,0 200,90 100,90" fill="#2f855a" opacity="0.5"/>
+    <polygon points="100,90 200,90 200,180 100,180" fill="#c53030" opacity="0.5"/>
+    <text x="100" y="205" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470">4 classes</text>
+  </g>
+  <!-- row 2 -->
+  <g transform="translate(20,260)">
+    <rect x="0" y="0" width="200" height="180" fill="#f7fafc" stroke="#1a202c"/>
+    <polygon points="0,0 200,0 200,180 0,180" fill="#2b6cb0" opacity="0.3"/>
+    <polygon points="0,40 200,100 200,180 0,140" fill="#2f855a" opacity="0.4"/>
+    <polygon points="0,100 200,40 200,180 0,180" fill="#c53030" opacity="0.3"/>
+    <text x="100" y="205" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470">Overlapping classes</text>
+  </g>
+  <g transform="translate(250,260)">
+    <rect x="0" y="0" width="200" height="180" fill="#f7fafc" stroke="#1a202c"/>
+    <polygon points="0,0 90,0 90,60 0,60" fill="#2b6cb0" opacity="0.5"/>
+    <polygon points="90,0 200,0 200,60 90,60" fill="#2f855a" opacity="0.5"/>
+    <polygon points="0,60 90,60 90,120 0,120" fill="#b7791f" opacity="0.5"/>
+    <polygon points="90,60 200,60 200,120 90,120" fill="#6b46c1" opacity="0.5"/>
+    <polygon points="0,120 90,120 90,180 0,180" fill="#c53030" opacity="0.5"/>
+    <polygon points="90,120 200,120 200,180 90,180" fill="#2c7a7b" opacity="0.5"/>
+    <text x="100" y="205" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470">6 classes (checkerboard)</text>
+  </g>
+  <g transform="translate(480,260)">
+    <rect x="0" y="0" width="200" height="180" fill="#f7fafc" stroke="#1a202c"/>
+    <polygon points="0,0 200,0 200,180 0,180" fill="#2b6cb0" opacity="0.2"/>
+    <polygon points="0,0 200,180 0,180" fill="#2f855a" opacity="0.4"/>
+    <polygon points="0,0 200,0 200,180" fill="#c53030" opacity="0.3"/>
+    <text x="100" y="205" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#5b6470">Non-linear boundaries</text>
+  </g>
+</svg>
+<figcaption><strong>Figure 12.</strong> Softmax produces decision boundaries in the input
+space. With 2 classes, it is equivalent to logistic regression (a linear boundary). With
+3 or more classes, the boundaries are piecewise-linear, dividing the space into regions —
+one per class. Deeper networks with softmax can produce more complex (non-linear)
+boundaries.</figcaption>
+</figure>
+
+<h3>16.3 Softmax in a neural network — putting it together</h3>
+<p>The forward pass of a multi-class network with softmax output looks like:</p>
+<pre><code># Layers 1 to L-1: usual activation
+for l in range(1, L):
+    Z = W[l] @ A_prev + b[l]
+    A = g[l](Z)
+
+# Final layer L: softmax
+Z_L = W[L] @ A_prev + b[L]
+A_L = softmax(Z_L)   # probability distribution over C classes
+</code></pre>
+
+<!-- ============================================================= -->
+<h2 id="frameworks">17. Deep Learning Frameworks</h2>
+
+<h3>17.1 Why use a framework?</h3>
+<p>Implementing backpropagation by hand is a great learning exercise, but for real
+projects, frameworks save enormous time and reduce bugs. They handle:</p>
+<ul>
+<li>Automatic differentiation (computing gradients for you).</li>
+<li>GPU acceleration.</li>
+<li>Optimized linear algebra primitives.</li>
+<li>Standard architectures, layers, and optimizers.</li>
+</ul>
+
+<h3>17.2 Common frameworks</h3>
+<table class="tbl-fixed">
+<thead><tr><th>Framework</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><strong>TensorFlow</strong></td><td>Google; widely used, strong production support. The course uses it.</td></tr>
+<tr><td><strong>PyTorch</strong></td><td>Meta; very popular in research, dynamic computation graphs.</td></tr>
+<tr><td><strong>Keras</strong></td><td>High-level API that runs on top of TensorFlow and others; excellent for rapid prototyping.</td></tr>
+<tr><td><strong>Caffe / Caffe2</strong></td><td>Older framework, historically important for computer vision.</td></tr>
+<tr><td><strong>CNTK</strong></td><td>Microsoft; no longer actively developed.</td></tr>
+<tr><td><strong>MXNet</strong></td><td>Apache; used to be Amazon's framework.</td></tr>
+<tr><td><strong>PaddlePaddle</strong></td><td>Baidu.</td></tr>
+<tr><td><strong>Theano</strong></td><td>Historical; one of the earliest frameworks.</td></tr>
+<tr><td><strong>Torch / PyTorch</strong></td><td>Lua-based Torch was older; PyTorch is its Python successor.</td></tr>
+<tr><td><strong>DL4J</strong></td><td>Java-based.</td></tr>
+</tbody>
+</table>
+
+<h3>17.3 How to choose a framework</h3>
+<div class="callout imp">
+<span class="label">🟡 Important — criteria for choosing a framework</span>
+<ul>
+<li><strong>Ease of programming</strong> — both for development and for deployment.</li>
+<li><strong>Running speed</strong> — especially for large models and datasets.</li>
+<li><strong>Truly open</strong> — open source with good governance, so the project is
+not controlled by a single company in a way that could restrict use.</li>
+</ul>
+</div>
+
+<!-- ============================================================= -->
+<h2 id="tf">18. TensorFlow and the Motivating Problem</h2>
+
+<h3>18.1 The motivating problem</h3>
+<p>Consider a very simple optimization problem. Suppose we want to minimize:</p>
+\[
+J(w) = w^2 - 10w + 25 = (w - 5)^2
+\]
+<p>The minimum is at \(w = 5\) with \(J(5) = 0\). In TensorFlow, you would write:</p>
+
+<pre><code>import tensorflow as tf
+
+w = tf.Variable(0.0)             # initial guess
+optimizer = tf.keras.optimizers.SGD(learning_rate=0.1)
+
+for step in range(100):
+    with tf.GradientTape() as tape:
+        J = (w - 5) ** 2
+    grad = tape.gradient(J, w)
+    optimizer.apply_gradients([(grad, w)])
+
+print(w.numpy())   # should be close to 5
+</code></pre>
+
+<div class="callout impl">
+<span class="label">⚙️ Implementation — how TensorFlow works</span>
+<ol>
+<li>Define <strong>variables</strong> — the parameters you want to optimize.</li>
+<li>Define the <strong>cost function</strong> using those variables.</li>
+<li>Use <code>GradientTape</code> to record operations and compute gradients
+automatically.</li>
+<li>Use an <strong>optimizer</strong> to update the variables in the direction that
+reduces the cost.</li>
+</ol>
+<p>No manual backpropagation needed — the framework handles it.</p>
+</div>
+
+<div class="callout insight">
+<span class="label">💡 Insight — the value of frameworks</span>
+The example is trivially simple, but the same pattern scales to networks with millions
+of parameters: define the cost, let the framework compute gradients, apply an optimizer.
+This is why frameworks like TensorFlow and PyTorch have made deep learning so much more
+accessible.
+</div>
+
+<!-- ============================================================= -->
+<h2 id="summary">19. Weekly Summary</h2>
+
+<div class="card">
+<h3>What we covered</h3>
+<ul>
+<li><strong>Which hyperparameters matter</strong> — learning rate \(\alpha\) is the most
+important; Adam's \(\beta_1, \beta_2, \varepsilon\) rarely need tuning.</li>
+<li><strong>Random search beats grid search</strong> — because we don't know which
+hyperparameters are important, random sampling explores more distinct values per axis.</li>
+<li><strong>Coarse to fine</strong> — after a broad search, zoom in on the promising
+region.</li>
+<li><strong>Right scale</strong> — sample \(\alpha\) and \(\lambda\) on a log scale;
+sample \(1-\beta\) on a log scale for exponentially weighted averages.</li>
+<li><strong>Pandas vs Caviar</strong> — babysit one model when compute is limited; run
+many in parallel when compute is abundant.</li>
+<li><strong>Batch Normalization</strong> — normalize intermediate activations, add
+learnable scale \(\gamma\) and shift \(\beta\), use mini-batch statistics during training,
+running averages at test time.</li>
+<li><strong>Why Batch Norm works</strong> — stabilizes the input distribution to each
+layer, allows larger learning rates, and adds a mild regularization effect.</li>
+<li><strong>Softmax regression</strong> — generalizes logistic regression to \(C\) classes;
+produces a probability distribution over classes.</li>
+<li><strong>Multi-class loss</strong> — categorical cross-entropy
+\(\mathcal{L} = -\sum_i y_i \log(\hat{y}_i)\).</li>
+<li><strong>Frameworks</strong> — TensorFlow, PyTorch, Keras, and others automate
+gradient computation and enable GPU acceleration.</li>
+</ul>
+</div>
+
+<h3>Must-Know Concepts</h3>
+<ul>
+<li>Random search (not grid search) for hyperparameter tuning.</li>
+<li>Sample \(\alpha\) and \(\lambda\) on a log scale; sample \(1-\beta\) on a log scale.</li>
+<li>Batch Norm normalizes each mini-batch's pre-activations, then scales and shifts
+with learnable \(\gamma, \beta\).</li>
+<li>The bias \(b^{[l]}\) in a layer is usually redundant when Batch Norm is used.</li>
+<li>At test time, use running averages of \(\mu\) and \(\sigma^2\).</li>
+<li>Softmax converts \(C\) real-valued scores into a probability distribution.</li>
+<li>Cross-entropy loss: \(-\sum_i y_i \log \hat{y}_i\).</li>
+</ul>
+
+<h3>Important Equations</h3>
+<table class="tbl-fixed">
+<thead><tr><th>Equation</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td>\(\alpha = 10^{r}, \; r \sim \text{Uniform}(a,b)\)</td><td>Log-uniform sampling for learning rate.</td></tr>
+<tr><td>\(1-\beta = 10^{r}, \; r \sim \text{Uniform}(a,b)\)</td><td>Log-uniform sampling for \(\beta\).</td></tr>
+<tr><td>\(\mu = \frac{1}{m}\sum z^{(i)}\)</td><td>Mini-batch mean in Batch Norm.</td></tr>
+<tr><td>\(\sigma^2 = \frac{1}{m}\sum (z^{(i)} - \mu)^2\)</td><td>Mini-batch variance.</td></tr>
+<tr><td>\(z_{\text{norm}}^{(i)} = \frac{z^{(i)} - \mu}{\sqrt{\sigma^2 + \varepsilon}}\)</td><td>Normalized activation.</td></tr>
+<tr><td>\(\tilde{z}^{(i)} = \gamma \, z_{\text{norm}}^{(i)} + \beta\)</td><td>Scaled and shifted activation.</td></tr>
+<tr><td>\(a^{[L]}_i = \frac{e^{z^{[L]}_i}}{\sum_j e^{z^{[L]}_j}}\)</td><td>Softmax output.</td></tr>
+<tr><td>\(\mathcal{L} = -\sum_{i} y_i \log \hat{y}_i\)</td><td>Categorical cross-entropy loss.</td></tr>
+</tbody>
+</table>
+
+<h3>Common Confusions</h3>
+<table class="tbl-fixed">
+<thead><tr><th>Concept A</th><th>Concept B</th><th>Key difference</th></tr></thead>
+<tbody>
+<tr><td>Grid search</td><td>Random search</td><td>Grid: fixed values per axis. Random: samples arbitrary values, explores more distinct values of important hyperparameters.</td></tr>
+<tr><td>Linear sampling</td><td>Log sampling</td><td>Linear: uniform over range. Log: uniform over orders of magnitude, better for \(\alpha, \lambda\).</td></tr>
+<tr><td>Momentum \(\beta\)</td><td>Batch Norm \(\beta\)</td><td>Momentum \(\beta\) is a hyperparameter. Batch Norm \(\beta\) is a learnable shift.</td></tr>
+<tr><td>Normalizing inputs</td><td>Batch Norm</td><td>Inputs: done once. Batch Norm: done at every layer, per mini-batch.</td></tr>
+<tr><td>Softmax</td><td>Logistic regression</td><td>Softmax generalizes logistic regression from binary to multi-class.</td></tr>
+<tr><td>Sigmoid output</td><td>Softmax output</td><td>Sigmoid: binary classification. Softmax: multi-class classification.</td></tr>
+</tbody>
+</table>
+
+<!-- ============================================================= -->
+<h2 id="review">20. Review Questions</h2>
+<div class="qa">
+
+<details>
+<summary>Q1. Which hyperparameter should you tune first, and why?</summary>
+<p>The <strong>learning rate \(\alpha\)</strong>. It has the single largest impact on
+whether training converges at all and how fast. Small changes in \(\alpha\) can mean the
+difference between a model that trains smoothly and one that diverges. Tune it first and
+most carefully; other hyperparameters matter less in comparison.</p>
+</details>
+
+<details>
+<summary>Q2. Why is random search preferred over grid search?</summary>
+<p>Because we usually don't know which hyperparameters are important ahead of time. With
+grid search, if only 2 hyperparameters matter out of 5, you waste most of your
+experiments on combinations that don't matter. With random search, you explore more
+distinct values per axis for the same number of experiments. If you later find a
+promising region, use coarse-to-fine to narrow the search.</p>
+</details>
+
+<details>
+<summary>Q3. When sampling the learning rate \(\alpha\), why should you sample on a log scale rather than a linear scale?</summary>
+<p>Because the learning rate spans orders of magnitude (e.g. \(10^{-4}\) to \(10^{0}\)).
+Linear sampling would spend 90% of the samples in the top decade (\(0.1\) to \(1\)) and
+only 10% in the lower decades. Log sampling spreads samples evenly across decades, so
+you explore small values (where differences often matter most) more thoroughly.</p>
+</details>
+
+<details>
+<summary>Q4. What is the right scale for sampling \(\beta\) in exponentially weighted averages? Give the formula.</summary>
+<p>Sample \(1-\beta\) on a log scale. Formula:
+\(1-\beta = 10^{r}\) where \(r \sim \text{Uniform}(a, b)\).
+For example, for \(\beta \in [0.9, 0.999]\), use \(1-\beta \in [10^{-3}, 10^{-1}]\), so
+\(r \sim \text{Uniform}(-3, -1)\). This spreads samples evenly across the effective
+window sizes \(10, 100, 1000\).</p>
+</details>
+
+<details>
+<summary>Q5. What is "coarse to fine" and when should you use it?</summary>
+<p>Coarse-to-fine means starting with a broad random search over the hyperparameter
+space, identifying the region where performance is best, then zooming in and sampling
+more densely in that region. Use it after an initial round of random search has given
+you a rough sense of which region works well. It is especially helpful when you have
+many hyperparameters to tune and limited compute.</p>
+</details>
+
+<details>
+<summary>Q6. Explain the "Pandas vs Caviar" analogy for hyperparameter tuning.</summary>
+<p><strong>Panda:</strong> When compute is limited, you can only run one or two models at
+a time. You "babysit" the model — watch its learning curve and adjust hyperparameters as
+you go. <strong>Caviar:</strong> When compute is abundant, you train many models in
+parallel with different hyperparameters and pick the best one. Most people today use a
+mix of the two approaches.</p>
+</details>
+
+<details>
+<summary>Q7. What is Batch Normalization and what problem does it solve?</summary>
+<p>Batch Normalization is a technique that normalizes the pre-activations of each layer
+within each mini-batch to have approximately zero mean and unit variance, then applies a
+learnable scale \(\gamma\) and shift \(\beta\). It solves the problem of internal
+covariate shift — as previous layers change during training, the inputs to later layers
+shift, forcing them to constantly re-adapt. Batch Norm stabilizes these inputs, allowing
+faster training and larger learning rates.</p>
+</details>
+
+<details>
+<summary>Q8. Write the four steps of Batch Norm computation for a mini-batch.</summary>
+<ol>
+<li>Compute the mean: \(\mu = \frac{1}{m}\sum_i z^{(i)}\)</li>
+<li>Compute the variance: \(\sigma^2 = \frac{1}{m}\sum_i (z^{(i)} - \mu)^2\)</li>
+<li>Normalize: \(z_{\text{norm}}^{(i)} = \frac{z^{(i)} - \mu}{\sqrt{\sigma^2 + \varepsilon}}\)</li>
+<li>Scale and shift: \(\tilde{z}^{(i)} = \gamma \, z_{\text{norm}}^{(i)} + \beta\)</li>
+</ol>
+</details>
+
+<details>
+<summary>Q9. In Batch Norm, why are \(\gamma\) and \(\beta\) learned parameters rather than fixed constants?</summary>
+<p>If we forced activations to always have exactly zero mean and unit variance, we would
+restrict the network's representational power — the network could not choose to have,
+say, a nonzero mean at some layer if that were useful. By making \(\gamma\) and \(\beta\)
+learnable, the network can recover any mean and variance it wants. The normalization
+just provides a well-conditioned starting point that the network can then adjust during
+training.</p>
+</details>
+
+<details>
+<summary>Q10. Why is the bias \(b^{[l]}\) usually dropped when using Batch Norm?</summary>
+<p>Because Batch Norm subtracts the mini-batch mean \(\mu\) from \(z^{[l]}\). Any
+constant offset added by \(b^{[l]}\) would be immediately subtracted out by the
+normalization. So \(b^{[l]}\) has no effect on the output — the Batch Norm shift
+parameter \(\beta^{[l]}\) takes over the role of the bias. Standard practice is to drop
+\(b^{[l]}\) or set it to zero.</p>
+</details>
+
+<details>
+<summary>Q11. How does Batch Norm behave differently at training vs test time?</summary>
+<p>At <strong>training time</strong>, Batch Norm computes \(\mu\) and \(\sigma^2\) from
+each mini-batch. At <strong>test time</strong>, we process examples one at a time (or in
+very small batches) — computing statistics from a single example would be meaningless.
+Instead, we use exponentially weighted running averages of \(\mu\) and \(\sigma^2\)
+accumulated during training.</p>
+</details>
+
+<details>
+<summary>Q12. What is covariate shift, and how does it relate to Batch Norm?</summary>
+<p><strong>Covariate shift</strong> is when the distribution of inputs \(X\) changes
+while the task \(X \to Y\) stays the same. Inside a deep network, the inputs to each layer
+(the previous layer's activations) change as training progresses — a form of internal
+covariate shift. Batch Norm stabilizes each layer's inputs by re-normalizing them at
+every step, which is one reason it speeds up training. <em>Additional Context:</em>
+researchers have pointed out that the covariate-shift story does not fully explain why
+Batch Norm works, but the practical benefit is unambiguous.</p>
+</details>
+
+<details>
+<summary>Q13. Does Batch Norm act as a regularizer? Why or why not?</summary>
+<p>Yes, it has a <strong>mild</strong> regularizing effect. Because each mini-batch
+computes its own mean and variance, the normalized activations are slightly noisy — similar
+in spirit to dropout. This noise makes the network less able to rely on specific
+activation values, which reduces overfitting slightly. However, this effect is small and
+should not be relied upon as a substitute for proper regularization (L2, dropout).</p>
+</details>
+
+<details>
+<summary>Q14. What is softmax and why is it used in the output layer of multi-class classifiers?</summary>
+<p>Softmax is a function that takes \(C\) real-valued scores and converts them into a
+probability distribution over \(C\) classes:
+\(a_i = e^{z_i} / \sum_j e^{z_j}\). It is used in the output layer because we want the
+network to output probabilities — all non-negative and summing to 1. The class with the
+highest probability is the predicted class.</p>
+</details>
+
+<details>
+<summary>Q15. What loss function is used with softmax and why?</summary>
+<p>The <strong>categorical cross-entropy loss</strong>:
+\(\mathcal{L} = -\sum_i y_i \log \hat{y}_i\), where \(y\) is the one-hot true label and
+\(\hat{y}\) is the softmax output. Because \(y\) is one-hot, the loss simplifies to
+\(-\log \hat{y}_i\) where \(i\) is the true class. It penalizes the model heavily when
+the predicted probability for the true class is low, which is exactly the behavior we
+want.</p>
+</details>
+
+<details>
+<summary>Q16. What is the difference between softmax and logistic regression?</summary>
+<p>Logistic regression is used for <strong>binary</strong> classification — a single
+output between 0 and 1 (a sigmoid). Softmax is a generalization to
+<strong>multi-class</strong> classification — \(C\) outputs that sum to 1. Logistic
+regression is a special case of softmax with \(C = 2\).</p>
+</details>
+
+<details>
+<summary>Q17. Name three criteria for choosing a deep learning framework.</summary>
+<ol>
+<li><strong>Ease of programming</strong> — both for development and for deployment.</li>
+<li><strong>Running speed</strong> — critical for large models and datasets.</li>
+<li><strong>Truly open</strong> — open source with good governance, so the project is
+not controlled by a single company in a way that could restrict use.</li>
+</ol>
+</details>
+
+<details>
+<summary>Q18. What does a deep learning framework like TensorFlow do for you?</summary>
+<p>It automates much of the work of training neural networks:
+<ul>
+<li><strong>Automatic differentiation</strong> — computes gradients for you, so you
+don't have to implement backpropagation by hand.</li>
+<li><strong>GPU acceleration</strong> — runs matrix operations on GPUs, giving orders of
+magnitude speedups.</li>
+<li><strong>Optimized primitives</strong> — efficient implementations of matrix
+multiplication, convolutions, etc.</li>
+<li><strong>Standard layers and optimizers</strong> — you can compose models from
+pre-built components instead of writing everything from scratch.</li>
+</ul>
+</p>
+</details>
+
+<details>
+<summary>Q19. Suppose you want to tune \(\alpha, \beta, \text{mini-batch size}, \text{and } \lambda\). Which would you sample on a log scale, which linearly, and which from a discrete set?</summary>
+<p>
+<ul>
+<li><strong>\(\alpha\)</strong> — log scale (e.g. \(10^{-4}\) to \(10^{-1}\)).</li>
+<li><strong>\(\lambda\)</strong> — log scale (e.g. \(10^{-5}\) to \(10^{-1}\)).</li>
+<li><strong>\(\beta\)</strong> — log scale on \(1-\beta\) (e.g. \(1-\beta \in [10^{-3}, 10^{-1}]\)).</li>
+<li><strong>Mini-batch size</strong> — discrete set of powers of 2 (64, 128, 256, 512).</li>
+</ul>
+</p>
+</details>
+
+<details>
+<summary>Q20. What does Andrew Ng say about the stability of hyperparameter intuitions over time?</summary>
+<p>He advises re-evaluating hyperparameters occasionally. What was optimal a few years
+ago may not be optimal now — datasets, architectures, and hardware change. "Intuitions
+do get stale." Even for a problem you think you understand well, it is worth
+re-checking your hyperparameter choices periodically.</p>
+</details>
+
+</div>
+
+<!-- ============================================================= -->
+<h2 id="selftest">21. Self-Test</h2>
+<p class="small">Click each question to reveal the answer. These questions test conceptual
+understanding rather than memorization.</p>
+
+<div class="qa">
+
+<details>
+<summary>Q1. You have 5 hyperparameters to tune and a limited compute budget for
+30 experiments. Would you use grid search or random search? Justify your answer with a
+concrete example.</summary>
+<p><strong>Answer.</strong> Use <strong>random search</strong>.</p>
+<p>Concrete example: suppose only 2 of the 5 hyperparameters actually matter (you don't
+know which). With grid search on 5 hyperparameters and 30 experiments, you can afford
+at most 2–3 values per axis, so you only try 2–3 distinct values of each <em>important</em>
+hyperparameter. With random search and 30 experiments, you try 30 distinct values of each
+hyperparameter. If even one of the important hyperparameters has a "sweet spot" that
+grid search misses, you lose. Random search is far more likely to hit a good region.</p>
+<p>After identifying a promising region via random search, use coarse-to-fine to zoom in.</p>
+</details>
+
+<details>
+<summary>Q2. Suppose you want to tune the learning rate in the range \(10^{-4}\) to
+\(10^{-1}\). Write pseudocode to sample it correctly. Explain why linear sampling would
+be a bad idea.</summary>
+<p><strong>Answer.</strong> Correct sampling:</p>
+<pre><code>r = -4 + 3 * np.random.rand()   # r uniform in [-4, -1]
+alpha = 10 ** r                  # log-uniform in [10^-4, 10^-1]</code></pre>
+<p>Why linear sampling is bad: if you instead did
+<code>alpha = 0.0001 + 0.0999 * np.random.rand()</code>, then 90% of samples would fall
+in the range \([10^{-2}, 10^{-1}]\) (since that interval is 0.09 out of the 0.0999 total
+range) and only 10% would fall below \(10^{-2}\). But the region \(10^{-4}\) to \(10^{-2}\)
+contains two whole decades of potentially useful learning rates. You would under-sample
+that region and likely miss the best value. Log sampling spreads samples evenly across
+decades.</p>
+</details>
+
+<details>
+<summary>Q3. You are training a deep network and observe that the training loss decreases
+for a while, then plateaus at a value higher than you would like. Adding Batch Norm
+suddenly makes the loss continue decreasing. Explain why Batch Norm might help here, in
+terms of the internal covariate shift idea.</summary>
+<p><strong>Answer.</strong> Without Batch Norm, as training progresses, the weights of
+earlier layers change. This shifts the distribution of inputs to later layers — a form of
+internal covariate shift. Later layers have to constantly re-adapt to a moving target,
+which slows learning and can lead to a plateau.</p>
+<p>Batch Norm re-normalizes the pre-activations at each layer using the current
+mini-batch's mean and variance. Each layer therefore sees inputs with a stable mean and
+variance, regardless of how the previous layers change. This gives every layer a
+well-conditioned input distribution to learn from, allowing gradient descent to continue
+making progress — hence the loss resumes decreasing.</p>
+<p><em>Additional note:</em> the covariate shift story is intuitive and commonly used,
+but researchers have pointed out that it does not fully explain Batch Norm's success.
+The practical effect — more stable, faster training — is well established.</p>
+</details>
+
+<details>
+<summary>Q4. What happens if you keep the bias \(b^{[l]}\) in a layer that uses Batch
+Norm? Is it harmful?</summary>
+<p><strong>Answer.</strong> It is not exactly "harmful" in the sense of causing the
+network to fail, but it is <strong>redundant</strong> — the bias has no effect on the
+output because Batch Norm subtracts the mini-batch mean from \(z^{[l]}\), which removes
+any constant offset. The parameter \(b^{[l]}\) would receive a gradient that effectively
+cancels itself out, and it would simply stay near its initial value (or be driven in a
+direction that has no effect on the output).</p>
+<p>Convention is to drop \(b^{[l]}\) entirely when using Batch Norm. The learnable shift
+parameter \(\beta^{[l]}\) of Batch Norm takes over the role of the bias.</p>
+<p>Keeping it is not harmful per se, but it wastes memory, adds useless parameters, and
+can cause confusion when debugging. Drop it.</p>
+</details>
+
+<details>
+<summary>Q5. You use Batch Norm with a mini-batch size of 32. Then you switch to a
+mini-batch size of 512. Does Batch Norm's behavior change? Explain.</summary>
+<p><strong>Answer.</strong> Yes, in two important ways:</p>
+<ul>
+<li><strong>Noise / regularization effect:</strong> With mini-batch size 32, the mean
+and variance are computed from only 32 samples, so they are noisy. This introduces more
+noise into the normalized activations, giving a stronger (but still mild) regularization
+effect. With size 512, the statistics are much more stable, so the regularization effect
+is weaker.</li>
+<li><strong>Accuracy of statistics:</strong> Small batches give noisier \(\mu\) and
+\(\sigma^2\), which can occasionally hurt performance if the noise is very high. Very
+small batches (like 8 or 16) can sometimes cause instability. Larger batches give more
+stable statistics but less regularization.</li>
+</ul>
+<p>In practice, Batch Norm works with a wide range of mini-batch sizes, but the sweet
+spot is often 64–512. Very small batches may need extra care.</p>
+</details>
+
+<details>
+<summary>Q6. Suppose you have a network whose last layer uses softmax over 10 classes.
+You observe that the loss is stuck at \(\log(10) \approx 2.3\) even after many iterations.
+What is likely going wrong?</summary>
+<p><strong>Answer.</strong> \(\log(10)\) is exactly the loss you would get if the network
+were predicting a uniform distribution over the 10 classes — i.e., each class getting
+probability 0.1. This is the loss you get from random guessing. So the network is not
+learning at all.</p>
+<p>Possible causes:</p>
+<ul>
+<li><strong>Learning rate too small</strong> — the network is barely moving.</li>
+<li><strong>Learning rate too large</strong> — the optimizer is diverging, and the
+weights have gone to values that produce saturated softmax outputs (uniform predictions).</li>
+<li><strong>Bug in the loss function or gradient computation</strong> — for example, using
+the wrong loss with softmax, or forgetting to apply softmax at all.</li>
+<li><strong>Data issue</strong> — for example, labels not properly one-hot encoded, or a
+mismatch between the number of outputs and number of classes.</li>
+<li><strong>Bad initialization</strong> — all weights initialized to zero (symmetry
+problem).</li>
+</ul>
+<p>Diagnostic steps: check that the loss decreases on a small subset of the data (if it
+doesn't, there is a bug); check gradients against numerical approximations; try different
+learning rates.</p>
+</details>
+
+<details>
+<summary>Q7. Explain the following claim: "Batch Norm's regularization effect is a
+side effect, not its main purpose." Do you agree?</summary>
+<p><strong>Answer.</strong> Yes, I agree. Batch Norm's <em>main purpose</em> is to
+stabilize and speed up training by normalizing intermediate activations. This allows
+larger learning rates and makes the network less sensitive to initialization — these are
+the primary benefits, demonstrated consistently in practice.</p>
+<p>The regularization effect comes from the fact that each mini-batch uses its own
+\(\mu\) and \(\sigma^2\), which introduces some noise into the normalized activations.
+This noise is <em>similar in spirit</em> to dropout, and it does slightly reduce
+overfitting. But:</p>
+<ul>
+<li>The effect is mild compared to dedicated regularization methods.</li>
+<li>It depends on mini-batch size — larger batches give weaker regularization.</li>
+<li>It is a byproduct of how Batch Norm works, not a design goal.</li>
+</ul>
+<p>So the claim is accurate: Batch Norm's regularization effect is a side effect. If
+you are overfitting, use L2 or dropout — don't rely on Batch Norm alone.</p>
+</details>
+
+<details>
+<summary>Q8. You are building a multi-class classifier with 4 classes. What should the
+output layer look like? What activation function should you use? What loss?</summary>
+<p><strong>Answer.</strong></p>
+<ul>
+<li><strong>Output layer size:</strong> 4 neurons (one per class).</li>
+<li><strong>Activation:</strong> softmax. This converts the 4 pre-activations into a
+probability distribution over the 4 classes.</li>
+<li><strong>Loss:</strong> categorical cross-entropy:
+\(\mathcal{L} = -\sum_{i=1}^{4} y_i \log \hat{y}_i\). With one-hot labels, this reduces
+to \(-\log \hat{y}_i\) where \(i\) is the true class.</li>
+</ul>
+<p>During inference, the predicted class is \(\arg\max_i \hat{y}_i\).</p>
+<p>Important: do not use sigmoid on each output — that would treat the classes as
+independent binary problems, which is appropriate for multi-label classification (where
+an example can belong to multiple classes), but not for multi-class classification
+(mutually exclusive). For multi-class, use softmax.</p>
+</details>
+
+<details>
+<summary>Q9. Compare and contrast: (a) normalizing inputs, (b) Batch Norm, and (c)
+softmax. What problem does each solve, and how are they related?</summary>
+<p><strong>Answer.</strong></p>
+<p><strong>(a) Normalizing inputs:</strong> Done once, before training. Computes
+\(\mu\) and \(\sigma^2\) on the training set, then applies the transformation
+\(x \to (x-\mu)/\sigma\) to all inputs. Solves the problem of poorly-scaled features,
+which makes the cost surface elongated and gradient descent slow. Applied to the raw
+input \(X\), not to intermediate activations.</p>
+<p><strong>(b) Batch Norm:</strong> Applied at every layer during training, per
+mini-batch. Computes \(\mu\) and \(\sigma^2\) from the mini-batch's pre-activations,
+normalizes, then scales and shifts with learnable \(\gamma, \beta\). Solves internal
+covariate shift — the shifting distribution of inputs to each layer as earlier layers
+change. Allows larger learning rates and speeds up training. Also has a mild
+regularization side effect.</p>
+<p><strong>(c) Softmax:</strong> Applied at the output layer for multi-class problems.
+Takes \(C\) real-valued scores and produces a probability distribution over \(C\) classes
+via \(a_i = e^{z_i} / \sum_j e^{z_j}\). Solves the problem of needing a proper probability
+output for more than 2 classes. Logistic regression is the 2-class special case.</p>
+<p><strong>Relationships:</strong> (a) and (b) are conceptually similar — both normalize
+a set of values to zero mean and unit variance. The key differences are <em>where</em>
+(inputs vs intermediate layers) and <em>when</em> (once vs every mini-batch). (c) is
+unrelated to (a) and (b); it is about output representation, not normalization.</p>
+</details>
+
+<details>
+<summary>Q10. In the TensorFlow motivating example, why do we need <code>GradientTape</code>?
+Couldn't we just compute the derivative analytically?</summary>
+<p><strong>Answer.</strong> In the trivial example \(J(w) = (w-5)^2\), yes — the
+derivative \(dJ/dw = 2(w-5)\) is easy to compute by hand. But for a real neural network
+with millions of parameters and many layers, deriving and coding the gradient by hand
+is extremely error-prone.</p>
+<p><code>GradientTape</code> uses <strong>automatic differentiation</strong>: it records
+every operation that involves the watched variables during the forward pass, building a
+computational graph. Then <code>tape.gradient()</code> traverses this graph backward,
+applying the chain rule automatically to compute gradients with respect to any variable.</p>
+<p>This is the core value of frameworks like TensorFlow and PyTorch: you write only the
+forward pass, and the framework handles the entire backward pass. This eliminates a huge
+class of bugs and makes it possible to iterate on architectures quickly.</p>
+<p>There is still a place for understanding backprop by hand — it helps you debug when
+things go wrong, and it is essential for understanding the algorithms. But for actual
+implementation, automatic differentiation is the standard tool.</p>
+</details>
+
+</div>
+
+<hr class="soft">
+<div class="weeknav">
+  <a href="C2_W2.html" class="nav-btn">← Previous Week</a>
+  <a href="#">Back to Course 2</a>
+  <a href="#">Back to Specialization</a>
+  <a href="C3_W1.html" class="nav-btn">Next Week →</a>
+</div>
+
+<p class="small" style="text-align:center; margin-top:30px;">
+Notes generated from the supplied Course 2 Week 3 slides.
+Additional Context is provided where the slides assume prior knowledge.
+All diagrams are recreated as inline SVG for portability.
+</p>
+
+</div><!-- /wrap -->
+
+<button id="topBtn" title="Back to top">↑</button>
+
+<script>
+// ---------- theme ----------
+(function(){
+  const btn = document.getElementById('themeBtn');
+  const saved = localStorage.getItem('dl-theme');
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const initial = saved || (prefersDark ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', initial);
+  btn.textContent = initial === 'dark' ? '☀️' : '🌙';
+  btn.addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('dl-theme', next);
+    btn.textContent = next === 'dark' ? '☀️' : '🌙';
+  });
+})();
+
+// ---------- back to top ----------
+(function(){
+  const b = document.getElementById('topBtn');
+  window.addEventListener('scroll', () => {
+    b.classList.toggle('show', window.scrollY > 400);
+  });
+  b.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+})();
+
+// ---------- search ----------
+(function(){
+  const box = document.getElementById('searchBox');
+  if(!box) return;
+  let lastHits = [];
+  function clearHits(){
+    lastHits.forEach(m => {
+      const p = m.parentNode;
+      if(!p) return;
+      p.replaceChild(document.createTextNode(m.textContent), m);
+      p.normalize();
+    });
+    lastHits = [];
+  }
+  box.addEventListener('input', () => {
+    clearHits();
+    const q = box.value.trim().toLowerCase();
+    if(q.length < 3) return;
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+      acceptNode: n => {
+        if(!n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        const p = n.parentNode;
+        if(!p) return NodeFilter.FILTER_REJECT;
+        const tag = p.nodeName;
+        if(tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT') return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes = [];
+    let n;
+    while(n = walker.nextNode()) nodes.push(n);
+    let firstHit = null;
+    nodes.forEach(node => {
+      const text = node.nodeValue;
+      const idx = text.toLowerCase().indexOf(q);
+      if(idx === -1) return;
+      const span = document.createElement('mark');
+      span.className = 'hit';
+      span.textContent = text.substr(idx, q.length);
+      const after = node.splitText(idx);
+      after.nodeValue = after.nodeValue.substr(q.length);
+      node.parentNode.insertBefore(span, after);
+      lastHits.push(span);
+      if(!firstHit) firstHit = span;
+    });
+    if(firstHit) firstHit.scrollIntoView({behavior:'smooth', block:'center'});
+  });
+})();
+</script>
+
+</body>
+</html>

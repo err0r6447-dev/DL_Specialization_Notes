@@ -1,0 +1,2054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Course 1 · Week 2 — Basics of Neural Network Programming</title>
+
+<!-- MathJax with graceful fallback -->
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$','$'], ['\\(','\\)']], displayMath: [['$$','$$'], ['\\[','\\]']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+:root{
+  --bg:#f7f8fb;
+  --bg-elev:#ffffff;
+  --bg-soft:#eef2f7;
+  --text:#1c2330;
+  --text-soft:#4a5568;
+  --muted:#6b7280;
+  --border:#dfe5ee;
+  --accent:#2563eb;
+  --accent-soft:#e0ebff;
+  --accent-2:#7c3aed;
+
+  --def-bg:#eaf2ff;      --def-bd:#2563eb;
+  --intu-bg:#e9f9ef;     --intu-bd:#16a34a;
+  --imp-bg:#fff7e0;      --imp-bd:#d97706;
+  --warn-bg:#ffeaea;     --warn-bd:#dc2626;
+  --ex-bg:#f4ecff;       --ex-bd:#7c3aed;
+  --impl-bg:#e7f6fb;     --impl-bd:#0891b2;
+  --ins-bg:#fff0f6;      --ins-bd:#db2777;
+
+  --code-bg:#0f172a;
+  --code-fg:#e2e8f0;
+
+  --shadow: 0 1px 2px rgba(16,24,40,.04), 0 4px 14px rgba(16,24,40,.06);
+  --radius:14px;
+  --radius-sm:10px;
+  --maxw:960px;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+               Arial, "Noto Sans", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+               "Liberation Mono", "Courier New", monospace;
+}
+
+html[data-theme="dark"]{
+  --bg:#0d1117;
+  --bg-elev:#161b22;
+  --bg-soft:#1c2230;
+  --text:#e6edf3;
+  --text-soft:#c9d1d9;
+  --muted:#8b949e;
+  --border:#2a3240;
+  --accent:#58a6ff;
+  --accent-soft:#1b2a45;
+  --accent-2:#a78bfa;
+
+  --def-bg:#12233f;      --def-bd:#3b82f6;
+  --intu-bg:#0f2a1c;     --intu-bd:#22c55e;
+  --imp-bg:#2c220c;      --imp-bd:#f59e0b;
+  --warn-bg:#2b1313;     --warn-bd:#ef4444;
+  --ex-bg:#241640;       --ex-bd:#a78bfa;
+  --impl-bg:#0b2730;     --impl-bd:#06b6d4;
+  --ins-bg:#2b1220;      --ins-bd:#ec4899;
+
+  --code-bg:#010409;
+  --code-fg:#e6edf3;
+
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.35);
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-sans);
+  line-height:1.7;
+  font-size:16.5px;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+img{max-width:100%;height:auto;display:block}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:color-mix(in srgb, var(--bg-elev) 92%, transparent);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--border);
+}
+.topbar-inner{
+  max-width:var(--maxw);margin:0 auto;
+  padding:.6rem 1rem;
+  display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;
+}
+.brand{
+  font-weight:700;font-size:.95rem;color:var(--accent);
+  text-decoration:none;white-space:nowrap;
+}
+.brand:hover{text-decoration:underline}
+.topbar .spacer{flex:1}
+.topbar button{
+  background:var(--bg-soft);border:1px solid var(--border);
+  color:var(--text);border-radius:999px;
+  padding:.4rem .8rem;font-size:.85rem;cursor:pointer;
+  font-family:inherit;
+}
+.topbar button:hover{border-color:var(--accent);color:var(--accent)}
+
+.wrap{
+  max-width:var(--maxw);
+  margin:0 auto;
+  padding:1.25rem 1rem 5rem;
+}
+
+/* ============================================================
+   HEADINGS
+   ============================================================ */
+h1,h2,h3,h4{line-height:1.28;color:var(--text);margin:1.6em 0 .6em}
+h1{font-size:2rem;margin-top:.4em;letter-spacing:-.02em}
+h2{
+  font-size:1.45rem;letter-spacing:-.01em;
+  padding-bottom:.35rem;border-bottom:2px solid var(--accent-soft);
+  margin-top:2.4em;
+}
+h3{font-size:1.15rem;color:var(--text-soft)}
+h4{font-size:1rem;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;font-size:.8rem}
+
+p{margin:.7em 0}
+ul,ol{margin:.5em 0 .9em;padding-left:1.4em}
+li{margin:.35em 0}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+hr{border:none;border-top:1px solid var(--border);margin:2.5em 0}
+
+/* ============================================================
+   HERO / TITLE
+   ============================================================ */
+.hero{
+  background:linear-gradient(135deg, var(--accent-soft), transparent 65%);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:1.5rem 1.4rem 1.3rem;
+  box-shadow:var(--shadow);
+  margin-bottom:1.5rem;
+}
+.hero .eyebrow{
+  font-size:.78rem;text-transform:uppercase;letter-spacing:.14em;
+  color:var(--accent);font-weight:700;
+}
+.hero h1{margin:.15em 0 .25em;font-size:1.85rem}
+.hero .sub{color:var(--text-soft);font-size:1rem;margin:0}
+.hero .meta{
+  margin-top:.9rem;display:flex;flex-wrap:wrap;gap:.5rem;
+}
+.pill{
+  background:var(--bg-elev);border:1px solid var(--border);
+  border-radius:999px;padding:.25rem .7rem;font-size:.8rem;color:var(--text-soft);
+}
+
+/* ============================================================
+   TOC
+   ============================================================ */
+.toc{
+  background:var(--bg-elev);border:1px solid var(--border);
+  border-radius:var(--radius);padding:1rem 1.2rem;
+  box-shadow:var(--shadow);
+  margin-bottom:2rem;
+}
+.toc h2{
+  font-size:1.05rem;border:none;margin:.1em 0 .5em;padding:0;
+}
+.toc ol{
+  columns:1;
+  list-style:none;padding-left:0;margin:0;
+}
+@media(min-width:640px){
+  .toc ol{columns:2;column-gap:1.6rem}
+}
+.toc li{margin:.25em 0;break-inside:avoid}
+.toc a{
+  color:var(--text-soft);font-size:.94rem;
+  display:inline-block;
+}
+.toc a:hover{color:var(--accent)}
+.toc .num{color:var(--muted);font-variant-numeric:tabular-nums;margin-right:.4em}
+
+/* ============================================================
+   CALLOUT BOXES
+   ============================================================ */
+.box{
+  border-radius:var(--radius-sm);
+  padding:.9rem 1.1rem;
+  margin:1.1em 0;
+  border-left:5px solid;
+  background:var(--bg-elev);
+}
+.box .label{
+  display:inline-flex;align-items:center;gap:.4rem;
+  font-weight:700;font-size:.82rem;
+  text-transform:uppercase;letter-spacing:.08em;
+  margin-bottom:.35rem;
+}
+.box p:first-of-type{margin-top:.2em}
+.box p:last-child{margin-bottom:.2em}
+
+.box.def{background:var(--def-bg);border-color:var(--def-bd)}
+.box.def .label{color:var(--def-bd)}
+.box.intu{background:var(--intu-bg);border-color:var(--intu-bd)}
+.box.intu .label{color:var(--intu-bd)}
+.box.imp{background:var(--imp-bg);border-color:var(--imp-bd)}
+.box.imp .label{color:var(--imp-bd)}
+.box.warn{background:var(--warn-bg);border-color:var(--warn-bd)}
+.box.warn .label{color:var(--warn-bd)}
+.box.ex{background:var(--ex-bg);border-color:var(--ex-bd)}
+.box.ex .label{color:var(--ex-bd)}
+.box.impl{background:var(--impl-bg);border-color:var(--impl-bd)}
+.box.impl .label{color:var(--impl-bd)}
+.box.ins{background:var(--ins-bg);border-color:var(--ins-bd)}
+.box.ins .label{color:var(--ins-bd)}
+
+/* ============================================================
+   EQUATIONS
+   ============================================================ */
+.eq{
+  background:var(--bg-soft);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:.9rem 1.1rem;
+  margin:1em 0;
+  overflow-x:auto;
+  text-align:center;
+}
+.eq-caption{
+  font-size:.85rem;color:var(--muted);margin-top:.4rem;text-align:center;
+}
+
+/* ============================================================
+   TABLES
+   ============================================================ */
+.table-wrap{overflow-x:auto;margin:1.1em 0;border-radius:var(--radius-sm);border:1px solid var(--border)}
+table{
+  width:100%;border-collapse:collapse;
+  font-size:.93rem;background:var(--bg-elev);
+}
+th,td{
+  padding:.65rem .85rem;text-align:left;border-bottom:1px solid var(--border);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);font-weight:700;color:var(--text);
+  font-size:.83rem;text-transform:uppercase;letter-spacing:.05em;
+}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:color-mix(in srgb, var(--accent-soft) 40%, transparent)}
+
+/* ============================================================
+   CODE
+   ============================================================ */
+code{
+  font-family:var(--font-mono);font-size:.88em;
+  background:var(--bg-soft);color:var(--text);
+  padding:.15em .4em;border-radius:6px;border:1px solid var(--border);
+}
+pre{
+  background:var(--code-bg);color:var(--code-fg);
+  padding:1rem 1.1rem;border-radius:var(--radius-sm);
+  overflow-x:auto;font-size:.87rem;line-height:1.6;
+  margin:1em 0;border:1px solid var(--border);
+}
+pre code{background:none;border:none;color:inherit;padding:0}
+.kw{color:#ff79c6}.st{color:#f1fa8c}.cm{color:#7d8b9d;font-style:italic}
+.fn{color:#8be9fd}.nm{color:#bd93f9}
+
+/* ============================================================
+   SVG DIAGRAM WRAPPER
+   ============================================================ */
+.fig{
+  margin:1.3em 0;padding:1rem;
+  background:var(--bg-elev);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  box-shadow:var(--shadow);
+}
+.fig svg{display:block;width:100%;height:auto;max-width:100%}
+.fig figcaption{
+  font-size:.85rem;color:var(--muted);
+  text-align:center;margin-top:.6rem;line-height:1.5;
+}
+.svg-text{font-family:var(--font-sans);fill:var(--text)}
+.svg-text-soft{font-family:var(--font-sans);fill:var(--text-soft)}
+.svg-line{stroke:var(--text-soft);stroke-width:1.4;fill:none}
+.svg-node{fill:var(--bg-elev);stroke:var(--accent);stroke-width:1.6}
+.svg-node-2{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.6}
+.svg-label{font-family:var(--font-sans);font-size:12px;fill:var(--text);font-weight:600}
+.svg-label-sm{font-family:var(--font-sans);font-size:11px;fill:var(--text-soft)}
+.svg-axis{stroke:var(--text-soft);stroke-width:1.2}
+.svg-grid{stroke:var(--border);stroke-width:1;stroke-dasharray:3 4}
+
+/* ============================================================
+   SUMMARY BOXES / REVIEW
+   ============================================================ */
+.summary{
+  background:linear-gradient(180deg, var(--accent-soft), transparent 80%);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:1.2rem 1.3rem;
+  margin:2em 0 1em;
+}
+.summary h2{border:none;margin-top:.2em;padding:0}
+
+details.qa{
+  background:var(--bg-elev);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:.7rem 1rem;margin:.55em 0;
+}
+details.qa summary{
+  cursor:pointer;font-weight:600;color:var(--text);
+  list-style:none;display:flex;gap:.6rem;align-items:flex-start;
+}
+details.qa summary::-webkit-details-marker{display:none}
+details.qa summary::before{
+  content:"Q";flex:none;
+  background:var(--accent);color:#fff;font-size:.72rem;font-weight:800;
+  border-radius:6px;padding:.12rem .42rem;line-height:1.4;margin-top:.15rem;
+}
+details.qa[open] summary::before{content:"A";background:var(--intu-bd)}
+details.qa .ans{
+  margin-top:.55rem;padding-top:.55rem;
+  border-top:1px dashed var(--border);
+  color:var(--text-soft);font-size:.95rem;
+}
+
+/* ============================================================
+   NAV FOOTER
+   ============================================================ */
+.navfoot{
+  margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border);
+  display:flex;flex-wrap:wrap;gap:.6rem;justify-content:space-between;align-items:center;
+}
+.navfoot a, .navfoot button{
+  background:var(--bg-elev);border:1px solid var(--border);
+  color:var(--text);border-radius:999px;
+  padding:.5rem .9rem;font-size:.85rem;text-decoration:none;cursor:pointer;
+  font-family:inherit;
+}
+.navfoot a:hover{border-color:var(--accent);color:var(--accent)}
+.navfoot .disabled{opacity:.5;pointer-events:none}
+
+.backtop{
+  position:fixed;right:1rem;bottom:1rem;z-index:90;
+  background:var(--accent);color:#fff;border:none;
+  border-radius:999px;padding:.6rem .9rem;
+  font-size:.85rem;cursor:pointer;box-shadow:var(--shadow);
+  font-family:inherit;
+  opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.backtop.show{opacity:1;pointer-events:auto}
+
+/* ============================================================
+   SEARCH
+   ============================================================ */
+.searchbar{
+  display:flex;gap:.5rem;align-items:center;
+  margin:0 0 1rem;
+}
+.searchbar input{
+  flex:1;background:var(--bg-elev);border:1px solid var(--border);
+  color:var(--text);border-radius:999px;padding:.5rem .9rem;
+  font-family:inherit;font-size:.9rem;outline:none;
+}
+.searchbar input:focus{border-color:var(--accent)}
+.searchbar .clear{
+  background:var(--bg-soft);border:1px solid var(--border);color:var(--text-soft);
+  border-radius:999px;padding:.4rem .8rem;cursor:pointer;font-size:.8rem;font-family:inherit;
+}
+mark.hit{background:#fde68a;color:#1c2330;border-radius:3px;padding:0 .12em}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media(max-width:640px){
+  body{font-size:15.5px}
+  h1{font-size:1.55rem}
+  .hero h1{font-size:1.45rem}
+  h2{font-size:1.22rem}
+  h3{font-size:1.05rem}
+  .wrap{padding:1rem .8rem 4rem}
+  th,td{padding:.5rem .6rem;font-size:.86rem}
+  .box{padding:.75rem .85rem}
+}
+
+@media print{
+  .topbar,.backtop,.navfoot,.searchbar{display:none}
+  body{background:#fff;color:#000}
+  .box,.fig,.toc,.summary{box-shadow:none}
+}
+</style>
+</head>
+
+<body>
+
+<!-- ================= TOP BAR ================= -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#top">Deep Learning Specialization</a>
+    <span class="spacer"></span>
+    <button id="themeBtn" type="button" aria-label="Toggle theme">🌗 Theme</button>
+  </div>
+</header>
+
+<div class="wrap" id="top">
+
+  <!-- ================= HERO ================= -->
+  <section class="hero">
+    <div class="eyebrow">Course 1 · Week 2</div>
+    <h1>Basics of Neural Network Programming</h1>
+    <p class="sub">Binary classification, logistic regression, cost functions, gradient descent, derivatives, computation graphs, and the art of vectorization.</p>
+    <div class="meta">
+      <span class="pill">📘 Beginner friendly</span>
+      <span class="pill">🧮 Calculus intuition included</span>
+      <span class="pill">💻 NumPy code</span>
+      <span class="pill">⏱ ~75 min read</span>
+    </div>
+  </section>
+
+  <!-- ================= SEARCH ================= -->
+  <div class="searchbar">
+    <input id="searchInput" type="search" placeholder="Search this week's notes… (e.g. sigmoid, vectorization)" aria-label="Search notes">
+    <button class="clear" id="searchClear" type="button">Clear</button>
+  </div>
+
+  <!-- ================= TOC ================= -->
+  <nav class="toc" aria-label="Table of contents">
+    <h2>📑 Table of Contents</h2>
+    <ol>
+      <li><span class="num">1.</span><a href="#s1">Binary Classification</a></li>
+      <li><span class="num">2.</span><a href="#s2">Notation for Deep Learning</a></li>
+      <li><span class="num">3.</span><a href="#s3">Logistic Regression</a></li>
+      <li><span class="num">4.</span><a href="#s4">Logistic Regression Cost Function</a></li>
+      <li><span class="num">5.</span><a href="#s5">Gradient Descent</a></li>
+      <li><span class="num">6.</span><a href="#s6">Derivatives — Intuition</a></li>
+      <li><span class="num">7.</span><a href="#s7">Computation Graph</a></li>
+      <li><span class="num">8.</span><a href="#s8">Derivatives with a Computation Graph</a></li>
+      <li><span class="num">9.</span><a href="#s9">Logistic Regression Gradient Descent</a></li>
+      <li><span class="num">10.</span><a href="#s10">Gradient Descent on m Examples</a></li>
+      <li><span class="num">11.</span><a href="#s11">Vectorization</a></li>
+      <li><span class="num">12.</span><a href="#s12">Vectorizing Logistic Regression</a></li>
+      <li><span class="num">13.</span><a href="#s13">Vectorizing the Gradient Computation</a></li>
+      <li><span class="num">14.</span><a href="#s14">Broadcasting in Python</a></li>
+      <li><span class="num">15.</span><a href="#s15">Why the Cost Function Looks Like That (MLE)</a></li>
+      <li><span class="num">16.</span><a href="#s16">Common Mistakes &amp; Clarifications</a></li>
+      <li><span class="num">17.</span><a href="#s17">Weekly Summary &amp; Review</a></li>
+    </ol>
+  </nav>
+
+  <!-- ============================================================
+       1. BINARY CLASSIFICATION
+       ============================================================ -->
+  <h2 id="s1">1. Binary Classification</h2>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — Binary Classification</div>
+    <p><strong>Binary classification</strong> is a supervised-learning problem in which the output $y$ can take only two values — conventionally $0$ or $1$. The model's job is to decide which class a given input belongs to.</p>
+  </div>
+
+  <p>Examples from the lectures:</p>
+  <ul>
+    <li><strong>Email / account security:</strong> has this account been hacked? (1 = hacked, 0 = not hacked)</li>
+    <li><strong>Medical diagnosis:</strong> is a tumor malignant (1) or benign (0)?</li>
+    <li><strong>The running example of this course:</strong> is this image a cat (1) or not a cat (0)?</li>
+  </ul>
+
+  <h3>1.1 How a computer stores an image</h3>
+
+  <p>To make this concrete, take a $64 \times 64$ pixel color image of a cat. A computer stores it as <em>three</em> separate matrices of numbers — one per color channel:</p>
+
+  <ul>
+    <li><strong>Red</strong> channel — a $64 \times 64$ matrix</li>
+    <li><strong>Green</strong> channel — a $64 \times 64$ matrix</li>
+    <li><strong>Blue</strong> channel — a $64 \times 64$ matrix</li>
+  </ul>
+
+  <p>Each cell contains a <strong>pixel intensity</strong> — a number from 0 to 255 describing how much of that color is present at that pixel. So an image of size $64 \times 64$ contains $64 \times 64 \times 3 = 12{,}288$ numbers.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 640 300" role="img" aria-label="RGB channels of a 64x64 image being unrolled into a feature vector">
+      <!-- image -->
+      <g>
+        <rect x="30" y="60" width="130" height="130" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+        <text class="svg-label" x="95" y="130" text-anchor="middle">64 × 64</text>
+        <text class="svg-label-sm" x="95" y="55" text-anchor="middle">image (cat)</text>
+      </g>
+      <!-- arrow -->
+      <text x="180" y="130" font-size="26" fill="#6b7280">→</text>
+      <!-- channels -->
+      <g>
+        <rect x="215" y="70" width="70" height="70" fill="#fca5a5" stroke="#dc2626" stroke-width="1.5"/>
+        <rect x="295" y="70" width="70" height="70" fill="#86efac" stroke="#16a34a" stroke-width="1.5"/>
+        <rect x="375" y="70" width="70" height="70" fill="#93c5fd" stroke="#2563eb" stroke-width="1.5"/>
+        <text class="svg-label-sm" x="250" y="60" text-anchor="middle">Red 64×64</text>
+        <text class="svg-label-sm" x="330" y="60" text-anchor="middle">Green 64×64</text>
+        <text class="svg-label-sm" x="410" y="60" text-anchor="middle">Blue 64×64</text>
+      </g>
+      <!-- arrow -->
+      <text x="460" y="130" font-size="26" fill="#6b7280">→</text>
+      <!-- vector -->
+      <g>
+        <rect x="500" y="40" width="20" height="200" fill="#e0ebff" stroke="#2563eb" stroke-width="1.5"/>
+        <text class="svg-label-sm" x="510" y="260" text-anchor="middle">x ∈ ℝ¹²²⁸⁸</text>
+        <text class="svg-label-sm" x="560" y="120">unroll each</text>
+        <text class="svg-label-sm" x="560" y="136">channel and</text>
+        <text class="svg-label-sm" x="560" y="152">stack them</text>
+      </g>
+    </svg>
+    <figcaption>A color image is stored as three 64×64 matrices (one per RGB channel). To feed it into a classifier, we <em>unroll</em> (flatten) all three matrices into a single column vector $x$ of length $n_x = 64\cdot 64\cdot 3 = 12{,}288$.</figcaption>
+  </div>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — Feature Vector</div>
+    <p>A <strong>feature vector</strong> is a column vector containing all the input numbers describing one example. For our cat image, the feature vector $x$ has $n_x = 12{,}288$ entries.</p>
+  </div>
+
+  <div class="eq">
+    $$n = n_x = 64 \times 64 \times 3 = 12{,}288$$
+  </div>
+  <div class="eq-caption">The dimension of the input feature vector for a 64×64 RGB image.</div>
+
+  <div class="box intu">
+    <div class="label">🟢 Intuition</div>
+    <p>Think of the model as a “black box” that receives a long list of numbers (the pixel intensities) and outputs either 0 or 1. All the learning happens by adjusting internal parameters so that the box outputs the right answer on the training examples.</p>
+  </div>
+
+  <div class="box imp">
+    <div class="label">⭐ Key Idea — Notation Convention</div>
+    <p>From here on, $x$ denotes the input feature vector and $y \in \{0,1\}$ denotes the binary label. The training set consists of $m$ labeled pairs $(x^{(i)}, y^{(i)})$ for $i = 1, \ldots, m$.</p>
+  </div>
+
+  <!-- ============================================================
+       2. NOTATION
+       ============================================================ -->
+  <h2 id="s2">2. Notation for Deep Learning</h2>
+
+  <p>Andrew Ng is very deliberate about notation because it stays consistent throughout the entire specialization. Internalize it now; it will save you confusion later.</p>
+
+  <h3>2.1 Superscripts — example vs layer</h3>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — Superscript conventions</div>
+    <ul>
+      <li><strong>$(i)$</strong> in parentheses — refers to the $i$-th <em>training example</em>. E.g., $x^{(3)}$ is the third training example's input.</li>
+      <li><strong>$[l]$</strong> in brackets — refers to the $l$-th <em>layer</em> of the neural network. E.g., $W^{[2]}$ is the weight matrix of the second layer.</li>
+    </ul>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Warning</div>
+    <p>Do not mix these up! $(i)$ is <em>parentheses</em> and refers to examples; $[l]$ is <em>brackets</em> and refers to layers. This distinction is critical once we start writing equations with both.</p>
+  </div>
+
+  <h3>2.2 Sizes</h3>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Symbol</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>$m$</td><td>Number of training examples in the dataset</td></tr>
+        <tr><td>$n_x$</td><td>Input size (dimension of the feature vector $x$)</td></tr>
+        <tr><td>$n_y$</td><td>Output size (number of classes or output units)</td></tr>
+        <tr><td>$n_h^{[l]}$</td><td>Number of hidden units in layer $l$</td></tr>
+        <tr><td>$L$</td><td>Total number of layers in the network</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>For convenience, one can also define $n_x = n_h^{[0]}$ and $n_y = n_h^{[L+1]}$, treating the input and output as “layer 0” and “layer $L+1$”.</p>
+
+  <h3>2.3 Objects (matrices and vectors)</h3>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Symbol</th><th>Shape / space</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>$X$</td><td>$\mathbb{R}^{n_x \times m}$</td><td>Input matrix — column $i$ is $x^{(i)}$</td></tr>
+        <tr><td>$x^{(i)}$</td><td>$\mathbb{R}^{n_x}$ (column vector)</td><td>The $i$-th training input example</td></tr>
+        <tr><td>$Y$</td><td>$\mathbb{R}^{n_y \times m}$</td><td>Label matrix — column $i$ is $y^{(i)}$</td></tr>
+        <tr><td>$y^{(i)}$</td><td>$\mathbb{R}^{n_y}$</td><td>Label for the $i$-th example</td></tr>
+        <tr><td>$W^{[l]}$</td><td>$\mathbb{R}^{(\text{units in layer } l) \times (\text{units in layer } l-1)}$</td><td>Weight matrix of layer $l$</td></tr>
+        <tr><td>$b^{[l]}$</td><td>$\mathbb{R}^{(\text{units in layer } l)}$</td><td>Bias vector of layer $l$</td></tr>
+        <tr><td>$\hat{y}$</td><td>$\mathbb{R}^{n_y}$</td><td>Predicted output (also written $a^{[L]}$)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box imp">
+    <div class="label">⭐ Key Idea — Why $X$ is $n_x \times m$, not $m \times n_x$</div>
+    <p>In many machine learning libraries (scikit-learn, pandas) each row is one example. But in this specialization, following standard deep-learning convention, <strong>each column is one example</strong>. This makes the matrix arithmetic work out cleanly when we vectorize, as you'll see in Section 11.</p>
+  </div>
+
+  <div class="fig">
+    <svg viewBox="0 0 620 260" role="img" aria-label="X matrix is nx by m, Y matrix is 1 by m">
+      <!-- X matrix -->
+      <g>
+        <rect x="30" y="40" width="220" height="160" fill="#e0ebff" stroke="#2563eb" stroke-width="2"/>
+        <line x1="90" y1="40" x2="90" y2="200" stroke="#2563eb" stroke-width="1"/>
+        <line x1="150" y1="40" x2="150" y2="200" stroke="#2563eb" stroke-width="1"/>
+        <line x1="190" y1="40" x2="190" y2="200" stroke="#2563eb" stroke-width="1"/>
+        <text class="svg-label" x="60" y="125" text-anchor="middle">x⁽¹⁾</text>
+        <text class="svg-label" x="120" y="125" text-anchor="middle">x⁽²⁾</text>
+        <text class="svg-label" x="170" y="125" text-anchor="middle">⋯</text>
+        <text class="svg-label" x="215" y="125" text-anchor="middle">x⁽ᵐ⁾</text>
+        <!-- dimension annotations -->
+        <line x1="20" y1="40" x2="20" y2="200" stroke="#6b7280"/>
+        <line x1="18" y1="40" x2="22" y2="40" stroke="#6b7280"/>
+        <line x1="18" y1="200" x2="22" y2="200" stroke="#6b7280"/>
+        <text class="svg-label-sm" x="10" y="125" text-anchor="middle" transform="rotate(-90 10 125)">n_x</text>
+        <line x1="30" y1="215" x2="250" y2="215" stroke="#6b7280"/>
+        <text class="svg-label-sm" x="140" y="235" text-anchor="middle">m</text>
+        <text class="svg-label" x="140" y="20" text-anchor="middle">X ∈ ℝ^(n_x × m)</text>
+      </g>
+      <!-- Y matrix -->
+      <g>
+        <rect x="380" y="100" width="220" height="40" fill="#e9f9ef" stroke="#16a34a" stroke-width="2"/>
+        <line x1="440" y1="100" x2="440" y2="140" stroke="#16a34a" stroke-width="1"/>
+        <line x1="500" y1="100" x2="500" y2="140" stroke="#16a34a" stroke-width="1"/>
+        <line x1="540" y1="100" x2="540" y2="140" stroke="#16a34a" stroke-width="1"/>
+        <text class="svg-label" x="410" y="125" text-anchor="middle">y⁽¹⁾</text>
+        <text class="svg-label" x="470" y="125" text-anchor="middle">y⁽²⁾</text>
+        <text class="svg-label" x="520" y="125" text-anchor="middle">⋯</text>
+        <text class="svg-label" x="565" y="125" text-anchor="middle">y⁽ᵐ⁾</text>
+        <line x1="380" y1="155" x2="600" y2="155" stroke="#6b7280"/>
+        <text class="svg-label-sm" x="490" y="175" text-anchor="middle">m</text>
+        <text class="svg-label" x="490" y="85" text-anchor="middle">Y ∈ ℝ^(1 × m)</text>
+      </g>
+    </svg>
+    <figcaption>The input matrix $X$ stacks all $m$ training examples as columns. The label matrix $Y$ stacks all labels as columns (a single row for binary classification).</figcaption>
+  </div>
+
+  <h3>2.4 Common forward-propagation equations</h3>
+
+  <p>For a general layer $l$ with activation function $g^{[l]}$:</p>
+
+  <div class="eq">
+    $$a_j^{[l]} = g^{[l]}\!\left(\sum_k w_{jk}^{[l]} a_k^{[l-1]} + b_j^{[l]}\right) = g^{[l]}\!\left(z_j^{[l]}\right)$$
+  </div>
+  <div class="eq-caption">The general activation formula: each unit computes a weighted sum of the previous layer's activations, adds its bias, then applies the activation function.</div>
+
+  <p>Variables:</p>
+  <ul>
+    <li>$a_j^{[l]}$ — activation (output) of unit $j$ in layer $l$.</li>
+    <li>$w_{jk}^{[l]}$ — weight connecting unit $k$ in layer $l-1$ to unit $j$ in layer $l$.</li>
+    <li>$a_k^{[l-1]}$ — activation of unit $k$ in the previous layer.</li>
+    <li>$b_j^{[l]}$ — bias of unit $j$ in layer $l$.</li>
+    <li>$g^{[l]}$ — activation function of layer $l$ (e.g., sigmoid, ReLU).</li>
+    <li>$z_j^{[l]}$ — the weighted sum before applying $g^{[l]}$.</li>
+  </ul>
+
+  <p>And the predicted output is the final layer's activation:</p>
+
+  <div class="eq">
+    $$\hat{y} = a^{[L]}$$
+  </div>
+
+  <h3>2.5 Cost function notation</h3>
+
+  <p>The cost (or loss) is written $J(w, b)$ or $J(\hat{y}, y)$ and measures how far the predictions are from the true labels. Two common examples:</p>
+
+  <div class="eq">
+    $$J_{CE}(\hat{y}, y) = -\sum_{i=1}^{m} y^{(i)} \log \hat{y}^{(i)}$$
+  </div>
+  <div class="eq-caption">Cross-entropy cost — used for classification tasks.</div>
+
+  <div class="eq">
+    $$J_{1}(\hat{y}, y) = \sum_{i=1}^{m} \left| y^{(i)} - \hat{y}^{(i)} \right|$$
+  </div>
+  <div class="eq-caption">L1 cost — sum of absolute errors.</div>
+
+  <h3>2.6 Two ways to draw a neural network</h3>
+
+  <div class="fig">
+    <svg viewBox="0 0 640 300" role="img" aria-label="Two equivalent representations of a neural network">
+      <!-- Left: detailed network -->
+      <g>
+        <text class="svg-label-sm" x="20" y="25">Comprehensive representation</text>
+        <!-- inputs -->
+        <circle class="svg-node-2" cx="60" cy="80" r="14"/>
+        <circle class="svg-node-2" cx="60" cy="140" r="14"/>
+        <circle class="svg-node-2" cx="60" cy="200" r="14"/>
+        <circle class="svg-node-2" cx="60" cy="260" r="14"/>
+        <text class="svg-label-sm" x="10" y="84">x₁⁽ⁱ⁾</text>
+        <text class="svg-label-sm" x="10" y="144">x₂⁽ⁱ⁾</text>
+        <text class="svg-label-sm" x="10" y="204">x₃⁽ⁱ⁾</text>
+        <text class="svg-label-sm" x="10" y="264">x₄⁽ⁱ⁾</text>
+        <!-- layer 1 -->
+        <circle class="svg-node" cx="170" cy="80" r="14"/>
+        <circle class="svg-node" cx="170" cy="140" r="14"/>
+        <circle class="svg-node" cx="170" cy="200" r="14"/>
+        <circle class="svg-node" cx="170" cy="260" r="14"/>
+        <text class="svg-label-sm" x="185" y="84">a₁⁽¹⁾</text>
+        <text class="svg-label-sm" x="185" y="144">a₂⁽¹⁾</text>
+        <text class="svg-label-sm" x="185" y="204">a₃⁽¹⁾</text>
+        <text class="svg-label-sm" x="185" y="264">a₄⁽¹⁾</text>
+        <!-- layer 2 -->
+        <circle class="svg-node" cx="310" cy="110" r="14"/>
+        <circle class="svg-node" cx="310" cy="170" r="14"/>
+        <circle class="svg-node" cx="310" cy="230" r="14"/>
+        <text class="svg-label-sm" x="325" y="114">a₁⁽²⁾</text>
+        <text class="svg-label-sm" x="325" y="174">a₂⁽²⁾</text>
+        <text class="svg-label-sm" x="325" y="234">a₃⁽²⁾</text>
+        <!-- output -->
+        <circle class="svg-node-2" cx="440" cy="170" r="14"/>
+        <text class="svg-label-sm" x="455" y="174">ŷ⁽ⁱ⁾</text>
+        <!-- connections -->
+        <g class="svg-line" color="#8b95a7">
+          <line x1="74" y1="80" x2="156" y2="80"/>
+          <line x1="74" y1="140" x2="156" y2="140"/>
+          <line x1="74" y1="200" x2="156" y2="200"/>
+          <line x1="74" y1="260" x2="156" y2="260"/>
+          <line x1="184" y1="80" x2="296" y2="110"/>
+          <line x1="184" y1="80" x2="296" y2="170"/>
+          <line x1="184" y1="80" x2="296" y2="230"/>
+          <line x1="184" y1="140" x2="296" y2="110"/>
+          <line x1="184" y1="140" x2="296" y2="170"/>
+          <line x1="184" y1="140" x2="296" y2="230"/>
+          <line x1="184" y1="200" x2="296" y2="110"/>
+          <line x1="184" y1="200" x2="296" y2="170"/>
+          <line x1="184" y1="200" x2="296" y2="230"/>
+          <line x1="184" y1="260" x2="296" y2="110"/>
+          <line x1="184" y1="260" x2="296" y2="170"/>
+          <line x1="184" y1="260" x2="296" y2="230"/>
+          <line x1="324" y1="110" x2="426" y2="170"/>
+          <line x1="324" y1="170" x2="426" y2="170"/>
+          <line x1="324" y1="230" x2="426" y2="170"/>
+        </g>
+      </g>
+      <!-- Right: simplified stack -->
+      <g>
+        <text class="svg-label-sm" x="500" y="25">Simplified representation</text>
+        <rect x="500" y="50" width="60" height="220" fill="#e0ebff" stroke="#2563eb" stroke-width="1.5"/>
+        <rect x="580" y="50" width="60" height="220" fill="#e0ebff" stroke="#2563eb" stroke-width="1.5"/>
+        <text class="svg-label" x="530" y="160" text-anchor="middle">x⁽ⁱ⁾</text>
+        <text class="svg-label" x="610" y="160" text-anchor="middle">a⁽¹⁾</text>
+        <text class="svg-label-sm" x="530" y="45">input</text>
+        <text class="svg-label-sm" x="610" y="45">ReLU</text>
+        <text class="svg-label-sm" x="545" y="290" text-anchor="middle">→</text>
+        <text class="svg-label-sm" x="600" y="290">a⁽²⁾ → ŷ</text>
+      </g>
+    </svg>
+    <figcaption><strong>Left:</strong> the detailed graphical representation (each node = an activation, each edge = a weight or bias). <strong>Right:</strong> a compressed block-diagram view that simply names each layer. Both are equivalent — the block version is what you'll see most often in later lectures.</figcaption>
+  </div>
+
+  <!-- ============================================================
+       3. LOGISTIC REGRESSION
+       ============================================================ -->
+  <h2 id="s3">3. Logistic Regression</h2>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — Logistic Regression</div>
+    <p><strong>Logistic regression</strong> is a supervised-learning algorithm for binary classification. Given an input feature vector $x$, it outputs the probability that the label is 1: $\hat{y} = P(y=1 \mid x)$, with $0 \le \hat{y} \le 1$.</p>
+  </div>
+
+  <p>Although logistic regression is not itself a “deep” network, it is the fundamental building block of this course. A single-layer neural network for binary classification <em>is</em> logistic regression. Understanding it deeply makes everything that follows easier.</p>
+
+  <h3>3.1 Parameters</h3>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Symbol</th><th>Space</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>$x$</td><td>$\mathbb{R}^{n_x}$</td><td>Input feature vector (e.g., the flattened 12,288-dim cat image)</td></tr>
+        <tr><td>$y$</td><td>$\{0,1\}$</td><td>Binary label</td></tr>
+        <tr><td>$w$</td><td>$\mathbb{R}^{n_x}$</td><td>Weight vector — one weight per input feature</td></tr>
+        <tr><td>$b$</td><td>$\mathbb{R}$</td><td>Bias (a single scalar threshold)</td></tr>
+        <tr><td>$\hat{y}$</td><td>$[0,1]$</td><td>Predicted probability that $y = 1$</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>3.2 The model</h3>
+
+  <p>The logistic regression model computes a linear combination $z = w^T x + b$ and then applies the <strong>sigmoid</strong> function:</p>
+
+  <div class="eq">
+    $$\hat{y} = \sigma\!\left(w^T x + b\right) = \sigma(z)$$
+  </div>
+  <div class="eq-caption">Logistic regression output: a probability between 0 and 1.</div>
+
+  <p>where the sigmoid function is:</p>
+
+  <div class="eq">
+    $$\sigma(z) = \frac{1}{1 + e^{-z}}$$
+  </div>
+  <div class="eq-caption">The sigmoid (or logistic) function.</div>
+
+  <div class="box intu">
+    <div class="label">🟢 Intuition — why sigmoid?</div>
+    <p>The linear part $w^T x + b$ can be any real number — from $-\infty$ to $+\infty$. But we need a probability in $[0,1]$. The sigmoid function “squashes” any real number into the interval $(0,1)$: very negative numbers map close to 0, very positive numbers map close to 1, and 0 maps to exactly 0.5.</p>
+  </div>
+
+  <h3>3.3 Properties of the sigmoid</h3>
+
+  <div class="fig">
+    <svg viewBox="0 0 520 300" role="img" aria-label="Sigmoid function curve">
+      <!-- axes -->
+      <line class="svg-axis" x1="60" y1="240" x2="490" y2="240"/>
+      <line class="svg-axis" x1="270" y1="20" x2="270" y2="260"/>
+      <text class="svg-label-sm" x="485" y="258" text-anchor="end">z</text>
+      <text class="svg-label-sm" x="280" y="20">σ(z)</text>
+      <!-- grid lines -->
+      <line class="svg-grid" x1="60" y1="60" x2="490" y2="60"/>
+      <line class="svg-grid" x1="60" y1="150" x2="490" y2="150"/>
+      <text class="svg-label-sm" x="55" y="64" text-anchor="end">1</text>
+      <text class="svg-label-sm" x="55" y="154" text-anchor="end">0.5</text>
+      <text class="svg-label-sm" x="55" y="244" text-anchor="end">0</text>
+      <!-- sigmoid curve -->
+      <path d="M60,240 C120,238 180,235 220,225 C245,215 255,190 265,155 C275,120 280,90 290,65 C305,45 330,32 380,30 C430,28 470,28 490,28"
+            fill="none" stroke="#2563eb" stroke-width="2.6"/>
+      <!-- annotation point at z=0 -->
+      <circle cx="270" cy="150" r="4.5" fill="#dc2626"/>
+      <text class="svg-label-sm" x="278" y="170" fill="#dc2626">σ(0) = 0.5</text>
+    </svg>
+    <figcaption>The sigmoid function. It smoothly transitions from 0 to 1 and is symmetric about $(0, 0.5)$.</figcaption>
+  </div>
+
+  <ul>
+    <li>If $z$ is a large positive number, $\sigma(z) \approx 1$.</li>
+    <li>If $z$ is a large negative number, $\sigma(z) \approx 0$.</li>
+    <li>If $z = 0$, then $\sigma(z) = 0.5$.</li>
+  </ul>
+
+  <div class="box warn">
+    <div class="label">🔴 Warning — a common notation confusion</div>
+    <p>In some textbooks you'll see an extra “intercept” input $x_0 = 1$ with a corresponding weight, absorbing the bias into the weight vector. Andrew's course <em>keeps $b$ separate</em>. Stick with the course's convention: <strong>$z = w^T x + b$</strong>.</p>
+  </div>
+
+  <!-- ============================================================
+       4. COST FUNCTION
+       ============================================================ -->
+  <h2 id="s4">4. Logistic Regression Cost Function</h2>
+
+  <p>To train $w$ and $b$, we need to define how “wrong” the model is on each example, and then how wrong it is on the whole training set. That's the role of the loss and cost functions.</p>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — Loss function</div>
+    <p>The <strong>loss function</strong> (also called <em>error function</em>) $L(\hat{y}, y)$ measures the discrepancy between one prediction $\hat{y}$ and one true label $y$. It is defined per example.</p>
+  </div>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — Cost function</div>
+    <p>The <strong>cost function</strong> $J(w, b)$ is the <em>average</em> loss over all $m$ training examples. Training means finding the $w$ and $b$ that minimize $J$.</p>
+  </div>
+
+  <h3>4.1 Why not squared error?</h3>
+
+  <p>You might think: “Just use the squared error $L(\hat{y}, y) = \tfrac{1}{2}(\hat{y} - y)^2$.” That's what linear regression does. For logistic regression, however, this produces a <em>non-convex</em> cost surface with many local minima, which makes gradient descent unreliable. Instead, we use the <strong>cross-entropy loss</strong>:</p>
+
+  <div class="eq">
+    $$L(\hat{y}, y) = -\left[ y \log(\hat{y}) + (1 - y) \log(1 - \hat{y}) \right]$$
+  </div>
+  <div class="eq-caption">Binary cross-entropy loss — the standard loss for logistic regression.</div>
+
+  <h3>4.2 Understanding the loss, case by case</h3>
+
+  <div class="box ex">
+    <div class="label">🟣 Case 1 — When the true label is $y = 1$</div>
+    <p>The second term $(1-y)\log(1-\hat{y})$ becomes 0, leaving:</p>
+    <div class="eq">$$L(\hat{y}, y) = -\log(\hat{y})$$</div>
+    <ul>
+      <li>If $\hat{y} \to 1$, then $-\log(\hat{y}) \to 0$ — small loss. Good.</li>
+      <li>If $\hat{y} \to 0$, then $-\log(\hat{y}) \to +\infty$ — huge loss. Bad.</li>
+    </ul>
+    <p>So the loss pushes the prediction toward 1, which is what we want when $y = 1$.</p>
+  </div>
+
+  <div class="box ex">
+    <div class="label">🟣 Case 2 — When the true label is $y = 0$</div>
+    <p>The first term $y\log(\hat{y})$ becomes 0, leaving:</p>
+    <div class="eq">$$L(\hat{y}, y) = -\log(1-\hat{y})$$</div>
+    <ul>
+      <li>If $\hat{y} \to 0$, then $-\log(1-\hat{y}) \to 0$ — small loss. Good.</li>
+      <li>If $\hat{y} \to 1$, then $-\log(1-\hat{y}) \to +\infty$ — huge loss. Bad.</li>
+    </ul>
+    <p>So the loss pushes the prediction toward 0, which is what we want when $y = 0$.</p>
+  </div>
+
+  <div class="box intu">
+    <div class="label">🟢 Intuition — the loss is a “surprise meter”</div>
+    <p>Cross-entropy measures how <em>surprised</em> the model would be to see the true label. If the model is confident and correct, the loss is tiny. If the model is confident and wrong, the loss is enormous. This shape is what makes gradient descent well-behaved here.</p>
+  </div>
+
+  <div class="box impl">
+    <div class="label">⚙️ Implementation — numerically safe cross-entropy</div>
+    <p>In practice, $\log(0)$ is undefined and $\log$ of a number near 0 can underflow. Deep-learning frameworks compute cross-entropy from the raw logits $z$ rather than the sigmoid output $\hat{y}$, using the numerically stable <em>log-sum-exp</em> trick. In NumPy, you should clip probabilities away from exactly 0 or 1:</p>
+    <pre><code><span class="cm"># Safe cross-entropy in NumPy</span>
+epsilon = <span class="nm">1e-15</span>
+y_hat = np.clip(y_hat, epsilon, <span class="nm">1</span> - epsilon)
+loss = -(y * np.log(y_hat) + (<span class="nm">1</span> - y) * np.log(<span class="nm">1</span> - y_hat))</code></pre>
+  </div>
+
+  <h3>4.3 The cost function over all examples</h3>
+
+  <p>The cost $J(w,b)$ is the average loss across all $m$ training examples:</p>
+
+  <div class="eq">
+    $$J(w, b) = \frac{1}{m} \sum_{i=1}^{m} L\!\left(\hat{y}^{(i)}, y^{(i)}\right) = -\frac{1}{m} \sum_{i=1}^{m} \left[ y^{(i)} \log \hat{y}^{(i)} + (1 - y^{(i)}) \log\!\left(1 - \hat{y}^{(i)}\right) \right]$$
+  </div>
+  <div class="eq-caption">The cost function for logistic regression — the average cross-entropy loss over the training set.</div>
+
+  <p>Here:</p>
+  <ul>
+    <li>$m$ — the number of training examples.</li>
+    <li>$\hat{y}^{(i)} = \sigma(w^T x^{(i)} + b)$ — the model's prediction for example $i$.</li>
+    <li>$y^{(i)}$ — the true label of example $i$ (0 or 1).</li>
+  </ul>
+
+  <div class="box ins">
+    <div class="label">💡 Insight — why average, not sum?</div>
+    <p>Taking the average makes the cost independent of dataset size. This matters for choosing a fixed learning rate: if the cost grew with $m$, the learning rate would need to shrink as the dataset grew. Averaging keeps the gradient scale roughly constant.</p>
+  </div>
+
+  <!-- ============================================================
+       5. GRADIENT DESCENT
+       ============================================================ -->
+  <h2 id="s5">5. Gradient Descent</h2>
+
+  <p>We now have a cost function $J(w, b)$. Training means finding values of $w$ and $b$ that make $J$ as small as possible. <strong>Gradient descent</strong> is the algorithm that does this.</p>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — Gradient Descent</div>
+    <p><strong>Gradient descent</strong> is an iterative optimization algorithm that repeatedly nudges the parameters in the direction that reduces the cost the most, until the cost stops improving.</p>
+  </div>
+
+  <div class="fig">
+    <svg viewBox="0 0 600 340" role="img" aria-label="3D bowl-shaped cost surface with gradient descent steps descending to the global minimum">
+      <!-- 3D bowl -->
+      <path d="M80,80 C160,40 260,40 340,80 L460,180 C400,320 180,320 120,180 Z"
+            fill="url(#bowlGrad)" stroke="#4b5563" stroke-width="1.5"/>
+      <defs>
+        <linearGradient id="bowlGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#e0ebff"/>
+          <stop offset="100%" stop-color="#7c3aed" stop-opacity="0.55"/>
+        </linearGradient>
+      </defs>
+      <!-- axes -->
+      <line class="svg-axis" x1="60" y1="300" x2="160" y2="250"/>
+      <line class="svg-axis" x1="60" y1="300" x2="60" y2="60"/>
+      <line class="svg-axis" x1="60" y1="300" x2="540" y2="300"/>
+      <text class="svg-label-sm" x="60" y="52">J(w,b)</text>
+      <text class="svg-label-sm" x="160" y="268">w</text>
+      <text class="svg-label-sm" x="540" y="320">b</text>
+      <!-- descent steps -->
+      <circle cx="250" cy="100" r="6" fill="#dc2626"/>
+      <circle cx="270" cy="150" r="6" fill="#dc2626"/>
+      <circle cx="285" cy="200" r="6" fill="#dc2626"/>
+      <circle cx="295" cy="240" r="6" fill="#dc2626"/>
+      <circle cx="298" cy="270" r="7" fill="#16a34a"/>
+      <text class="svg-label-sm" x="310" y="100" fill="#dc2626">start</text>
+      <text class="svg-label-sm" x="308" y="278" fill="#16a34a">global minimum</text>
+      <!-- arrows between steps -->
+      <line x1="253" y1="106" x2="268" y2="145" stroke="#dc2626" stroke-width="1.5"/>
+      <line x1="273" y1="155" x2="283" y2="195" stroke="#dc2626" stroke-width="1.5"/>
+      <line x1="288" y1="205" x2="293" y2="235" stroke="#dc2626" stroke-width="1.5"/>
+      <line x1="296" y1="245" x2="297" y2="264" stroke="#dc2626" stroke-width="1.5"/>
+    </svg>
+    <figcaption>The cost surface $J(w,b)$ looks like a bowl (for convex problems like logistic regression). Gradient descent takes small steps “downhill” until it reaches the bottom — the parameters that minimize the cost.</figcaption>
+  </div>
+
+  <h3>5.1 The update rules</h3>
+
+  <p>Gradient descent repeatedly performs these two updates:</p>
+
+  <div class="eq">
+    $$w := w - \alpha \frac{\partial J(w,b)}{\partial w}$$
+    $$b := b - \alpha \frac{\partial J(w,b)}{\partial b}$$
+  </div>
+  <div class="eq-caption">The gradient descent update rules. The partial derivatives $\partial J/\partial w$ and $\partial J/\partial b$ tell us the slope of the cost surface, and $\alpha$ controls step size.</div>
+
+  <p>Where:</p>
+  <ul>
+    <li>$:=$ means <em>assign</em> (update the variable) — not equality.</li>
+    <li>$\alpha$ (alpha) — the <strong>learning rate</strong>, a positive hyperparameter controlling how big each step is.</li>
+    <li>$\partial J/\partial w$ — the <strong>gradient</strong> of the cost with respect to $w$: a vector pointing uphill.</li>
+    <li>$\partial J/\partial b$ — the gradient of the cost with respect to $b$: a scalar pointing uphill.</li>
+  </ul>
+
+  <div class="box intu">
+    <div class="label">🟢 Intuition — why subtract the gradient?</div>
+    <p>The gradient points in the direction of <em>steepest increase</em> of $J$. To go downhill, we move in the opposite direction: we <em>subtract</em> the gradient. Geometrically, we roll the ball down the slope.</p>
+  </div>
+
+  <div class="box imp">
+    <div class="label">⭐ Key Idea — the meaning of the learning rate</div>
+    <ul>
+      <li><strong>Too small:</strong> training is slow (many tiny steps).</li>
+      <li><strong>Too large:</strong> the algorithm may overshoot and diverge — the cost may even grow.</li>
+      <li><strong>Just right:</strong> the cost decreases smoothly and reaches a minimum in reasonable time.</li>
+    </ul>
+    <p>Choosing $\alpha$ is one of the most important practical skills in deep learning. It's usually tuned by trial and error on a <em>logarithmic scale</em> ($0.1, 0.03, 0.01, \ldots$).</p>
+  </div>
+
+  <div class="fig">
+    <svg viewBox="0 0 520 260" role="img" aria-label="Left: convex bowl with gradient descent steps. Right: non-convex curve with multiple local minima.">
+      <!-- Convex -->
+      <text class="svg-label-sm" x="130" y="20" text-anchor="middle">Convex (logistic regression)</text>
+      <line class="svg-axis" x1="30" y1="220" x2="240" y2="220"/>
+      <line class="svg-axis" x1="30" y1="40" x2="30" y2="220"/>
+      <path d="M40,60 C90,220 180,220 230,60" fill="none" stroke="#16a34a" stroke-width="2.4"/>
+      <circle cx="135" cy="200" r="5" fill="#dc2626"/>
+      <text class="svg-label-sm" x="145" y="216">min</text>
+
+      <!-- Non-convex -->
+      <text class="svg-label-sm" x="390" y="20" text-anchor="middle">Non-convex (deep networks)</text>
+      <line class="svg-axis" x1="280" y1="220" x2="500" y2="220"/>
+      <line class="svg-axis" x1="280" y1="40" x2="280" y2="220"/>
+      <path d="M290,80 C310,220 330,170 350,120 C370,60 390,220 410,150 C430,80 450,200 470,90"
+            fill="none" stroke="#d97706" stroke-width="2.4"/>
+      <circle cx="335" cy="175" r="5" fill="#dc2626"/>
+      <circle cx="410" cy="165" r="5" fill="#dc2626"/>
+      <circle cx="345" cy="140" r="5" fill="#7c3aed"/>
+    </svg>
+    <figcaption><strong>Left:</strong> for logistic regression the cost is convex — a single global minimum. <strong>Right:</strong> for deep neural networks the cost surface can have many local minima and saddle points. In practice, gradient descent still finds good solutions, but understanding the shape matters for later courses.</figcaption>
+  </div>
+
+  <!-- ============================================================
+       6. DERIVATIVES
+       ============================================================ -->
+  <h2 id="s6">6. Derivatives — Intuition</h2>
+
+  <p>Gradient descent needs derivatives. Before diving into the algebra, let's build intuition for what a derivative <em>is</em>.</p>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — Derivative</div>
+    <p>The <strong>derivative</strong> of a function at a point is the slope of the tangent line to its graph at that point. Informally, it tells you: <em>if I nudge the input slightly, how much does the output change?</em></p>
+  </div>
+
+  <h3>6.1 A simple example — $f(a) = 3a$</h3>
+
+  <p>Take the function $f(a) = 3a$. Its graph is a straight line.</p>
+
+  <ul>
+    <li>At $a = 2$, $f(a) = 6$.</li>
+    <li>Nudge $a$ by $0.001$: $a = 2.001$, $f(a) = 6.003$.</li>
+    <li>Change in output: $0.003$; change in input: $0.001$.</li>
+    <li>Ratio: $0.003 / 0.001 = 3$.</li>
+  </ul>
+
+  <p>So the slope — the derivative — is 3 at $a = 2$. And at $a = 5$, the same calculation gives $0.003 / 0.001 = 3$ again. Indeed, for a straight line the slope is constant everywhere.</p>
+
+  <div class="eq">
+    $$f(a) = 3a \quad \Longrightarrow \quad \frac{d f(a)}{d a} = 3$$
+  </div>
+
+  <h3>6.2 A curved example — $f(a) = a^2$</h3>
+
+  <p>At $a = 2$, $f(a) = 4$. Nudge: at $a = 2.001$, $f(a) \approx 4.004$. Ratio: $0.004 / 0.001 \approx 4$.</p>
+  <p>At $a = 5$, $f(a) = 25$. Nudge: at $a = 5.001$, $f(a) \approx 25.010$. Ratio: $0.010 / 0.001 = 10$.</p>
+
+  <p>The slope <em>changes</em> depending on where we are. Differentiating analytically:</p>
+
+  <div class="eq">
+    $$f(a) = a^2 \quad \Longrightarrow \quad \frac{d f(a)}{d a} = 2a$$
+  </div>
+
+  <p>Indeed, $2a = 4$ when $a = 2$, and $2a = 10$ when $a = 5$. ✓</p>
+
+  <h3>6.3 More derivatives worth memorizing</h3>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>$f(a)$</th><th>$\dfrac{d}{da}f(a)$</th><th>Example at $a=2$</th></tr></thead>
+      <tbody>
+        <tr><td>$3a$</td><td>$3$</td><td>$3$</td></tr>
+        <tr><td>$a^2$</td><td>$2a$</td><td>$4$</td></tr>
+        <tr><td>$a^3$</td><td>$3a^2$</td><td>$12$</td></tr>
+        <tr><td>$\log_e(a) = \ln(a)$</td><td>$\dfrac{1}{a}$</td><td>$0.5$</td></tr>
+        <tr><td>$e^a$</td><td>$e^a$</td><td>$\approx 7.389$</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box intu">
+    <div class="label">🟢 Intuition — the formal definition</div>
+    <p>Formally, the derivative is defined as the limit of the ratio of a tiny output change to a tiny input change:</p>
+    <div class="eq">$$\frac{d f(a)}{d a} = \lim_{\varepsilon \to 0} \frac{f(a + \varepsilon) - f(a)}{\varepsilon}$$</div>
+    <p>For a straight line, this ratio is the same everywhere; for a curve, it varies — giving us a “slope function” rather than a single number.</p>
+  </div>
+
+  <div class="box imp">
+    <div class="label">⭐ Key Idea — why derivatives matter</div>
+    <p>In neural networks we want to know: <em>if I slightly change a weight $w$, how much does the cost $J$ change?</em> That quantity is $\partial J / \partial w$ — a derivative. Gradient descent uses it directly to update $w$.</p>
+  </div>
+
+  <!-- ============================================================
+       7. COMPUTATION GRAPH
+       ============================================================ -->
+  <h2 id="s7">7. Computation Graph</h2>
+
+  <p>For neural networks, we could compute derivatives by hand — but it's tedious and error-prone. A <strong>computation graph</strong> gives us a clean, systematic way to do it.</p>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — Computation Graph</div>
+    <p>A <strong>computation graph</strong> is a directed graph in which each node represents a value or an operation. Information flows forward through the graph to compute a final output; derivatives flow backward through the graph (using the chain rule) to compute gradients.</p>
+  </div>
+
+  <h3>7.1 A small worked example</h3>
+
+  <p>Consider the function $J(a, b, c) = 3(a + bc)$. Let's compute it for $a = 5$, $b = 3$, $c = 2$.</p>
+
+  <p>Break the computation into steps:</p>
+  <ol>
+    <li>$u = b \cdot c = 3 \cdot 2 = 6$</li>
+    <li>$v = a + u = 5 + 6 = 11$</li>
+    <li>$J = 3 \cdot v = 3 \cdot 11 = 33$</li>
+  </ol>
+
+  <div class="fig">
+    <svg viewBox="0 0 640 220" role="img" aria-label="Computation graph for J = 3(a + bc)">
+      <!-- inputs -->
+      <text class="svg-label" x="20" y="45">a = 5</text>
+      <text class="svg-label" x="20" y="115">b = 3</text>
+      <text class="svg-label" x="20" y="185">c = 2</text>
+
+      <!-- u = bc -->
+      <rect x="130" y="135" width="90" height="40" rx="6" fill="#e0ebff" stroke="#2563eb" stroke-width="1.5"/>
+      <text class="svg-label" x="175" y="160" text-anchor="middle">u = bc</text>
+      <text class="svg-label-sm" x="175" y="200" text-anchor="middle">6</text>
+
+      <!-- v = a + u -->
+      <rect x="280" y="80" width="90" height="40" rx="6" fill="#e0ebff" stroke="#2563eb" stroke-width="1.5"/>
+      <text class="svg-label" x="325" y="105" text-anchor="middle">v = a + u</text>
+      <text class="svg-label-sm" x="325" y="140" text-anchor="middle">11</text>
+
+      <!-- J = 3v -->
+      <rect x="440" y="80" width="90" height="40" rx="6" fill="#e9f9ef" stroke="#16a34a" stroke-width="1.5"/>
+      <text class="svg-label" x="485" y="105" text-anchor="middle">J = 3v</text>
+      <text class="svg-label-sm" x="485" y="140" text-anchor="middle">33</text>
+
+      <!-- arrows -->
+      <line x1="90" y1="140" x2="125" y2="140" stroke="#6b7280" stroke-width="1.4"/>
+      <line x1="90" y1="110" x2="125" y2="155" stroke="#6b7280" stroke-width="1.4"/>
+      <line x1="90" y1="180" x2="125" y2="165" stroke="#6b7280" stroke-width="1.4"/>
+
+      <line x1="220" y1="155" x2="275" y2="105" stroke="#6b7280" stroke-width="1.4"/>
+      <line x1="90" y1="40" x2="275" y2="95" stroke="#6b7280" stroke-width="1.4"/>
+
+      <line x1="370" y1="100" x2="435" y2="100" stroke="#6b7280" stroke-width="1.4"/>
+    </svg>
+    <figcaption>A computation graph decomposes $J = 3(a + bc)$ into simple operations. Values are computed left-to-right (forward pass); gradients are computed right-to-left (backward pass).</figcaption>
+  </div>
+
+  <div class="box intu">
+    <div class="label">🟢 Intuition</div>
+    <p>Think of the graph as a recipe with clearly separated steps. Each step is a simple operation (multiply, add, …). Because we know how to differentiate each simple step, we can chain them together to get derivatives of the whole function. This decomposition is what makes backpropagation possible.</p>
+  </div>
+
+  <div class="box ins">
+    <div class="label">💡 Insight — why this matters for neural networks</div>
+    <p>A neural network <em>is</em> a computation graph: nodes represent activations, edges represent weights and biases. The forward pass fills in activation values; the backward pass fills in gradients. Every framework (PyTorch, TensorFlow, JAX) builds on exactly this idea.</p>
+  </div>
+
+  <!-- ============================================================
+       8. DERIVATIVES WITH COMPUTATION GRAPH
+       ============================================================ -->
+  <h2 id="s8">8. Derivatives with a Computation Graph</h2>
+
+  <p>Now the key step: how do we compute $\frac{dJ}{da}$, $\frac{dJ}{db}$, $\frac{dJ}{dc}$ efficiently using the graph?</p>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — Chain Rule</div>
+    <p>The <strong>chain rule</strong> says: if $J$ depends on $v$, and $v$ depends on $a$, then the rate of change of $J$ with respect to $a$ is the product of the two rates:</p>
+    <div class="eq">$$\frac{dJ}{da} = \frac{dJ}{dv} \cdot \frac{dv}{da}$$</div>
+  </div>
+
+  <h3>8.1 Backward pass on our graph</h3>
+
+  <p>Recall the graph: $u = bc$, $v = a + u$, $J = 3v$ with values $a=5, b=3, c=2, u=6, v=11, J=33$.</p>
+
+  <p><strong>Step 1 — derivative of $J$ with respect to itself.</strong> By convention, $\frac{dJ}{dJ} = 1$. This seeds the backward pass.</p>
+
+  <p><strong>Step 2 — $\frac{dJ}{dv}$.</strong> Since $J = 3v$, the derivative is 3:</p>
+  <div class="eq">$$\frac{dJ}{dv} = 3$$</div>
+
+  <p><strong>Step 3 — $\frac{dJ}{da}$.</strong> Using the chain rule through $v$:</p>
+  <div class="eq">$$\frac{dJ}{da} = \frac{dJ}{dv} \cdot \frac{dv}{da} = 3 \cdot 1 = 3$$</div>
+  <p>(Because $v = a + u$, $\frac{dv}{da} = 1$.)</p>
+
+  <p><strong>Step 4 — $\frac{dJ}{du}$.</strong> Also through $v$:</p>
+  <div class="eq">$$\frac{dJ}{du} = \frac{dJ}{dv} \cdot \frac{dv}{du} = 3 \cdot 1 = 3$$</div>
+
+  <p><strong>Step 5 — $\frac{dJ}{db}$ and $\frac{dJ}{dc}$.</strong> Since $u = b \cdot c$, we have $\frac{du}{db} = c = 2$ and $\frac{du}{dc} = b = 3$:</p>
+  <div class="eq">$$\frac{dJ}{db} = \frac{dJ}{du} \cdot \frac{du}{db} = 3 \cdot 2 = 6$$</div>
+  <div class="eq">$$\frac{dJ}{dc} = \frac{dJ}{du} \cdot \frac{du}{dc} = 3 \cdot 3 = 9$$</div>
+
+  <div class="box ins">
+    <div class="label">💡 Insight — the naming convention</div>
+    <p>Andrew uses <code>dvar</code> to denote $\frac{d(\text{final output})}{d(\text{var})}$. So <code>da</code> means $\frac{dJ}{da}$, <code>db</code> means $\frac{dJ}{db}$, etc. This naming is used in the coding assignments and in the logistic-regression derivation that follows.</p>
+  </div>
+
+  <div class="box intu">
+    <div class="label">🟢 Intuition — the backward flow</div>
+    <p>Think of the backward pass as a “responsibility” flow. The final cost $J$ is the output we care about. When we move backward, each node asks: “How much did I contribute to the change in $J$?” The chain rule multiplies these contributions along every path.</p>
+  </div>
+
+  <!-- ============================================================
+       9. LOGISTIC REGRESSION GRADIENT DESCENT
+       ============================================================ -->
+  <h2 id="s9">9. Logistic Regression Gradient Descent</h2>
+
+  <p>Now we apply the computation-graph method to logistic regression. The graph for one example is:</p>
+
+  <div class="eq">
+    $$z = w^T x + b, \quad a = \sigma(z), \quad L(a, y) = -\left[ y \log(a) + (1 - y)\log(1-a) \right]$$
+  </div>
+
+  <h3>9.1 Building the backward pass</h3>
+
+  <p>We want $\frac{\partial L}{\partial w_1}$, $\frac{\partial L}{\partial w_2}$, and $\frac{\partial L}{\partial b}$ for a two-feature example ($n_x = 2$). Using the chain rule backwards through the graph:</p>
+
+  <p><strong>Step 1 — $\frac{dL}{da}$.</strong> Differentiate the loss with respect to $a$:</p>
+  <div class="eq">
+    $$\frac{dL}{da} = -\frac{y}{a} + \frac{1-y}{1-a}$$
+  </div>
+
+  <p><strong>Step 2 — $\frac{da}{dz}$.</strong> The derivative of the sigmoid is a beautiful expression:</p>
+  <div class="eq">
+    $$\frac{da}{dz} = a(1-a)$$
+  </div>
+
+  <div class="box ex">
+    <div class="label">🟣 Where does $\sigma'(z) = \sigma(z)(1-\sigma(z))$ come from?</div>
+    <p>Start with $\sigma(z) = (1 + e^{-z})^{-1}$. Using the chain rule:</p>
+    <div class="eq">$$\frac{d\sigma}{dz} = -(1 + e^{-z})^{-2} \cdot (-e^{-z}) = \frac{e^{-z}}{(1 + e^{-z})^2}$$</div>
+    <p>Now note that $\sigma(z) = \frac{1}{1+e^{-z}}$ and $1 - \sigma(z) = \frac{e^{-z}}{1+e^{-z}}$. Multiplying:</p>
+    <div class="eq">$$\sigma(z)(1-\sigma(z)) = \frac{1}{1+e^{-z}} \cdot \frac{e^{-z}}{1+e^{-z}} = \frac{e^{-z}}{(1+e^{-z})^2} = \frac{d\sigma}{dz}$$</div>
+    <p>Therefore $\sigma'(z) = \sigma(z)(1 - \sigma(z)) = a(1 - a)$. This is one of the most important identities in deep learning.</p>
+  </div>
+
+  <p><strong>Step 3 — $\frac{dL}{dz}$.</strong> Chain the two:</p>
+  <div class="eq">
+    $$\frac{dL}{dz} = \frac{dL}{da} \cdot \frac{da}{dz} = \left( -\frac{y}{a} + \frac{1-y}{1-a} \right) \cdot a(1-a)$$
+  </div>
+
+  <p>Let's simplify this carefully. Expand:</p>
+  <div class="eq">
+    $$= -\frac{y}{a} \cdot a(1-a) + \frac{1-y}{1-a} \cdot a(1-a) = -y(1-a) + a(1-y)$$
+  </div>
+  <div class="eq">
+    $$= -y + ay + a - ay = a - y$$
+  </div>
+
+  <div class="box imp">
+    <div class="label">⭐ Key Idea — the famous simplification</div>
+    <div class="eq" style="background:transparent;border:none;margin:.4em 0">$$\boxed{\frac{dL}{dz} = a - y}$$</div>
+    <p>This is one of the most elegant results in deep learning: the gradient of the loss with respect to $z$ is simply the prediction minus the true label. This “clean” form is one reason cross-entropy plus sigmoid is the standard pairing.</p>
+  </div>
+
+  <p><strong>Step 4 — $\frac{\partial L}{\partial w_j}$ and $\frac{\partial L}{\partial b}$.</strong> Since $z = w^T x + b = \sum_j w_j x_j + b$, we have $\frac{\partial z}{\partial w_j} = x_j$ and $\frac{\partial z}{\partial b} = 1$. So:</p>
+
+  <div class="eq">
+    $$\frac{\partial L}{\partial w_j} = x_j \cdot (a - y), \quad \frac{\partial L}{\partial b} = a - y$$
+  </div>
+
+  <h3>9.2 The update rules</h3>
+
+  <p>With the gradients in hand, the parameter updates are:</p>
+
+  <div class="eq">
+    $$w_j := w_j - \alpha \cdot x_j \cdot (a - y)$$
+    $$b := b - \alpha \cdot (a - y)$$
+  </div>
+
+  <div class="box intu">
+    <div class="label">🟢 Intuition — what the update is telling us</div>
+    <p>The quantity $a - y$ is the “error.” If the prediction matches the label exactly, $a - y = 0$ and no update occurs. If the prediction is too high ($a > y$), we nudge each weight $w_j$ in the opposite direction of $x_j$; if too low, in the direction of $x_j$. The magnitude of the update scales with the feature value $x_j$ and the learning rate $\alpha$.</p>
+  </div>
+
+  <!-- ============================================================
+       10. GRADIENT DESCENT ON m EXAMPLES
+       ============================================================ -->
+  <h2 id="s10">10. Gradient Descent on m Examples</h2>
+
+  <p>So far we derived gradients for <em>one</em> example. Real training uses the whole dataset. The cost over all examples is:</p>
+
+  <div class="eq">
+    $$J(w, b) = \frac{1}{m} \sum_{i=1}^{m} L\!\left(a^{(i)}, y^{(i)}\right)$$
+  </div>
+
+  <p>Because the derivative of a sum is the sum of derivatives, the gradient of $J$ is the <em>average</em> of the per-example gradients:</p>
+
+  <div class="eq">
+    $$\frac{\partial J}{\partial w_j} = \frac{1}{m} \sum_{i=1}^{m} x_j^{(i)} \cdot (a^{(i)} - y^{(i)})$$
+    $$\frac{\partial J}{\partial b} = \frac{1}{m} \sum_{i=1}^{m} (a^{(i)} - y^{(i)})$$
+  </div>
+
+  <h3>10.1 The naive (loop-based) algorithm</h3>
+
+  <p>Here is the straightforward way to implement one gradient-descent step:</p>
+
+  <pre><code><span class="cm"># Pseudocode for one gradient descent step (non-vectorized)</span>
+J = <span class="nm">0</span>;  dw1 = <span class="nm">0</span>;  dw2 = <span class="nm">0</span>;  db = <span class="nm">0</span>
+
+<span class="kw">for</span> i = <span class="nm">1</span> to m:
+    z[i]  = w1 * x1[i] + w2 * x2[i] + b
+    a[i]  = sigmoid(z[i])
+    J    += -[ y[i]*log(a[i]) + (<span class="nm">1</span>-y[i])*log(<span class="nm">1</span>-a[i]) ]
+    dz[i] = a[i] - y[i]
+    dw1  += x1[i] * dz[i]
+    dw2  += x2[i] * dz[i]
+    db   += dz[i]
+
+J   /= m
+dw1 /= m
+dw2 /= m
+db  /= m
+
+w1 := w1 - alpha * dw1
+w2 := w2 - alpha * dw2
+b  := b  - alpha * db</code></pre>
+
+  <div class="box warn">
+    <div class="label">🔴 Warning — this is slow</div>
+    <p>If $n_x = 12{,}288$ (our cat image) and $m = 1{,}000{,}000$ (a large dataset), the code above executes <em>billions</em> of operations per gradient-descent iteration. In Python, this is prohibitively slow. The fix is <strong>vectorization</strong> — the subject of Section 11.</p>
+  </div>
+
+  <div class="box ins">
+    <div class="label">💡 Insight</div>
+    <p>Andrew's pedagogical strategy here is deliberate: first show the loop version so you understand the math, then show the vectorized version so you understand the engineering. Both compute <em>the same thing</em>; the difference is speed. You should always write the vectorized version in practice.</p>
+  </div>
+
+  <!-- ============================================================
+       11. VECTORIZATION
+       ============================================================ -->
+  <h2 id="s11">11. Vectorization</h2>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — Vectorization</div>
+    <p><strong>Vectorization</strong> is the practice of replacing explicit Python <code>for</code> loops with array operations (using NumPy, for example), so that the heavy lifting is done by highly optimized, parallelized low-level code (BLAS, SIMD, GPU kernels).</p>
+  </div>
+
+  <div class="box intu">
+    <div class="label">🟢 Intuition — why vectorization is faster</div>
+    <p>Modern CPUs and GPUs can perform the same arithmetic operation on many numbers <em>simultaneously</em> — this is called <strong>SIMD</strong> (Single Instruction, Multiple Data). A vectorized operation like <code>np.dot(w, x)</code> exploits SIMD; a Python <code>for</code> loop does not, because each iteration carries Python interpreter overhead. The speed difference can be <em>two orders of magnitude</em> or more.</p>
+  </div>
+
+  <h3>11.1 A small numeric example</h3>
+
+  <p>Compute $z = w^T x + b$ where $w, x \in \mathbb{R}^n$, say $n = 1{,}000{,}000$.</p>
+
+  <p><strong>Non-vectorized:</strong></p>
+  <pre><code>z = <span class="nm">0</span>
+<span class="kw">for</span> i <span class="kw">in</span> range(n):
+    z += w[i] * x[i]
+z += b</code></pre>
+
+  <p><strong>Vectorized:</strong></p>
+  <pre><code><span class="kw">import</span> numpy <span class="kw">as</span> np
+z = np.dot(w, x) + b</code></pre>
+
+  <p>Both compute the same number. On a typical CPU, the vectorized version is roughly 300× faster.</p>
+
+  <div class="box impl">
+    <div class="label">⚙️ Implementation — SIMD in one line</div>
+    <p>The single instruction <code>z = np.dot(w, x)</code> gets translated into machine-level vector operations that process multiple elements per clock cycle. On GPUs, thousands of threads each work on a different element simultaneously.</p>
+  </div>
+
+  <h3>11.2 Guidelines and common NumPy functions</h3>
+
+  <div class="box imp">
+    <div class="label">⭐ Neural-network programming guideline</div>
+    <p><em>Whenever possible, avoid explicit for-loops.</em> Almost every quantity you compute in a neural network — dot products, element-wise functions, sums, maxima — has a vectorized NumPy equivalent that is both cleaner and dramatically faster.</p>
+  </div>
+
+  <p>Examples of element-wise vectorized operations (applied to every element of a vector $v$):</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Operation</th><th>Loop version</th><th>Vectorized version</th></tr></thead>
+      <tbody>
+        <tr><td>Exponential</td><td><code>[math.exp(v[i]) for i in range(n)]</code></td><td><code>np.exp(v)</code></td></tr>
+        <tr><td>Natural log</td><td>loop</td><td><code>np.log(v)</code></td></tr>
+        <tr><td>Absolute value</td><td>loop</td><td><code>np.abs(v)</code></td></tr>
+        <tr><td>Element-wise max with 0</td><td>loop</td><td><code>np.maximum(v, 0)</code></td></tr>
+        <tr><td>Square</td><td>loop</td><td><code>v ** 2</code></td></tr>
+        <tr><td>Reciprocal</td><td>loop</td><td><code>1 / v</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Warning — still need some loops</div>
+    <p>The “no for-loops” rule refers to iterating over training examples or features. You will still use a loop over the <em>gradient-descent iterations</em> (typically a few thousand). That's fine — the loop is over iterations, not over examples.</p>
+  </div>
+
+  <!-- ============================================================
+       12. VECTORIZING LOGISTIC REGRESSION
+       ============================================================ -->
+  <h2 id="s12">12. Vectorizing Logistic Regression</h2>
+
+  <p>Here is where the notation from Section 2 pays off. Recall we stacked the training examples as columns of a matrix $X \in \mathbb{R}^{n_x \times m}$.</p>
+
+  <h3>12.1 The forward pass</h3>
+
+  <p>For all $m$ examples simultaneously:</p>
+
+  <div class="eq">
+    $$Z = w^T X + b$$
+  </div>
+
+  <p>What shape is $Z$? Since $w^T$ is $1 \times n_x$ and $X$ is $n_x \times m$, their product is $1 \times m$. Adding $b$ (a scalar) broadcasts, giving a $1 \times m$ row vector:</p>
+
+  <div class="eq">
+    $$Z = \begin{bmatrix} z^{(1)} & z^{(2)} & \cdots & z^{(m)} \end{bmatrix}$$
+  </div>
+
+  <p>Then, applying the sigmoid element-wise:</p>
+
+  <div class="eq">
+    $$A = \sigma(Z) = \begin{bmatrix} a^{(1)} & a^{(2)} & \cdots & a^{(m)} \end{bmatrix}$$
+  </div>
+
+  <div class="box impl">
+    <div class="label">⚙️ Implementation — the forward pass in two lines</div>
+    <pre><code>Z = np.dot(w.T, X) + b     <span class="cm"># b is a scalar, broadcasts to (1, m)</span>
+A = sigmoid(Z)             <span class="cm"># element-wise; A has shape (1, m)</span></code></pre>
+    <p>No Python loop over examples. Compare with the loop version — this is the reason deep learning can scale to massive datasets.</p>
+  </div>
+
+  <div class="box ins">
+    <div class="label">💡 Insight</div>
+    <p>Note the elegant role of broadcasting: the single scalar $b$ is automatically replicated to shape $(1, m)$ when added to $w^T X$. This is why we keep $b$ as a separate scalar instead of fusing it into $w$ via an extra “$x_0 = 1$” feature. Both work; the course convention is cleaner for vectorization.</p>
+  </div>
+
+  <!-- ============================================================
+       13. VECTORIZING THE GRADIENT
+       ============================================================ -->
+  <h2 id="s13">13. Vectorizing the Gradient Computation</h2>
+
+  <p>The gradient computation also vectorizes beautifully.</p>
+
+  <h3>13.1 The key quantity: $dZ$</h3>
+
+  <p>Recall that for one example, $dz^{(i)} = a^{(i)} - y^{(i)}$. Stacking all examples as columns:</p>
+
+  <div class="eq">
+    $$dZ = A - Y = \begin{bmatrix} a^{(1)} - y^{(1)} & a^{(2)} - y^{(2)} & \cdots & a^{(m)} - y^{(m)} \end{bmatrix}$$
+  </div>
+
+  <p>This is a $1 \times m$ row vector — one gradient contribution per example.</p>
+
+  <h3>13.2 The gradient with respect to $w$</h3>
+
+  <p>Recall the non-vectorized formula:</p>
+  <div class="eq">$$dw_j = \frac{1}{m} \sum_{i=1}^{m} x_j^{(i)} \cdot dz^{(i)}$$</div>
+
+  <p>Vectorized, this becomes a matrix-vector product:</p>
+  <div class="eq">$$dw = \frac{1}{m} X \, dZ^T$$</div>
+
+  <p>Let's verify the shapes:</p>
+  <ul>
+    <li>$X$ is $n_x \times m$.</li>
+    <li>$dZ^T$ is $m \times 1$.</li>
+    <li>Their product is $n_x \times 1$ — exactly the shape of $dw$. ✓</li>
+  </ul>
+
+  <h3>13.3 The gradient with respect to $b$</h3>
+
+  <p>For the bias, we sum all $dz^{(i)}$ and divide by $m$:</p>
+  <div class="eq">$$db = \frac{1}{m} \sum_{i=1}^{m} dz^{(i)} = \frac{1}{m} \texttt{np.sum}(dZ)$$</div>
+
+  <div class="box impl">
+    <div class="label">⚙️ Implementation — the full vectorized iteration</div>
+    <pre><code><span class="kw">for</span> iter <span class="kw">in</span> range(num_iterations):
+    <span class="cm"># Forward pass</span>
+    Z = np.dot(w.T, X) + b
+    A = sigmoid(Z)
+
+    <span class="cm"># Backward pass</span>
+    dZ = A - Y                              <span class="cm"># shape (1, m)</span>
+    dw = (<span class="nm">1</span> / m) * np.dot(X, dZ.T)          <span class="cm"># shape (n_x, 1)</span>
+    db = (<span class="nm">1</span> / m) * np.sum(dZ)              <span class="cm"># scalar</span>
+
+    <span class="cm"># Update</span>
+    w = w - alpha * dw
+    b = b - alpha * db</code></pre>
+    <p>That's the entire logistic-regression training loop — no loop over examples, no loop over features. Each iteration handles all $m$ examples and all $n_x$ features at once.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Common Mistake — dimension checks</div>
+    <p>Shape bugs are the #1 source of frustration in deep-learning code. Always check <code>X.shape</code>, <code>Z.shape</code>, <code>dZ.shape</code> when debugging. For logistic regression with one output: <code>X.shape = (n_x, m)</code>, <code>w.shape = (n_x, 1)</code>, <code>Z.shape = (1, m)</code>, <code>A.shape = (1, m)</code>, <code>dZ.shape = (1, m)</code>, <code>dw.shape = (n_x, 1)</code>.</p>
+  </div>
+
+  <!-- ============================================================
+       14. BROADCASTING
+       ============================================================ -->
+  <h2 id="s14">14. Broadcasting in Python</h2>
+
+  <div class="box def">
+    <div class="label">🔵 Definition — Broadcasting</div>
+    <p><strong>Broadcasting</strong> is NumPy's rule for performing arithmetic between arrays of different shapes. When the shapes are compatible, NumPy “stretches” the smaller array to match the larger one without copying data explicitly.</p>
+  </div>
+
+  <h3>14.1 The general rule</h3>
+
+  <p>When you perform an operation between two arrays, NumPy compares their shapes from the <em>trailing dimension</em>. Two dimensions are compatible if:</p>
+  <ul>
+    <li>They are equal, or</li>
+    <li>One of them is 1.</li>
+  </ul>
+
+  <p>The smaller dimension is then stretched to match the larger one.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Operation</th><th>Shapes</th><th>Result</th></tr></thead>
+      <tbody>
+        <tr><td>Matrix + vector</td><td>$(m, n) + (1, n)$</td><td>$(m, n)$ — vector is duplicated across rows</td></tr>
+        <tr><td>Matrix + column</td><td>$(m, n) + (m, 1)$</td><td>$(m, n)$ — column is duplicated across columns</td></tr>
+        <tr><td>Matrix + scalar</td><td>$(m, n) + \mathbb{R}$</td><td>$(m, n)$ — scalar is added to every entry</td></tr>
+        <tr><td>Row + column</td><td>$(1, n) + (m, 1)$</td><td>$(m, n)$ — both are stretched</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>14.2 A worked example — calorie percentages</h3>
+
+  <p>Suppose we have a table $A$ of grams of carbohydrate, protein, and fat per 100g of four foods (Apples, Beef, Eggs, Potatoes). Shape: $3 \times 4$.</p>
+
+  <p>We want to compute, for each food, what percentage of total calories comes from each macronutrient.</p>
+
+  <pre><code>A = np.array([
+    [<span class="nm">56.0</span>,  <span class="nm">0.0</span>,   <span class="nm">4.4</span>,  <span class="nm">68.0</span>],  <span class="cm"># carbs</span>
+    [ <span class="nm">1.2</span>, <span class="nm">104.0</span>, <span class="nm">52.0</span>,  <span class="nm">8.0</span>],  <span class="cm"># protein</span>
+    [ <span class="nm">1.8</span>, <span class="nm">135.0</span>, <span class="nm">99.0</span>,  <span class="nm">0.9</span>],  <span class="cm"># fat</span>
+])   <span class="cm"># shape (3, 4)</span>
+
+cal = A.sum(axis=<span class="nm">0</span>)          <span class="cm"># shape (4,)   → [59.0, 239.0, 155.4, 76.9]</span>
+percentage = <span class="nm">100</span> * A / cal      <span class="cm"># (3,4) / (4,) → broadcasts the (4,) row across rows</span></code></pre>
+
+  <p>NumPy broadcasts the shape-$(4,)$ vector <code>cal</code> into a shape-$(1, 4)$ row and divides every row of $A$ by it. The result is a $(3, 4)$ matrix of percentages.</p>
+
+  <h3>14.3 Another worked example — adding a row</h3>
+
+  <p>Consider adding the row vector $[100, 200, 300]$ (shape $(1,3)$) to the matrix:</p>
+
+  <div class="eq">
+    $$\begin{bmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \end{bmatrix} + \begin{bmatrix} 100 & 200 & 300 \end{bmatrix} = \begin{bmatrix} 101 & 202 & 303 \\ 104 & 205 & 306 \end{bmatrix}$$
+  </div>
+
+  <p>The row vector is stretched vertically (replicated once per row) to match the matrix shape. This is exactly what happens when we compute $w^T X + b$: the scalar $b$ is broadcast to every column.</p>
+
+  <h3>14.4 A final example — adding a scalar</h3>
+
+  <div class="eq">
+    $$\begin{bmatrix} 1 \\ 2 \\ 3 \\ 4 \end{bmatrix} + 100 = \begin{bmatrix} 101 \\ 102 \\ 103 \\ 104 \end{bmatrix}$$
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Warning — silent broadcasting bugs</div>
+    <p>If you accidentally use a shape like $(m,)$ instead of $(m, 1)$ for a column vector, NumPy may still broadcast it — but in the wrong direction, producing silently wrong results. <strong>Always use explicit <code>reshape(-1, 1)</code> or <code>keepdims=True</code></strong> when a specific rank is intended. This is one of the most common mistakes in deep-learning code.</p>
+  </div>
+
+  <div class="box impl">
+    <div class="label">⚙️ Implementation — checking shapes</div>
+    <pre><code><span class="cm"># Use assertions to catch shape bugs early</span>
+<span class="kw">assert</span> w.shape == (n_x, <span class="nm">1</span>)
+<span class="kw">assert</span> b.shape == () <span class="kw">or</span> b.shape == (<span class="nm">1</span>,)
+
+<span class="cm"># Force a column vector explicitly</span>
+v = v.reshape(-<span class="nm">1</span>, <span class="nm">1</span>)
+
+<span class="cm"># Force a row vector explicitly</span>
+v = v.reshape(<span class="nm">1</span>, -<span class="nm">1</span>)</code></pre>
+  </div>
+
+  <!-- ============================================================
+       15. WHY THE COST FUNCTION (MLE)
+       ============================================================ -->
+  <h2 id="s15">15. Why the Cost Function Looks Like That (Maximum Likelihood)</h2>
+
+  <p>This section explains <em>where</em> the cross-entropy loss comes from. It is labeled optional in the course, but it's worth understanding once — it demystifies the formula.</p>
+
+  <h3>15.1 Logistic regression as a probabilistic model</h3>
+
+  <p>Logistic regression outputs a probability: $\hat{y} = P(y = 1 \mid x)$. From this, we can write down the probability of <em>either</em> outcome:</p>
+
+  <ul>
+    <li>If $y = 1$: $P(y \mid x) = \hat{y}$</li>
+    <li>If $y = 0$: $P(y \mid x) = 1 - \hat{y}$</li>
+  </ul>
+
+  <p>These two cases can be combined into a single formula:</p>
+
+  <div class="eq">
+    $$P(y \mid x) = \hat{y}^{\,y} \, (1 - \hat{y})^{\,1 - y}$$
+  </div>
+  <div class="eq-caption">A compact expression that gives $\hat{y}$ when $y=1$ and $1-\hat{y}$ when $y=0$.</div>
+
+  <div class="box ex">
+    <div class="label">🟣 Verify the formula</div>
+    <ul>
+      <li>If $y=1$: $\hat{y}^{1}(1-\hat{y})^{0} = \hat{y} \cdot 1 = \hat{y}$. ✓</li>
+      <li>If $y=0$: $\hat{y}^{0}(1-\hat{y})^{1} = 1 \cdot (1-\hat{y}) = 1-\hat{y}$. ✓</li>
+    </ul>
+  </div>
+
+  <h3>15.2 Maximum likelihood estimation</h3>
+
+  <p>Since the training examples are assumed independent, the probability of observing the entire training set's labels is the product:</p>
+
+  <div class="eq">
+    $$P(\text{all labels}) = \prod_{i=1}^{m} P\!\left(y^{(i)} \mid x^{(i)}\right)$$
+  </div>
+
+  <p><strong>Maximum likelihood estimation (MLE)</strong> says: choose the parameters $w, b$ that make the observed data as likely as possible. Maximizing a product is awkward, so we take the logarithm (monotonic, so it doesn't change the argmax) — turning products into sums:</p>
+
+  <div class="eq">
+    $$\log P(\text{all labels}) = \sum_{i=1}^{m} \log P\!\left(y^{(i)} \mid x^{(i)}\right)$$
+  </div>
+
+  <p>Substituting $P(y^{(i)}|x^{(i)}) = \hat{y}^{(i)\,y^{(i)}}(1-\hat{y}^{(i)})^{1-y^{(i)}}$:</p>
+
+  <div class="eq">
+    $$\log P = \sum_{i=1}^{m} \left[ y^{(i)} \log \hat{y}^{(i)} + (1 - y^{(i)}) \log(1 - \hat{y}^{(i)}) \right]$$
+  </div>
+
+  <p>Maximizing the log-likelihood is equivalent to <em>minimizing its negative</em>, divided by $m$ for convenience:</p>
+
+  <div class="eq">
+    $$J(w, b) = -\frac{1}{m} \sum_{i=1}^{m} \left[ y^{(i)} \log \hat{y}^{(i)} + (1 - y^{(i)}) \log(1 - \hat{y}^{(i)}) \right]$$
+  </div>
+
+  <div class="box ins">
+    <div class="label">💡 Insight — so the cost function is a likelihood</div>
+    <p>The cross-entropy cost we've been using all along is simply the <em>negative log-likelihood</em> of the training data. Minimizing it means finding parameters that make the observed labels most probable. This connection shows the loss isn't arbitrary — it falls out naturally from the probabilistic interpretation of logistic regression.</p>
+  </div>
+
+  <div class="box imp">
+    <div class="label">⭐ Key Idea — convexity</div>
+    <p>Thanks to the log-likelihood form, $J(w, b)$ is a convex function of $w$ and $b$. That means gradient descent will find the global minimum without getting stuck. (Deep networks lose this guarantee, but the intuition still guides us.)</p>
+  </div>
+
+  <!-- ============================================================
+       16. COMMON MISTAKES
+       ============================================================ -->
+  <h2 id="s16">16. Common Mistakes &amp; Clarifications</h2>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 1 — Confusing $(i)$ with $[l]$</div>
+    <p>$(i)$ in parentheses = the $i$-th example; $[l]$ in brackets = the $l$-th layer. Mixing these up is a classic beginner error.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 2 — Writing $X$ as $m \times n_x$ instead of $n_x \times m$</div>
+    <p>In this specialization, columns are examples. Writing $X$ with $m$ rows causes every subsequent matrix multiplication to have the wrong shape.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 3 — Using squared error for logistic regression</div>
+    <p>Squared error produces a non-convex cost for logistic regression. Always use cross-entropy (binary cross-entropy for $y \in \{0,1\}$).</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 4 — Forgetting that $dz = a - y$</div>
+    <p>This simplification is what makes logistic regression so clean. If you derive the gradient by hand and get a messy expression, you've probably missed the sigmoid-derivative identity $\sigma'(z) = a(1-a)$ that collapses everything.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 5 — Getting the sign of the gradient wrong</div>
+    <p>Gradient descent <em>subtracts</em> the gradient: $w := w - \alpha \cdot dw$. If you accidentally add, the cost will grow instead of shrinking.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 6 — Blindly trusting broadcasting</div>
+    <p>NumPy will happily broadcast shapes that don't mean what you intended. Use explicit <code>reshape</code> and <code>assert</code> statements to catch bugs early.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 7 — Thinking vectorization changes the math</div>
+    <p>Vectorization does not change <em>what</em> is computed, only <em>how fast</em>. The loop version and vectorized version produce identical numbers (up to floating-point rounding).</p>
+  </div>
+
+  <div class="box warn">
+    <div class="label">🔴 Mistake 8 — Using “$y$” and “$\hat{y}$” interchangeably</div>
+    <p>$y$ is the ground-truth label; $\hat{y}$ is the model's prediction. The loss compares the two. Mixing them up makes every equation meaningless.</p>
+  </div>
+
+  <!-- ============================================================
+       17. SUMMARY & REVIEW
+       ============================================================ -->
+  <h2 id="s17">17. Weekly Summary &amp; Review</h2>
+
+  <section class="summary">
+    <h2 style="border:none">📌 Weekly Summary</h2>
+
+    <p><strong>1. Binary classification.</strong> Problems where $y \in \{0,1\}$. Images are stored as pixel intensities across RGB channels and unrolled into a feature vector $x \in \mathbb{R}^{n_x}$.</p>
+
+    <p><strong>2. Notation.</strong> $(i)$ = $i$-th example; $[l]$ = $l$-th layer. $X \in \mathbb{R}^{n_x \times m}$ has examples as columns. $W^{[l]}$, $b^{[l]}$ are the parameters of layer $l$. $\hat{y} = a^{[L]}$.</p>
+
+    <p><strong>3. Logistic regression.</strong> $\hat{y} = \sigma(w^T x + b)$ with $\sigma(z) = 1/(1+e^{-z})$. Sigmoid squashes any real number into $(0, 1)$, giving a probability.</p>
+
+    <p><strong>4. Cost function.</strong> Loss per example: $L(\hat{y}, y) = -[y\log\hat{y} + (1-y)\log(1-\hat{y})]$. Cost over all examples: $J(w,b) = \frac{1}{m}\sum L(\hat{y}^{(i)}, y^{(i)})$.</p>
+
+    <p><strong>5. Gradient descent.</strong> Repeatedly update $w := w - \alpha\,\partial J/\partial w$ and $b := b - \alpha\,\partial J/\partial b$. The learning rate $\alpha$ controls step size.</p>
+
+    <p><strong>6. Derivatives.</strong> Slope of a function at a point. Key identities: $\frac{d}{da}(a^2) = 2a$, $\frac{d}{da}\ln(a) = 1/a$, and for sigmoid $\sigma'(z) = \sigma(z)(1-\sigma(z))$.</p>
+
+    <p><strong>7. Computation graph.</strong> A directed graph that breaks a complex computation into simple steps. The forward pass computes values; the backward pass uses the chain rule to compute gradients.</p>
+
+    <p><strong>8. Backprop for logistic regression.</strong> $da = -y/a + (1-y)/(1-a)$, $dz = a - y$, $dw_j = x_j \cdot dz$, $db = dz$.</p>
+
+    <p><strong>9. Vectorization.</strong> Replace explicit loops with array operations. Forward pass: $Z = w^T X + b$, $A = \sigma(Z)$. Backward pass: $dZ = A - Y$, $dw = \frac{1}{m}X dZ^T$, $db = \frac{1}{m}\texttt{sum}(dZ)$.</p>
+
+    <p><strong>10. Broadcasting.</strong> NumPy stretches smaller arrays along size-1 dimensions. Know the rules; use explicit shapes to avoid bugs.</p>
+
+    <p><strong>11. Origin of the cost.</strong> Cross-entropy is the negative log-likelihood of the training data. Minimizing it = maximum likelihood estimation.</p>
+  </section>
+
+  <h3>✅ Must-Know Concepts</h3>
+  <ul>
+    <li>Notation: $(i)$ vs $[l]$, $X$ shape $(n_x, m)$, meaning of $m$, $n_x$, $n_y$.</li>
+    <li>The sigmoid function and its three key values: 0, 0.5, 1.</li>
+    <li>Binary cross-entropy loss and why we use it (not squared error).</li>
+    <li>The cost function as average loss.</li>
+    <li>Gradient descent update rules and the role of the learning rate.</li>
+    <li>Intuition of derivatives and the chain rule.</li>
+    <li>Computation graphs: forward pass for values, backward pass for gradients.</li>
+    <li>The critical simplification $dz = a - y$.</li>
+    <li>Vectorization: how to replace loops with NumPy operations.</li>
+    <li>Broadcasting rules in NumPy.</li>
+    <li>Cross-entropy loss as the negative log-likelihood (MLE view).</li>
+  </ul>
+
+  <h3>🧮 Important Equations (Week 2)</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Equation</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>$n_x = 64 \cdot 64 \cdot 3 = 12{,}288$</td><td>Dimension of feature vector for a 64×64 RGB image</td></tr>
+        <tr><td>$\hat{y} = \sigma(w^T x + b)$</td><td>Logistic regression output (probability)</td></tr>
+        <tr><td>$\sigma(z) = \dfrac{1}{1 + e^{-z}}$</td><td>Sigmoid function</td></tr>
+        <tr><td>$L(\hat{y}, y) = -[y\log\hat{y} + (1-y)\log(1-\hat{y})]$</td><td>Binary cross-entropy loss for one example</td></tr>
+        <tr><td>$J(w,b) = \dfrac{1}{m}\sum_{i=1}^{m} L(\hat{y}^{(i)}, y^{(i)})$</td><td>Cost function (average loss)</td></tr>
+        <tr><td>$w := w - \alpha \dfrac{\partial J}{\partial w}$, &nbsp; $b := b - \alpha \dfrac{\partial J}{\partial b}$</td><td>Gradient descent updates</td></tr>
+        <tr><td>$\dfrac{dJ}{da} = \dfrac{dJ}{dv} \cdot \dfrac{dv}{da}$</td><td>Chain rule</td></tr>
+        <tr><td>$\sigma'(z) = \sigma(z)(1-\sigma(z)) = a(1-a)$</td><td>Sigmoid derivative — the identity that simplifies backprop</td></tr>
+        <tr><td>$dz = a - y$</td><td>The famous simplification for logistic-regression backprop</td></tr>
+        <tr><td>$dw_j = x_j \cdot dz$, &nbsp; $db = dz$</td><td>Per-example gradients for $w_j$ and $b$</td></tr>
+        <tr><td>$Z = w^T X + b$, &nbsp; $A = \sigma(Z)$</td><td>Vectorized forward pass</td></tr>
+        <tr><td>$dZ = A - Y$, &nbsp; $dw = \frac{1}{m} X dZ^T$, &nbsp; $db = \frac{1}{m}\texttt{sum}(dZ)$</td><td>Vectorized backward pass</td></tr>
+        <tr><td>$(m, n) + (1, n) \to (m, n)$</td><td>Broadcasting rule (row vector is replicated)</td></tr>
+        <tr><td>$(m, n) + (m, 1) \to (m, n)$</td><td>Broadcasting rule (column vector is replicated)</td></tr>
+        <tr><td>$P(y \mid x) = \hat{y}^{\,y}(1-\hat{y})^{1-y}$</td><td>Likelihood of one observation under logistic regression</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>⚠️ Common Confusions Recap</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Confusion</th><th>Resolution</th></tr></thead>
+      <tbody>
+        <tr><td>Loss vs cost</td><td>Loss is per example; cost is average loss over all examples.</td></tr>
+        <tr><td>$y$ vs $\hat{y}$</td><td>$y$ = true label; $\hat{y}$ = model prediction.</td></tr>
+        <tr><td>$x^{(i)}$ vs $x^{[l]}$</td><td>$(i)$ = $i$-th example; $[l]$ = $l$-th layer.</td></tr>
+        <tr><td>Squared error vs cross-entropy</td><td>Squared error gives non-convex cost for logistic regression; cross-entropy gives convex, well-behaved cost.</td></tr>
+        <tr><td>$\partial$ vs $d$</td><td>$\partial$ (partial) is used when a function depends on multiple variables; we differentiate w.r.t. one while holding others constant.</td></tr>
+        <tr><td>Loop vs vectorized computation</td><td>Same math, vastly different speed. Always use vectorized NumPy in practice.</td></tr>
+        <tr><td>Broadcasting shape (m,) vs (m,1)</td><td>Different behaviors. Always reshape explicitly when rank matters.</td></tr>
+        <tr><td>Derivative vs gradient</td><td>Derivative of a scalar function of a scalar; gradient is the vector of partial derivatives of a scalar function of many variables.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>📝 Quick Review (Click to Reveal Answers)</h3>
+
+  <details class="qa">
+    <summary>Why is the feature vector for a 64×64 RGB image of length 12,288?</summary>
+    <div class="ans">Because the image has 64 × 64 = 4,096 pixels, and each pixel has 3 color channels (R, G, B), so 4,096 × 3 = 12,288 numbers are unrolled into the feature vector $x$.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What is the difference between $(i)$ and $[l]$ in the notation?</summary>
+    <div class="ans">$(i)$ refers to the $i$-th training example. $[l]$ refers to the $l$-th layer of the neural network.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What shape is the input matrix $X$, and why?</summary>
+    <div class="ans">$X \in \mathbb{R}^{n_x \times m}$ — each column is a training example. This makes vectorized computations across all $m$ examples work cleanly via matrix multiplication.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What does the sigmoid function do, and why is it used in logistic regression?</summary>
+    <div class="ans">The sigmoid maps any real number to the interval $(0, 1)$. It is used because logistic regression predicts a probability, which must lie between 0 and 1, while $w^T x + b$ can be any real number.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Write the binary cross-entropy loss for one example.</summary>
+    <div class="ans">$L(\hat{y}, y) = -[y \log \hat{y} + (1-y) \log(1-\hat{y})]$.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Why use cross-entropy instead of squared error for logistic regression?</summary>
+    <div class="ans">Squared error makes the cost function non-convex with respect to the parameters, leading to multiple local minima and unreliable gradient descent. Cross-entropy produces a convex cost surface for logistic regression.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What is the cost function $J(w, b)$?</summary>
+    <div class="ans">The average of the loss over all $m$ training examples: $J(w,b) = \frac{1}{m}\sum_{i=1}^{m} L(\hat{y}^{(i)}, y^{(i)})$.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Write the gradient descent update rules for $w$ and $b$.</summary>
+    <div class="ans">$w := w - \alpha \frac{\partial J}{\partial w}$, and $b := b - \alpha \frac{\partial J}{\partial b}$.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What happens if the learning rate α is too large? Too small?</summary>
+    <div class="ans">Too large: gradient descent may overshoot and diverge — cost may grow. Too small: training is very slow, requiring many iterations.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What does the derivative of a function tell you, intuitively?</summary>
+    <div class="ans">It tells you the slope of the function at a point — how much the output changes for a small change in the input.</div>
+  </details>
+
+  <details class="qa">
+    <summary>State the chain rule.</summary>
+    <div class="ans">If $J$ depends on $v$ and $v$ depends on $a$, then $\frac{dJ}{da} = \frac{dJ}{dv} \cdot \frac{dv}{da}$.</div>
+  </details>
+
+  <details class="qa">
+    <summary>In the computation graph for $J = 3(a + bc)$, what is $\frac{dJ}{db}$ at $a=5, b=3, c=2$?</summary>
+    <div class="ans">$\frac{dJ}{db} = \frac{dJ}{du} \cdot \frac{du}{db} = 3 \cdot c = 3 \cdot 2 = 6$. Alternatively, $J = 3(a + bc) = 3a + 3bc$, so $\partial J/\partial b = 3c = 6$. ✓</div>
+  </details>
+
+  <details class="qa">
+    <summary>What is $\sigma'(z)$ in terms of the sigmoid output $a = \sigma(z)$?</summary>
+    <div class="ans">$\sigma'(z) = a(1-a)$.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Derive $dz = a - y$ for logistic regression.</summary>
+    <div class="ans">$\frac{dL}{da} = -\frac{y}{a} + \frac{1-y}{1-a}$ and $\frac{da}{dz} = a(1-a)$. Multiply: $\frac{dL}{dz} = (-\frac{y}{a} + \frac{1-y}{1-a}) \cdot a(1-a) = -y(1-a) + a(1-y) = -y + ay + a - ay = a - y$.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What is the per-example gradient of the loss with respect to weight $w_j$?</summary>
+    <div class="ans">$\frac{\partial L}{\partial w_j} = x_j \cdot (a - y)$.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Why is vectorization so important in deep learning?</summary>
+    <div class="ans">It replaces slow Python loops with SIMD-optimized array operations that run 100–300× faster on CPUs and even faster on GPUs, making it feasible to train on large datasets.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Write the vectorized formulas for the forward pass of logistic regression.</summary>
+    <div class="ans">$Z = w^T X + b$ (shape $(1, m)$), then $A = \sigma(Z)$ (element-wise, also shape $(1, m)$).</div>
+  </details>
+
+  <details class="qa">
+    <summary>Write the vectorized formulas for the gradient computation.</summary>
+    <div class="ans">$dZ = A - Y$, $dw = \frac{1}{m} X\, dZ^T$, and $db = \frac{1}{m} \texttt{np.sum}(dZ)$.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What does NumPy broadcasting do when adding a $(m, n)$ matrix and a $(1, n)$ row vector?</summary>
+    <div class="ans">It stretches the row vector vertically to shape $(m, n)$ by replicating it $m$ times, then adds element-wise.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What does NumPy broadcasting do when adding a $(m, n)$ matrix and a scalar?</summary>
+    <div class="ans">It adds the scalar to every entry of the matrix, effectively broadcasting it to shape $(m, n)$.</div>
+  </details>
+
+  <details class="qa">
+    <summary>What is the probabilistic interpretation of the logistic regression cost?</summary>
+    <div class="ans">The cross-entropy cost is the negative log-likelihood of the training data. Minimizing it is equivalent to maximum likelihood estimation — finding the parameters that make the observed labels most likely.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Why is the logistic-regression cost convex?</summary>
+    <div class="ans">Because it corresponds to the negative log-likelihood of a probabilistic model with a linear parameterization inside a sigmoid — a structure that is convex in $w$ and $b$.</div>
+  </details>
+
+  <h3>🧠 Self-Test (Conceptual)</h3>
+
+  <details class="qa">
+    <summary>You notice that during training, the cost is decreasing but very slowly. What would you check first?</summary>
+    <div class="ans">The learning rate α. If it's too small, training will be slow. Try increasing α by a factor of 3 or 10 and observe. Also check that gradients are computed correctly — a bug that causes small gradients will produce the same symptom.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Your cost is oscillating wildly instead of decreasing smoothly. What's likely wrong?</summary>
+    <div class="ans">The learning rate is probably too large, causing the updates to overshoot the minimum. Try reducing α by a factor of 3 or 10.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Someone says “I'll just use squared error for logistic regression — it's simpler.” Why is that a bad idea?</summary>
+    <div class="ans">Because squared error yields a non-convex cost surface for logistic regression, so gradient descent is unreliable. Cross-entropy gives a convex cost with a single global minimum, and it also has cleaner gradients ($dz = a - y$).</div>
+  </details>
+
+  <details class="qa">
+    <summary>Suppose you vectorize your code but forget to divide $dw$ by $m$. What will happen to training?</summary>
+    <div class="ans">The gradient will be $m$ times too large. This effectively multiplies the learning rate by $m$, likely causing divergence (cost explodes) or chaotic updates. Always average over examples.</div>
+  </details>
+
+  <details class="qa">
+    <summary>You have a shape error where $X$ is $(m, n_x)$ instead of $(n_x, m)$. What goes wrong?</summary>
+    <div class="ans">The matrix multiplication $w^T X$ will either fail (incompatible shapes) or produce a wrong-shaped output, and the per-example gradient averaging will be over the wrong axis. This is why checking shapes is essential.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Explain in plain language why the backward pass in a computation graph computes the same derivatives as doing calculus by hand.</summary>
+    <div class="ans">Because the chain rule guarantees that the product of local derivatives along a path equals the derivative of the composite function. The backward pass simply organizes the chain rule systematically, node by node, so that many derivatives can be computed efficiently in one pass.</div>
+  </details>
+
+  <details class="qa">
+    <summary>If your sigmoid outputs exactly 0 or 1, what problem might you encounter in the loss computation?</summary>
+    <div class="ans">$\log(0)$ is $-\infty$ (or NaN in floating point), so the loss becomes undefined or infinite. In practice, frameworks clip probabilities away from 0 and 1, or compute cross-entropy directly from logits using a numerically stable log-sum-exp formula.</div>
+  </details>
+
+  <details class="qa">
+    <summary>Why does the course keep b separate from w instead of folding it into an “extra input $x_0 = 1$”?</summary>
+    <div class="ans">Both are mathematically equivalent, but keeping $b$ separate is cleaner for vectorization: $Z = w^T X + b$ broadcasts a scalar. Folding $b$ into $w$ would require adding a row of 1s to $X$ at every iteration, which is less efficient and more error-prone.</div>
+  </details>
+
+</div><!-- /wrap -->
+
+<!-- ================= FOOTER NAV ================= -->
+<nav class="navfoot" aria-label="Week navigation">
+  <a href="C1_W1.html" class="nav-btn">← Previous Week</a>
+  <a href="#top">↑ Back to Top</a>
+  <a href="#">Back to Course 1</a>
+  <a href="#">Back to Specialization</a>
+  <a href="C1_W3.html" class="nav-btn">Next Week →</a>
+</nav>
+
+<button class="backtop" id="backtop" type="button" aria-label="Back to top">↑ Top</button>
+
+<script>
+/* ============================================================
+   THEME TOGGLE
+   ============================================================ */
+(function(){
+  const root = document.documentElement;
+  const stored = localStorage.getItem('dl-theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if (stored === 'dark' || (!stored && prefersDark)) root.setAttribute('data-theme','dark');
+
+  const btn = document.getElementById('themeBtn');
+  btn.addEventListener('click', () => {
+    const cur = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', cur);
+    localStorage.setItem('dl-theme', cur);
+  });
+})();
+
+/* ============================================================
+   BACK TO TOP
+   ============================================================ */
+(function(){
+  const b = document.getElementById('backtop');
+  const onScroll = () => {
+    if (window.scrollY > 500) b.classList.add('show');
+    else b.classList.remove('show');
+  };
+  window.addEventListener('scroll', onScroll, {passive:true});
+  b.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+})();
+
+/* ============================================================
+   CLIENT-SIDE SEARCH
+   ============================================================ */
+(function(){
+  const input = document.getElementById('searchInput');
+  const clear = document.getElementById('searchClear');
+  const wrap = document.querySelector('.wrap');
+  let originalBody = null;
+
+  function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+  function doSearch(q){
+    if (originalBody === null){
+      originalBody = wrap.innerHTML;
+    } else {
+      wrap.innerHTML = originalBody;
+    }
+
+    if (!q || q.trim().length < 2) return;
+
+    const term = q.trim();
+    const re = new RegExp('(' + escapeRegExp(term) + ')', 'gi');
+
+    const walker = document.createTreeWalker(wrap, NodeFilter.SHOW_TEXT, {
+      acceptNode(node){
+        if (!node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        const p = node.parentElement;
+        if (!p) return NodeFilter.FILTER_REJECT;
+        const tag = p.tagName;
+        if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'PRE' || tag === 'CODE') return NodeFilter.FILTER_REJECT;
+        if (!re.test(node.nodeValue)) { re.lastIndex = 0; return NodeFilter.FILTER_REJECT; }
+        re.lastIndex = 0;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+
+    const targets = [];
+    while (walker.nextNode()) targets.push(walker.currentNode);
+
+    targets.forEach(node => {
+      const span = document.createElement('span');
+      span.innerHTML = node.nodeValue.replace(re, '<mark class="hit">$1</mark>');
+      node.parentNode.replaceChild(span, node);
+    });
+  }
+
+  let t = null;
+  input.addEventListener('input', (e) => {
+    clearTimeout(t);
+    t = setTimeout(() => doSearch(e.target.value), 180);
+  });
+
+  clear.addEventListener('click', () => {
+    input.value = '';
+    doSearch('');
+  });
+})();
+
+if (window.MathJax && window.MathJax.typesetPromise){
+  window.MathJax.typesetPromise();
+}
+</script>
+
+</body>
+</html>

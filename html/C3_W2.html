@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Course 3 · Week 2 — Error Analysis, Data Mismatch &amp; Transfer Learning</title>
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+    svg: { fontCache: 'global' },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+:root{
+  --bg:#ffffff; --bg-soft:#f5f7fa; --bg-card:#ffffff;
+  --text:#1f2733; --text-soft:#4a5568; --border:#e2e8f0;
+  --accent:#2b6cb0; --accent-soft:#ebf4ff;
+  --def:#2b6cb0; --int:#2f855a; --warn:#c53030;
+  --imp:#b7791f; --ex:#6b46c1;
+  --code-bg:#1a202c; --code-text:#e2e8f0;
+  --shadow:0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+  --maxw:980px;
+}
+[data-theme="dark"]{
+  --bg:#12161c; --bg-soft:#1a1f27; --bg-card:#1b212b;
+  --text:#e6edf5; --text-soft:#a3adbb; --border:#2c3542;
+  --accent:#63b3ed; --accent-soft:#1e2a3a;
+  --def:#63b3ed; --int:#68d391; --warn:#fc8181;
+  --imp:#f6c177; --ex:#b794f4;
+  --code-bg:#0d1117; --code-text:#e6edf5;
+  --shadow:0 1px 3px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg); color:var(--text); line-height:1.65;
+  font-size:16.5px; transition:background .25s,color .25s;
+}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 18px 80px}
+
+/* Top bar */
+.topbar{position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:1px solid var(--border);backdrop-filter:blur(8px)}
+.topbar-inner{max-width:var(--maxw);margin:0 auto;display:flex;align-items:center;gap:10px;padding:10px 18px;flex-wrap:wrap}
+.brand{font-weight:700;font-size:.95rem;color:var(--accent);white-space:nowrap}
+.spacer{flex:1}
+.btn{display:inline-block;background:var(--bg-soft);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:.82rem;cursor:pointer;text-decoration:none;transition:.15s;white-space:nowrap}
+.btn:hover{background:var(--accent-soft);border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.primary:hover{opacity:.9}
+
+/* Search */
+.search-wrap{position:relative;flex:1;max-width:260px}
+.searchbox{display:flex;align-items:center;gap:6px;background:var(--bg-soft);border:1px solid var(--border);border-radius:8px;padding:4px 10px}
+.searchbox input{border:none;background:transparent;outline:none;color:var(--text);font-size:.85rem;width:100%;padding:4px 0}
+.searchbox input::placeholder{color:var(--text-soft)}
+.search-results{position:absolute;top:100%;left:0;right:0;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;margin-top:4px;max-height:300px;overflow:auto;box-shadow:var(--shadow);display:none;z-index:60}
+.search-results a{display:block;padding:8px 12px;color:var(--text);text-decoration:none;font-size:.85rem;border-bottom:1px solid var(--border)}
+.search-results a:hover{background:var(--accent-soft)}
+.search-results a:last-child{border-bottom:none}
+
+/* Header */
+header.hero{padding:38px 0 22px;border-bottom:1px solid var(--border);margin-bottom:28px}
+.crumb{font-size:.82rem;color:var(--text-soft);letter-spacing:.04em;text-transform:uppercase;margin-bottom:8px}
+h1{font-size:2rem;line-height:1.2;margin:0 0 10px;letter-spacing:-.02em}
+.subtitle{font-size:1.02rem;color:var(--text-soft);max-width:720px}
+.hero-meta{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;font-size:.82rem;color:var(--text-soft)}
+.hero-meta span{display:inline-flex;align-items:center;gap:5px}
+
+/* TOC */
+.toc{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:18px 22px;box-shadow:var(--shadow);margin-bottom:34px}
+.toc h2{margin:0 0 10px;font-size:1.05rem}
+.toc ol{margin:0;padding-left:20px;columns:2;column-gap:32px}
+@media(max-width:640px){.toc ol{columns:1}}
+.toc li{margin:5px 0;font-size:.92rem}
+.toc a{color:var(--accent);text-decoration:none}
+.toc a:hover{text-decoration:underline}
+
+/* Headings */
+h2{font-size:1.45rem;margin:48px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--border);letter-spacing:-.01em}
+h3{font-size:1.12rem;margin:30px 0 10px}
+h4{font-size:.98rem;margin:20px 0 8px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.05em}
+p{margin:10px 0}
+ul,ol{margin:10px 0;padding-left:24px}
+li{margin:5px 0}
+
+/* Cards */
+.card{border-radius:10px;padding:14px 18px;margin:16px 0;border-left:5px solid var(--border);background:var(--bg-card);box-shadow:var(--shadow)}
+.card .label{font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:6px}
+.card.def{border-left-color:var(--def);background:linear-gradient(90deg,var(--accent-soft),var(--bg-card) 40%)}
+.card.def .label{color:var(--def)}
+.card.int{border-left-color:var(--int);background:linear-gradient(90deg,rgba(47,133,90,.10),var(--bg-card) 40%)}
+.card.int .label{color:var(--int)}
+.card.warn{border-left-color:var(--warn);background:linear-gradient(90deg,rgba(197,48,48,.10),var(--bg-card) 40%)}
+.card.warn .label{color:var(--warn)}
+.card.imp{border-left-color:var(--imp);background:linear-gradient(90deg,rgba(183,121,31,.12),var(--bg-card) 40%)}
+.card.imp .label{color:var(--imp)}
+.card.ex{border-left-color:var(--ex);background:linear-gradient(90deg,rgba(107,70,193,.10),var(--bg-card) 40%)}
+.card.ex .label{color:var(--ex)}
+
+/* Equation */
+.eq{background:var(--bg-soft);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:14px 0;overflow-x:auto;font-size:1.02rem}
+.eq .note{font-size:.85rem;color:var(--text-soft);margin-top:8px}
+
+/* Code */
+pre{background:var(--code-bg);color:var(--code-text);border-radius:8px;padding:14px 16px;overflow-x:auto;font-size:.86rem;line-height:1.55}
+code{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace}
+p code,li code,td code{background:var(--bg-soft);color:var(--accent);padding:1px 6px;border-radius:4px;font-size:.88em;border:1px solid var(--border)}
+
+/* Tables */
+.table-wrap{overflow-x:auto;margin:16px 0}
+table{border-collapse:collapse;width:100%;font-size:.92rem;min-width:480px}
+th,td{border:1px solid var(--border);padding:9px 12px;text-align:left}
+th{background:var(--bg-soft);font-weight:600}
+tr:nth-child(even) td{background:var(--bg-soft)}
+
+/* Figures */
+figure{margin:20px 0;text-align:center}
+figure svg{max-width:100%;height:auto}
+figcaption{font-size:.85rem;color:var(--text-soft);margin-top:8px;text-align:left;padding:0 4px}
+.diagram-box{background:var(--bg-soft);border:1px solid var(--border);border-radius:10px;padding:16px;overflow-x:auto}
+
+/* Details */
+details{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin:10px 0}
+details summary{cursor:pointer;font-weight:600;color:var(--accent);list-style:none;font-size:.94rem}
+details summary::-webkit-details-marker{display:none}
+details summary::before{content:"▸ ";display:inline-block;transition:.2s}
+details[open] summary::before{transform:rotate(90deg)}
+details .ans{margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);color:var(--text-soft);font-size:.92rem}
+
+/* Nav bottom */
+.navbottom{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:50px;padding-top:22px;border-top:1px solid var(--border)}
+
+/* Back to top */
+.totop{position:fixed;right:18px;bottom:18px;z-index:40;background:var(--accent);color:#fff;border:none;border-radius:50%;width:44px;height:44px;font-size:1.2rem;cursor:pointer;box-shadow:var(--shadow);display:none}
+.totop.show{display:block}
+
+hr{border:none;border-top:1px solid var(--border);margin:34px 0}
+mark{background:rgba(183,121,31,.28);padding:0 3px;border-radius:3px}
+
+@media(max-width:600px){
+  body{font-size:15.5px}
+  h1{font-size:1.55rem}
+  h2{font-size:1.25rem}
+  .toc ol{columns:1}
+  .topbar-inner{gap:6px}
+  .search-wrap{max-width:100%}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ TOP BAR ============ -->
+<div class="topbar">
+  <div class="topbar-inner">
+    <span class="brand">DL Specialization · C3 W2</span>
+    <div class="search-wrap">
+      <div class="searchbox">
+        <span style="font-size:.85rem">🔍</span>
+        <input id="searchInput" type="text" placeholder="Search this page…" autocomplete="off">
+      </div>
+      <div class="search-results" id="searchResults"></div>
+    </div>
+    <div class="spacer"></div>
+    <a class="btn" href="#toc">Contents</a>
+    <button class="btn" id="themeBtn" title="Toggle dark mode">🌙</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ============ HERO ============ -->
+<header class="hero">
+  <div class="crumb">Course 3 · Structuring Machine Learning Projects</div>
+  <h1>Week 2 — Error Analysis, Data Mismatch &amp; Transfer Learning</h1>
+  <p class="subtitle">
+    How to diagnose what is actually going wrong in your model, handle data that comes
+    from different sources, and reuse knowledge from one task to help another.
+  </p>
+  <div class="hero-meta">
+    <span>📘 Standalone notes</span>
+    <span>⏱ ~50–70 min read</span>
+    <span>🎯 Beginner-friendly</span>
+    <span>🧮 Equations explained</span>
+  </div>
+</header>
+
+<!-- ============ TOC ============ -->
+<nav class="toc" id="toc">
+  <h2>Table of Contents</h2>
+  <ol>
+    <li><a href="#build">Build Your First System Quickly, Then Iterate</a></li>
+    <li><a href="#error">Carrying Out Error Analysis</a></li>
+    <li><a href="#parallel">Evaluating Multiple Ideas in Parallel</a></li>
+    <li><a href="#labels">Cleaning Up Incorrectly Labeled Data</a></li>
+    <li><a href="#mismatch">Training and Testing on Different Distributions</a></li>
+    <li><a href="#biasvar">Bias &amp; Variance with Mismatched Data Distributions</a></li>
+    <li><a href="#addressing">Addressing Data Mismatch</a></li>
+    <li><a href="#synthesis">Artificial Data Synthesis</a></li>
+    <li><a href="#transfer">Transfer Learning</a></li>
+    <li><a href="#multitask">Multi-Task Learning</a></li>
+    <li><a href="#e2e">End-to-End Deep Learning</a></li>
+    <li><a href="#e2euse">Whether to Use End-to-End Learning</a></li>
+    <li><a href="#summary">Weekly Summary</a></li>
+    <li><a href="#review">Quick Review (with answers)</a></li>
+    <li><a href="#selftest">Self-Test</a></li>
+  </ol>
+</nav>
+
+<!-- ============ 1. BUILD FIRST SYSTEM ============ -->
+<h2 id="build">1. Build Your First System Quickly, Then Iterate</h2>
+
+<div class="card def">
+  <span class="label">🔵 Definition</span>
+  <strong>Build-first-then-iterate</strong> is a strategy: set up your dev/test sets and
+  metric, build a quick initial model, then use bias/variance and error analysis to decide
+  what to improve next.
+</div>
+
+<h3>1.1 The recommended workflow</h3>
+<ol>
+  <li><strong>Set up dev/test sets and metrics.</strong> This defines your target.</li>
+  <li><strong>Build an initial system quickly.</strong>
+    <ul>
+      <li>Train on the training set (fit the parameters).</li>
+      <li>Tune on the dev set (tune hyperparameters / model selection).</li>
+      <li>Assess on the test set (final unbiased evaluation).</li>
+    </ul>
+  </li>
+  <li><strong>Use bias/variance analysis and error analysis</strong> to prioritize next steps.</li>
+</ol>
+
+<div class="card int">
+  <span class="label">🟢 Intuition</span>
+  Building a quick, imperfect system gives you <em>something to measure</em>. Without a
+  baseline, you cannot tell whether a fancy new idea is actually helping. The quick
+  system is a "scaffold" you will improve.
+</div>
+
+<div class="card imp">
+  <span class="label">🟡 Important</span>
+  Do <em>not</em> spend weeks perfecting the first model. Get it working end-to-end
+  quickly, then iterate. The dev set + metric tell you where to focus.
+</div>
+
+<h3>1.2 Speech recognition example</h3>
+<p>
+  Suppose you are building a speech recognition system. Your dev set contains audio
+  from many conditions:
+</p>
+<ul>
+  <li>Noisy background</li>
+  <li>Café noise</li>
+  <li>Car noise</li>
+  <li>Accent</li>
+  <li>Far from microphone</li>
+  <li>Young speakers</li>
+  <li>Stutter</li>
+</ul>
+<p>
+  Instead of trying to fix all of these at once, you build a baseline, measure which
+  categories contribute most to dev error, and tackle the biggest categories first.
+</p>
+
+<!-- ============ 2. ERROR ANALYSIS ============ -->
+<h2 id="error">2. Carrying Out Error Analysis</h2>
+
+<div class="card def">
+  <span class="label">🔵 Definition</span>
+  <strong>Error analysis</strong> is the process of manually examining a sample of
+  misclassified dev examples, categorizing them, and counting how many fall into each
+  category — so you know which problems are worth fixing.
+</div>
+
+<h3>2.1 The cat classifier example</h3>
+<p>
+  Your cat classifier has <strong>90% accuracy</strong> (10% error) on the dev set.
+  You notice it sometimes mistakes dogs for cats. Should you spend months building a
+  "dog detector"?
+</p>
+
+<figure>
+<div class="diagram-box">
+<svg viewBox="0 0 700 180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Error analysis: counting how many dev errors are dogs">
+  <rect x="20" y="20" width="660" height="140" rx="10" fill="var(--bg-soft)" stroke="#2b6cb0"/>
+  <text x="50" y="55" font-family="sans-serif" font-size="14" fill="currentColor">Step 1: Get ~100 misclassified dev examples.</text>
+  <text x="50" y="85" font-family="sans-serif" font-size="14" fill="currentColor">Step 2: Count how many are dogs.</text>
+  <text x="50" y="120" font-family="sans-serif" font-size="14" fill="currentColor">Result: 5 out of 100 → 5% of dev errors are dogs.</text>
+  <text x="50" y="148" font-family="sans-serif" font-size="13" fill="#2f855a">Ceiling if fixed: 10% error → 9.5% error.</text>
+</svg>
+</div>
+<figcaption>
+  Figure 2.1 — Error analysis on the cat classifier. Manually inspecting 100 errors reveals
+  that dogs account for only 5% of the mistakes. Fixing dogs would improve accuracy from
+  90% to at most 95% — a modest gain.
+</figcaption>
+</figure>
+
+<p>
+  Here is the key calculation:
+</p>
+<ul>
+  <li>Current dev error: 10%</li>
+  <li>Fraction of errors that are dogs: 5%</li>
+  <li>If you perfectly fixed all dog errors, new dev error = 10% − (10% × 5%) = 9.5%</li>
+</ul>
+
+<div class="card int">
+  <span class="label">🟢 Intuition</span>
+  Error analysis tells you the <strong>ceiling</strong> on how much a particular fix can
+  help. If fixing dogs can only reduce error from 10% to 9.5%, it is probably not worth
+  months of effort. If it could reduce error from 10% to 3%, it is worth it.
+</div>
+
+<h3>2.2 Evaluating multiple ideas in parallel</h3>
+<p>
+  Suppose you have several ideas for improving the cat classifier:
+</p>
+<ul>
+  <li>Fix pictures of dogs being recognized as cats.</li>
+  <li>Fix great cats (lions, panthers) being misrecognized.</li>
+  <li>Improve performance on blurry images.</li>
+</ul>
+
+<p>
+  Create a spreadsheet. For each misclassified dev example, put a checkmark in the
+  columns that apply:
+</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>Image</th><th>Dog</th><th>Great Cat</th><th>Blurry</th><th>Instagram</th><th>Comments</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>✓</td><td></td><td></td><td>✓</td><td>Pitbull</td></tr>
+    <tr><td>2</td><td></td><td></td><td>✓</td><td>✓</td><td></td></tr>
+    <tr><td>3</td><td></td><td>✓</td><td>✓</td><td></td><td>Rainy day at zoo</td></tr>
+    <tr><td>…</td><td>…</td><td>…</td><td>…</td><td>…</td><td>…</td></tr>
+    <tr><td><strong>% of total</strong></td><td>8%</td><td>43%</td><td>61%</td><td>12%</td><td></td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  From this table, blurry images (61%) and great cats (43%) are the biggest contributors.
+  That is where you should focus first.
+</p>
+
+<div class="card imp">
+  <span class="label">🟡 Important</span>
+  Error analysis is <em>manual</em> work, but it is usually worth a few hours. It prevents
+  you from spending weeks on a fix that only addresses 5% of your errors.
+</div>
+
+<!-- ============ 3. PARALLEL ============ -->
+<h2 id="parallel">3. Evaluating Multiple Ideas in Parallel</h2>
+
+<p>
+  The slide above already introduced the spreadsheet method. Here is a more detailed
+  look at why it works and how to use it.
+</p>
+
+<h3>3.1 The process</h3>
+<ol>
+  <li>Collect ~100 misclassified dev examples.</li>
+  <li>Define a set of categories (e.g., Dog, Great Cat, Blurry, Instagram filter, …).</li>
+  <li>For each example, mark which categories apply.</li>
+  <li>Count the percentage of errors in each category.</li>
+  <li>Prioritize the categories with the highest percentages.</li>
+</ol>
+
+<div class="card warn">
+  <span class="label">🔴 Warning — Categories can overlap</span>
+  A single image can be both blurry <em>and</em> a dog. That is fine. The percentages
+  will not sum to 100%, and they should not. You are measuring <em>how often each
+  problem appears</em>, not partitioning the errors.
+</div>
+
+<h3>3.2 What you learn</h3>
+<ul>
+  <li>Which problems are most common (biggest potential impact).</li>
+  <li>Which problems are rare (probably not worth fixing yet).</li>
+  <li>Whether a proposed fix has a reasonable ceiling.</li>
+</ul>
+
+<!-- ============ 4. INCORRECT LABELS ============ -->
+<h2 id="labels">4. Cleaning Up Incorrectly Labeled Data</h2>
+
+<div class="card def">
+  <span class="label">🔵 Definition</span>
+  <strong>Incorrectly labeled examples</strong> are training/dev/test examples whose
+  label \(y\) is wrong — for example, a dog image labeled as a cat, or a cat image
+  labeled as "not cat".
+</div>
+
+<h3>4.1 Training set: random vs. systematic errors</h3>
+
+<div class="card int">
+  <span class="label">🟢 Intuition</span>
+  Deep learning algorithms are surprisingly robust to <strong>random</strong> label
+  errors in the training set. But they are <em>not</em> robust to
+  <strong>systematic</strong> errors.
+</div>
+
+<p>
+  <strong>Random errors:</strong> a few cats mislabeled as dogs, scattered randomly.
+  The model sees mostly correct examples and learns the right pattern.
+</p>
+<p>
+  <strong>Systematic errors:</strong> <em>all</em> white cats labeled as dogs. The model
+  learns the wrong pattern. This is much more harmful.
+</p>
+
+<figure>
+<div class="diagram-box">
+<svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Random vs systematic label errors">
+  <!-- Random -->
+  <text x="175" y="25" font-family="sans-serif" font-size="14" text-anchor="middle" font-weight="bold" fill="#2f855a">Random errors — mostly OK</text>
+  <rect x="30" y="45" width="290" height="130" rx="8" fill="#c6f6d5" stroke="#2f855a"/>
+  <text x="45" y="75" font-family="sans-serif" font-size="13" fill="currentColor">🐱 y=1</text>
+  <text x="115" y="75" font-family="sans-serif" font-size="13" fill="currentColor">🐶 y=0</text>
+  <text x="185" y="75" font-family="sans-serif" font-size="13" fill="#c53030">🐱 y=0 ✗</text>
+  <text x="45" y="105" font-family="sans-serif" font-size="13" fill="currentColor">🐱 y=1</text>
+  <text x="115" y="105" font-family="sans-serif" font-size="13" fill="currentColor">🐶 y=0</text>
+  <text x="185" y="105" font-family="sans-serif" font-size="13" fill="currentColor">🐱 y=1</text>
+  <text x="45" y="135" font-family="sans-serif" font-size="13" fill="currentColor">🐶 y=0</text>
+  <text x="115" y="135" font-family="sans-serif" font-size="13" fill="#c53030">🐶 y=1 ✗</text>
+  <text x="185" y="135" font-family="sans-serif" font-size="13" fill="currentColor">🐱 y=1</text>
+  <text x="45" y="163" font-family="sans-serif" font-size="12" fill="#4a5568">Scattered mistakes → model still learns.</text>
+
+  <!-- Systematic -->
+  <text x="525" y="25" font-family="sans-serif" font-size="14" text-anchor="middle" font-weight="bold" fill="#c53030">Systematic errors — harmful</text>
+  <rect x="380" y="45" width="290" height="130" rx="8" fill="#fff5f5" stroke="#c53030"/>
+  <text x="395" y="75" font-family="sans-serif" font-size="13" fill="currentColor">🐱 y=1</text>
+  <text x="465" y="75" font-family="sans-serif" font-size="13" fill="currentColor">🐶 y=0</text>
+  <text x="535" y="75" font-family="sans-serif" font-size="13" fill="currentColor">🐱 y=1</text>
+  <text x="395" y="105" font-family="sans-serif" font-size="13" fill="#c53030">⚪🐱 y=0 ✗</text>
+  <text x="465" y="105" font-family="sans-serif" font-size="13" fill="#c53030">⚪🐱 y=0 ✗</text>
+  <text x="535" y="105" font-family="sans-serif" font-size="13" fill="#c53030">⚪🐱 y=0 ✗</text>
+  <text x="395" y="135" font-family="sans-serif" font-size="13" fill="#c53030">⚪🐱 y=0 ✗</text>
+  <text x="465" y="135" font-family="sans-serif" font-size="13" fill="currentColor">🐶 y=0</text>
+  <text x="535" y="135" font-family="sans-serif" font-size="13" fill="#c53030">⚪🐱 y=0 ✗</text>
+  <text x="395" y="163" font-family="sans-serif" font-size="12" fill="#c53030">All white cats mislabeled → model learns wrong rule.</text>
+</svg>
+</div>
+<figcaption>
+  Figure 4.1 — Random vs systematic label errors. Random errors are tolerable; systematic
+  errors teach the model the wrong pattern and must be fixed.
+</figcaption>
+</figure>
+
+<h3>4.2 Dev/test set: error analysis with "incorrectly labeled" column</h3>
+<p>
+  Add an "Incorrectly labeled" column to your error-analysis spreadsheet:
+</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>Image</th><th>Dog</th><th>Great Cat</th><th>Blurry</th><th>Incorrectly labeled</th><th>Comments</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>98</td><td></td><td></td><td></td><td>✓</td><td>Labeler missed cat in background</td></tr>
+    <tr><td>99</td><td></td><td>✓</td><td></td><td></td><td></td></tr>
+    <tr><td>100</td><td></td><td></td><td></td><td>✓</td><td>Drawing of a cat; not a real cat</td></tr>
+    <tr><td><strong>% of total</strong></td><td>8%</td><td>43%</td><td>61%</td><td>6%</td><td></td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  Now you can compute:
+</p>
+<ul>
+  <li>Overall dev error: 10%</li>
+  <li>Errors due to incorrect labels: 10% × 6% = <strong>0.6%</strong></li>
+  <li>Errors due to other causes: 10% − 0.6% = <strong>9.4%</strong></li>
+</ul>
+
+<div class="card imp">
+  <span class="label">🟡 Important</span>
+  If incorrect labels account for only 0.6% of your 10% error, fixing labels will not
+  help much. Focus on the other 9.4%. But if incorrect labels were, say, 3%, they might
+  be worth fixing.
+</div>
+
+<h3>4.3 Correcting dev/test set examples</h3>
+<ul>
+  <li>
+    <strong>Apply the same process to dev and test sets.</strong> If you fix incorrect
+    labels in dev but not test, they will come from different distributions.
+  </li>
+  <li>
+    <strong>Consider examining examples your algorithm got right as well as wrong.</strong>
+    There may be mislabeled examples that the model happens to classify correctly — fixing
+    them prevents future confusion.
+  </li>
+  <li>
+    <strong>Train and dev/test data may now come from slightly different distributions.</strong>
+    Be aware of this; it is usually acceptable, but keep it in mind when interpreting
+    results.
+  </li>
+</ul>
+
+<div class="card warn">
+  <span class="label">🔴 Warning</span>
+  Do <em>not</em> spend days manually fixing labels unless error analysis shows that
+  incorrect labels are a significant contributor. It is easy to get sucked into
+  label-cleaning when the real problem is elsewhere.
+</div>
+
+<!-- ============ 5. MISMATCHED DISTRIBUTIONS ============ -->
+<h2 id="mismatch">5. Training and Testing on Different Distributions</h2>
+
+<div class="card def">
+  <span class="label">🔵 Definition</span>
+  <strong>Data mismatch</strong> occurs when your training set comes from a different
+  distribution than your dev/test sets (and the real-world data you care about).
+</div>
+
+<h3>5.1 The cat mobile app example</h3>
+<p>
+  You are building a mobile app that classifies cat photos uploaded by users. You have
+  two data sources:
+</p>
+<ul>
+  <li><strong>Web data:</strong> 200,000 professionally shot, high-resolution cat images.</li>
+  <li><strong>App data:</strong> 10,000 amateur photos — blurry, poorly framed, taken by users.</li>
+</ul>
+<p>
+  The app data is what you actually care about. But it is small. The web data is large
+  but from a different distribution.
+</p>
+
+<h3>5.2 Option 1 (bad): shuffle everything together</h3>
+<p>
+  Mix all 210,000 images and randomly split into train/dev/test.
+</p>
+<ul>
+  <li>Train: 205,000 (mostly web)</li>
+  <li>Dev: 2,500 (mostly web)</li>
+  <li>Test: 2,500 (mostly web)</li>
+</ul>
+
+<div class="card warn">
+  <span class="label">🔴 Warning</span>
+  This is <strong>bad</strong> because your dev/test sets are dominated by web images.
+  You will optimize for web performance, but your app users upload amateur photos.
+  The dev set does not reflect what you care about.
+</div>
+
+<h3>5.3 Option 2 (good): make dev/test reflect the target</h3>
+<p>
+  Put all 200,000 web images in the training set. Split the 10,000 app images into
+  5,000 dev and 5,000 test. Optionally, add a few app images to training.
+</p>
+
+<figure>
+<div class="diagram-box">
+<svg viewBox="0 0 720 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Good data split for mismatched distributions">
+  <!-- Training bar -->
+  <rect x="20" y="40" width="420" height="50" fill="#bee3f8" stroke="#2b6cb0"/>
+  <text x="230" y="70" font-family="sans-serif" font-size="13" text-anchor="middle" fill="#1a365d">205,000 training (200k web + 5k app)</text>
+  <text x="230" y="115" font-family="sans-serif" font-size="12" text-anchor="middle" fill="#718096">Training set</text>
+
+  <!-- Dev -->
+  <rect x="450" y="40" width="120" height="50" fill="#c6f6d5" stroke="#2f855a"/>
+  <text x="510" y="70" font-family="sans-serif" font-size="13" text-anchor="middle" fill="#22543d">5,000 app</text>
+  <text x="510" y="115" font-family="sans-serif" font-size="12" text-anchor="middle" fill="#718096">Dev set</text>
+
+  <!-- Test -->
+  <rect x="580" y="40" width="120" height="50" fill="#fefcbf" stroke="#b7791f"/>
+  <text x="640" y="70" font-family="sans-serif" font-size="13" text-anchor="middle" fill="#744210">5,000 app</text>
+  <text x="640" y="115" font-family="sans-serif" font-size="12" text-anchor="middle" fill="#718096">Test set</text>
+</svg>
+</div>
+<figcaption>
+  Figure 5.1 — Good split when distributions differ. Dev and test come from the
+  distribution you actually care about (the app), even though training includes a lot
+  of web data.
+</figcaption>
+</figure>
+
+<div class="card imp">
+  <span class="label">🟡 Important</span>
+  <strong>Advantage:</strong> the target (what you care about) is well defined.
+  <br>
+  <strong>Disadvantage:</strong> training distribution differs from dev/test. But this
+  is usually worth it — long-term performance is better when you optimize for the
+  right distribution.
+</div>
+
+<h3>5.4 Speech recognition example</h3>
+<p>
+  You are building a speech-activated rearview mirror. You have:
+</p>
+<ul>
+  <li>500,000 training examples from purchased data, smart speaker control, voice keyboard.</li>
+  <li>10,000 examples from the rearview mirror (what you care about).</li>
+</ul>
+<p>
+  Split: 500k+10k train (or 510k train), 5k dev, 5k test — with dev/test from the
+  rearview mirror distribution.
+</p>
+
+<div class="card int">
+  <span class="label">🟢 Intuition</span>
+  Always ask: "What data will my model see in deployment?" That is the distribution
+  your dev and test sets should reflect. Training can include other data to help the
+  model learn general features, but dev/test must match the target.
+</div>
+
+<!-- ============ 6. BIAS/VARIANCE MISMATCH ============ -->
+<h2 id="biasvar">6. Bias &amp; Variance with Mismatched Data Distributions</h2>
+
+<div class="card def">
+  <span class="label">🔵 Definition — Training-dev set</span>
+  A <strong>training-dev set</strong> has the <em>same distribution as the training
+  set</em>, but is <em>not used for training</em>. It lets you separate "variance"
+  from "data mismatch".
+</div>
+
+<h3>6.1 Why the standard bias/variance analysis breaks</h3>
+<p>
+  Normally:
+</p>
+<ul>
+  <li>Human error − training error = avoidable bias</li>
+  <li>Training error − dev error = variance</li>
+</ul>
+<p>
+  But when train and dev come from different distributions, the gap between training
+  error and dev error mixes <em>two</em> things:
+</p>
+<ol>
+  <li>The model failing to generalize to new examples (variance).</li>
+  <li>The dev set containing examples from a different, possibly harder distribution (data mismatch).</li>
+</ol>
+
+<h3>6.2 The new diagnostic table</h3>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>Metric</th><th>What it measures</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Human error (≈ Bayes)</td><td>Best possible</td></tr>
+    <tr><td>Training error</td><td>Fit on training distribution</td></tr>
+    <tr><td>Training-dev error</td><td>Generalization <em>within</em> training distribution</td></tr>
+    <tr><td>Dev error</td><td>Performance on target distribution</td></tr>
+    <tr><td>Test error</td><td>Final unbiased performance on target distribution</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>The gaps are interpreted as:</p>
+<ul>
+  <li><strong>Avoidable bias</strong> = Human error − Training error</li>
+  <li><strong>Variance</strong> = Training error − Training-dev error</li>
+  <li><strong>Data mismatch</strong> = Training-dev error − Dev error</li>
+  <li><strong>Degree of overfitting to dev</strong> = Dev error − Test error</li>
+</ul>
+
+<h3>6.3 The six scenarios</h3>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Human</td><td>0</td><td>0</td><td>0</td><td>0</td><td>4</td><td>—</td></tr>
+    <tr><td>Training error</td><td>1</td><td>1</td><td>1</td><td>10</td><td>7</td><td>—</td></tr>
+    <tr><td>Training-dev error</td><td>9</td><td>1.5</td><td>1.5</td><td>11</td><td>10</td><td>—</td></tr>
+    <tr><td>Dev error</td><td>10</td><td>10</td><td>10</td><td>12</td><td>20</td><td>6</td></tr>
+    <tr><td>Test error</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>6</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p><strong>Scenario A:</strong> Training error 1%, training-dev 9%, dev 10%. The gap between training and training-dev is 8% → <strong>variance problem</strong>. (The gap between training-dev and dev is only 1% → little data mismatch.)</p>
+
+<p><strong>Scenario B:</strong> Training 1%, training-dev 1.5%, dev 10%. Variance = 0.5% (small). Data mismatch = 1.5% − 10% = −8.5%? Wait, let's recompute: training-dev 1.5% to dev 10% is a gap of 8.5% → <strong>data mismatch problem</strong>.</p>
+
+<p><strong>Scenario C:</strong> Training 1%, training-dev 1.5%, dev 10%. Same as B — <strong>data mismatch</strong>.</p>
+
+<p><strong>Scenario D:</strong> Training 10%, training-dev 11%, dev 12%. Avoidable bias = 10% (large). Variance = 1%. Data mismatch = 1%. → <strong>Bias problem</strong>.</p>
+
+<p><strong>Scenario E:</strong> Human 4%, training 7%, training-dev 10%, dev 20%. Avoidable bias = 3%. Variance = 3%. Data mismatch = 10%. → <strong>Bias + variance + data mismatch</strong> (multiple problems).</p>
+
+<p><strong>Scenario F:</strong> Dev 6%, test 6%. Dev and test match. No overfitting to dev.</p>
+
+<div class="card imp">
+  <span class="label">🟡 Important</span>
+  <strong>Development should never be done on the test set</strong> — use dev for
+  iteration, test only for final evaluation. The difference between dev and test error
+  tells you how much you have overfit to the dev set.
+</div>
+
+<h3>6.4 General formulation</h3>
+
+<figure>
+<div class="diagram-box">
+<svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="General bias/variance/mismatch formulation">
+  <text x="350" y="25" font-family="sans-serif" font-size="14" text-anchor="middle" font-weight="bold" fill="currentColor">General formulation</text>
+
+  <!-- Rows -->
+  <text x="40" y="70" font-family="sans-serif" font-size="13" fill="currentColor">Human level</text>
+  <line x1="200" y1="65" x2="400" y2="65" stroke="#b7791f" stroke-width="2"/>
+  <text x="410" y="70" font-family="sans-serif" font-size="12" fill="#b7791f">Avoidable bias ↑</text>
+
+  <text x="40" y="120" font-family="sans-serif" font-size="13" fill="currentColor">Training error</text>
+  <line x1="200" y1="115" x2="400" y2="115" stroke="#2b6cb0" stroke-width="2"/>
+  <text x="410" y="120" font-family="sans-serif" font-size="12" fill="#2b6cb0">Variance ↑</text>
+
+  <text x="40" y="170" font-family="sans-serif" font-size="13" fill="currentColor">Training-dev error</text>
+  <line x1="200" y1="165" x2="400" y2="165" stroke="#2f855a" stroke-width="2"/>
+  <text x="410" y="170" font-family="sans-serif" font-size="12" fill="#2f855a">Data mismatch ↑</text>
+
+  <text x="40" y="220" font-family="sans-serif" font-size="13" fill="currentColor">Dev/Test error</text>
+  <line x1="200" y1="215" x2="400" y2="215" stroke="#c53030" stroke-width="2"/>
+  <text x="410" y="220" font-family="sans-serif" font-size="12" fill="#c53030">Overfit to dev ↑</text>
+</svg>
+</div>
+<figcaption>
+  Figure 6.1 — General formulation of bias, variance, data mismatch, and dev overfitting.
+  Each gap between consecutive lines has a distinct meaning and remedy.
+</figcaption>
+</figure>
+
+<!-- ============ 7. ADDRESSING DATA MISMATCH ============ -->
+<h2 id="addressing">7. Addressing Data Mismatch</h2>
+
+<div class="card imp">
+  <span class="label">🟡 Guideline</span>
+  <ol>
+    <li>Carry out <strong>manual error analysis</strong> to understand the difference between training and dev/test sets.</li>
+    <li>Make training data more similar; or collect more data similar to dev/test sets.</li>
+    <li>Use <strong>artificial data synthesis</strong> if needed — but be careful.</li>
+  </ol>
+</div>
+
+<h3>7.1 Manual error analysis</h3>
+<p>
+  Compare training errors and dev errors on the same categories. For example:
+</p>
+<ul>
+  <li>Noisy background: training error 2%, dev error 10% → mismatch here.</li>
+  <li>Car noise: training error 5%, dev error 6% → less mismatch.</li>
+  <li>Street numbers: training error 8%, dev error 9% → not the main issue.</li>
+</ul>
+<p>
+  This tells you <em>which</em> aspects of the distribution differ, so you can target them.
+</p>
+
+<h3>7.2 Collect more data similar to dev/test</h3>
+<p>
+  If error analysis shows that car noise is the problem, collect more car-noise audio
+  and add it to training. This is often the most reliable fix.
+</p>
+
+<!-- ============ 8. ARTIFICIAL DATA SYNTHESIS ============ -->
+<h2 id="synthesis">8. Artificial Data Synthesis</h2>
+
+<div class="card def">
+  <span class="label">🔵 Definition</span>
+  <strong>Artificial data synthesis</strong> is the process of generating new training
+  examples by combining or transforming existing data — for example, adding car noise
+  to clean audio.
+</div>
+
+<h3>8.1 Audio example</h3>
+<p>
+  You have 10,000 hours of clean audio ("The quick brown fox jumps over the lazy dog")
+  and only 1 hour of car noise. You can synthesize in-car audio by adding the car noise
+  to the clean audio.
+</p>
+
+<figure>
+<div class="diagram-box">
+<svg viewBox="0 0 700 140" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Artificial data synthesis for audio">
+  <text x="120" y="40" font-family="sans-serif" font-size="14" text-anchor="middle" fill="currentColor">🔊 Clean audio</text>
+  <text x="120" y="65" font-family="sans-serif" font-size="12" text-anchor="middle" fill="#4a5568">10,000 hours</text>
+  <text x="120" y="90" font-family="sans-serif" font-size="12" text-anchor="middle" fill="#4a5568">"The quick brown fox…"</text>
+
+  <text x="310" y="70" font-family="sans-serif" font-size="24" text-anchor="middle" fill="#718096">+</text>
+
+  <text x="480" y="40" font-family="sans-serif" font-size="14" text-anchor="middle" fill="currentColor">🔊 Car noise</text>
+  <text x="480" y="65" font-family="sans-serif" font-size="12" text-anchor="middle" fill="#4a5568">1 hour</text>
+  <text x="480" y="90" font-family="sans-serif" font-size="12" text-anchor="middle" fill="#4a5568">(looped)</text>
+
+  <text x="620" y="70" font-family="sans-serif" font-size="24" text-anchor="middle" fill="#718096">=</text>
+
+  <text x="680" y="40" font-family="sans-serif" font-size="14" text-anchor="middle" fill="#2f855a">Synthesized</text>
+  <text x="680" y="65" font-family="sans-serif" font-size="12" text-anchor="middle" fill="#2f855a">in-car audio</text>
+  <text x="680" y="90" font-family="sans-serif" font-size="12" text-anchor="middle" fill="#2f855a">10,000 hours</text>
+</svg>
+</div>
+<figcaption>
+  Figure 8.1 — Audio synthesis. Add one hour of car noise to ten thousand hours of clean
+  speech to create ten thousand hours of in-car speech.
+</figcaption>
+</figure>
+
+<h3>8.2 Car recognition example</h3>
+<p>
+  You have 1,000 images of a car. You can synthesize more by applying transformations:
+  change lighting, change background, rotate, crop, etc. This gives you many more
+  training examples from a small set.
+</p>
+
+<div class="card warn">
+  <span class="label">🔴 Warning — The tiny-subset trap</span>
+  Artificial synthesis can accidentally create data from only a <strong>tiny subset</strong>
+  of the space of all possible examples. For example, if you only have 1 hour of car noise,
+  your synthesized in-car audio may not represent <em>all</em> car noises. The model may
+  overfit to that one noise type. Always check whether your synthesized data covers the
+  full range of real-world variation.
+</div>
+
+<!-- ============ 9. TRANSFER LEARNING ============ -->
+<h2 id="transfer">9. Transfer Learning</h2>
+
+<div class="card def">
+  <span class="label">🔵 Definition</span>
+  <strong>Transfer learning</strong> means using knowledge learned from one task (Task A)
+  to help learn a different task (Task B). You "pre-train" on Task A, then "fine-tune"
+  on Task B.
+</div>
+
+<h3>9.1 Cat recognition → radiology diagnosis</h3>
+<p>
+  Suppose you have a neural network trained for cat recognition (image → cat / not cat).
+  You want to build a radiology diagnosis model (X-ray image → malignant / benign).
+</p>
+
+<figure>
+<div class="diagram-box">
+<svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Transfer learning from cat recognition to radiology">
+  <!-- Top: pre-training -->
+  <text x="350" y="25" font-family="sans-serif" font-size="14" text-anchor="middle" font-weight="bold" fill="#2b6cb0">Step 1: Pre-train on Task A (cat recognition)</text>
+  <rect x="50" y="45" width="60" height="60" rx="6" fill="#bee3f8" stroke="#2b6cb0"/>
+  <text x="80" y="80" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#1a365d">x</text>
+  <rect x="140" y="45" width="60" height="60" rx="6" fill="#bee3f8" stroke="#2b6cb0"/>
+  <text x="170" y="80" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#1a365d">layer</text>
+  <rect x="230" y="45" width="60" height="60" rx="6" fill="#bee3f8" stroke="#2b6cb0"/>
+  <text x="260" y="80" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#1a365d">layer</text>
+  <rect x="320" y="45" width="60" height="60" rx="6" fill="#bee3f8" stroke="#2b6cb0"/>
+  <text x="350" y="80" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#1a365d">layer</text>
+  <rect x="410" y="45" width="60" height="60" rx="6" fill="#fefcbf" stroke="#b7791f"/>
+  <text x="440" y="80" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#744210">output</text>
+  <text x="520" y="80" font-family="sans-serif" font-size="13" fill="#2f855a">→ cat / not cat</text>
+
+  <!-- Arrow -->
+  <text x="350" y="140" font-family="sans-serif" font-size="13" text-anchor="middle" fill="#718096">↓ keep all layers except output ↓</text>
+
+  <!-- Bottom: fine-tuning -->
+  <text x="350" y="175" font-family="sans-serif" font-size="14" text-anchor="middle" font-weight="bold" fill="#6b46c1">Step 2: Fine-tune on Task B (radiology)</text>
+  <rect x="50" y="195" width="60" height="50" rx="6" fill="#e9d8fd" stroke="#6b46c1"/>
+  <text x="80" y="225" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#44337a">x</text>
+  <rect x="140" y="195" width="60" height="50" rx="6" fill="#e9d8fd" stroke="#6b46c1"/>
+  <text x="170" y="225" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#44337a">layer</text>
+  <rect x="230" y="195" width="60" height="50" rx="6" fill="#e9d8fd" stroke="#6b46c1"/>
+  <text x="260" y="225" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#44337a">layer</text>
+  <rect x="320" y="195" width="60" height="50" rx="6" fill="#e9d8fd" stroke="#6b46c1"/>
+  <text x="350" y="225" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#44337a">layer</text>
+  <rect x="410" y="195" width="60" height="50" rx="6" fill="#c6f6d5" stroke="#2f855a"/>
+  <text x="440" y="225" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#22543d">new output</text>
+  <text x="520" y="225" font-family="sans-serif" font-size="13" fill="#2f855a">→ malignant / benign</text>
+</svg>
+</div>
+<figcaption>
+  Figure 9.1 — Transfer learning. The first layers (learned on cat recognition) are
+  reused. Only the final output layer is replaced and trained on radiology data.
+</figcaption>
+</figure>
+
+<h3>9.2 How to do it</h3>
+<ol>
+  <li>Take the pre-trained network (trained on Task A).</li>
+  <li><strong>Delete</strong> the last output layer and the weights feeding into it.</li>
+  <li>Create a <strong>new set of randomly initialized weights</strong> for the new output layer.</li>
+  <li>Train on the new dataset \((x, y)\) for Task B.</li>
+</ol>
+
+<p>
+  You can either:
+</p>
+<ul>
+  <li><strong>Freeze</strong> the earlier layers and only train the new output layer (if Task B data is small).</li>
+  <li><strong>Fine-tune</strong> all layers with a small learning rate (if Task B data is larger).</li>
+</ul>
+
+<h3>9.3 When transfer learning makes sense</h3>
+<ul>
+  <li>Task A and Task B have the <strong>same input \(x\)</strong> (e.g., both are images).</li>
+  <li>You have <strong>a lot more data for Task A</strong> than Task B.</li>
+  <li><strong>Low-level features</strong> from Task A could be helpful for Task B.</li>
+</ul>
+
+<div class="card ex">
+  <span class="label">🟣 Example — Speech recognition</span>
+  Pre-train on 10,000 hours of speech recognition. Fine-tune on 1 hour of wake-word
+  detection ("Hey device…"). The low-level audio features transfer well.
+</div>
+
+<div class="card imp">
+  <span class="label">🟡 Important</span>
+  Transfer learning is one of the most powerful practical tools in deep learning. It
+  lets you build good models even when your target task has limited data.
+</div>
+
+<!-- ============ 10. MULTI-TASK LEARNING ============ -->
+<h2 id="multitask">10. Multi-Task Learning</h2>
+
+<div class="card def">
+  <span class="label">🔵 Definition</span>
+  <strong>Multi-task learning</strong> means training <em>one</em> neural network to do
+  <em>several</em> tasks simultaneously, sharing lower-level features.
+</div>
+
+<h3>10.1 Autonomous driving example</h3>
+<p>
+  A self-driving car must detect:
+</p>
+<ul>
+  <li>Pedestrians</li>
+  <li>Cars</li>
+  <li>Road signs (stop signs)</li>
+  <li>Traffic lights</li>
+</ul>
+<p>
+  Instead of training four separate networks, train one network with four outputs.
+</p>
+
+<figure>
+<div class="diagram-box">
+<svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Multi-task learning architecture">
+  <!-- Input -->
+  <rect x="30" y="90" width="50" height="50" rx="6" fill="#bee3f8" stroke="#2b6cb0"/>
+  <text x="55" y="120" font-family="sans-serif" font-size="12" text-anchor="middle" fill="#1a365d">x</text>
+
+  <!-- Shared layers -->
+  <rect x="110" y="80" width="50" height="70" rx="6" fill="#e2e8f0" stroke="#4a5568"/>
+  <rect x="180" y="70" width="50" height="90" rx="6" fill="#e2e8f0" stroke="#4a5568"/>
+  <rect x="250" y="80" width="50" height="70" rx="6" fill="#e2e8f0" stroke="#4a5568"/>
+  <rect x="320" y="70" width="50" height="90" rx="6" fill="#e2e8f0" stroke="#4a5568"/>
+
+  <!-- Outputs -->
+  <rect x="420" y="40" width="80" height="30" rx="6" fill="#fefcbf" stroke="#b7791f"/>
+  <text x="460" y="60" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#744210">Pedestrians</text>
+
+  <rect x="420" y="85" width="80" height="30" rx="6" fill="#fefcbf" stroke="#b7791f"/>
+  <text x="460" y="105" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#744210">Cars</text>
+
+  <rect x="420" y="130" width="80" height="30" rx="6" fill="#fefcbf" stroke="#b7791f"/>
+  <text x="460" y="150" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#744210">Stop signs</text>
+
+  <rect x="420" y="175" width="80" height="30" rx="6" fill="#fefcbf" stroke="#b7791f"/>
+  <text x="460" y="195" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#744210">Traffic lights</text>
+
+  <!-- Arrows -->
+  <line x1="80" y1="115" x2="108" y2="115" stroke="#4a5568" stroke-width="2"/>
+  <line x1="160" y1="115" x2="178" y2="115" stroke="#4a5568" stroke-width="2"/>
+  <line x1="230" y1="115" x2="248" y2="115" stroke="#4a5568" stroke-width="2"/>
+  <line x1="300" y1="115" x2="318" y2="115" stroke="#4a5568" stroke-width="2"/>
+  <line x1="370" y1="115" x2="418" y2="55" stroke="#4a5568" stroke-width="1.5"/>
+  <line x1="370" y1="115" x2="418" y2="100" stroke="#4a5568" stroke-width="1.5"/>
+  <line x1="370" y1="115" x2="418" y2="145" stroke="#4a5568" stroke-width="1.5"/>
+  <line x1="370" y1="115" x2="418" y2="190" stroke="#4a5568" stroke-width="1.5"/>
+</svg>
+</div>
+<figcaption>
+  Figure 10.1 — Multi-task learning. One shared trunk learns common features; four
+  output heads each predict a different label.
+</figcaption>
+</figure>
+
+<h3>10.2 The output vector</h3>
+<p>
+  Each training example \(x^{(i)}\) is an image with multiple labels:
+</p>
+<div class="eq">
+\[
+y^{(i)} = \begin{bmatrix} 0 \\ 1 \\ 1 \\ 0 \end{bmatrix}
+\begin{array}{l} \text{Pedestrians} \\ \text{Cars} \\ \text{Road signs – Stop} \\ \text{Traffic lights} \end{array}
+\]
+</div>
+<p>
+  Unlike softmax regression (where labels are mutually exclusive), multi-task learning
+  allows <strong>multiple labels to be 1 at the same time</strong>. For example, an image
+  can contain both a car and a stop sign.
+</p>
+
+<h3>10.3 The loss function</h3>
+
+<div class="eq">
+\[
+J = -\frac{1}{m} \sum_{i=1}^{m} \sum_{j=1}^{4} \left[ y_j^{(i)} \log(\hat{y}_j^{(i)}) + (1 - y_j^{(i)}) \log(1 - \hat{y}_j^{(i)}) \right]
+\]
+<div class="note">
+  \(m\) = number of training examples.<br>
+  \(j\) = task index (1 to 4).<br>
+  \(y_j^{(i)}\) = true label for task \(j\) on example \(i\).<br>
+  \(\hat{y}_j^{(i)}\) = predicted probability for task \(j\) on example \(i\).<br>
+  The inner sum is the logistic loss for each task; the outer sum averages over examples.
+</div>
+</div>
+
+<p>
+  If some examples have missing labels for some tasks (e.g., a traffic-light label is
+  unknown), you can simply <strong>sum only over the labeled \(j\) values</strong>.
+  The loss is not affected by unlabeled entries.
+</p>
+
+<h3>10.4 When multi-task learning makes sense</h3>
+<ul>
+  <li>Tasks share <strong>lower-level features</strong>.</li>
+  <li>The amount of data for each task is <strong>roughly similar</strong>.</li>
+  <li>You can train a <strong>big enough network</strong> to do well on all tasks.</li>
+</ul>
+
+<div class="card imp">
+  <span class="label">🟡 Important</span>
+  Multi-task learning is used <em>less</em> often than transfer learning in practice,
+  but it is very useful when you have multiple related tasks and enough data for each.
+</div>
+
+<!-- ============ 11. END-TO-END ============ -->
+<h2 id="e2e">11. End-to-End Deep Learning</h2>
+
+<div class="card def">
+  <span class="label">🔵 Definition</span>
+  <strong>End-to-end deep learning</strong> means replacing a multi-stage pipeline with
+  a single neural network that maps \(x\) directly to \(y\).
+</div>
+
+<h3>11.1 Speech recognition example</h3>
+<p>
+  <strong>Traditional pipeline:</strong>
+</p>
+<ul>
+  <li>Audio → MFCC features → phonemes → words → transcript</li>
+</ul>
+<p>
+  <strong>End-to-end:</strong>
+</p>
+<ul>
+  <li>Audio → transcript (one network)</li>
+</ul>
+
+<figure>
+<div class="diagram-box">
+<svg viewBox="0 0 700 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Traditional pipeline vs end-to-end speech recognition">
+  <!-- Traditional -->
+  <text x="350" y="25" font-family="sans-serif" font-size="14" text-anchor="middle" font-weight="bold" fill="#2b6cb0">Traditional pipeline</text>
+  <rect x="30" y="45" width="80" height="40" rx="6" fill="#bee3f8" stroke="#2b6cb0"/>
+  <text x="70" y="70" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#1a365d">Audio</text>
+  <text x="125" y="70" font-family="sans-serif" font-size="16" fill="#718096">→</text>
+  <rect x="140" y="45" width="80" height="40" rx="6" fill="#bee3f8" stroke="#2b6cb0"/>
+  <text x="180" y="70" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#1a365d">MFCC</text>
+  <text x="235" y="70" font-family="sans-serif" font-size="16" fill="#718096">→</text>
+  <rect x="250" y="45" width="80" height="40" rx="6" fill="#bee3f8" stroke="#2b6cb0"/>
+  <text x="290" y="70" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#1a365d">Phonemes</text>
+  <text x="345" y="70" font-family="sans-serif" font-size="16" fill="#718096">→</text>
+  <rect x="360" y="45" width="80" height="40" rx="6" fill="#bee3f8" stroke="#2b6cb0"/>
+  <text x="400" y="70" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#1a365d">Words</text>
+  <text x="455" y="70" font-family="sans-serif" font-size="16" fill="#718096">→</text>
+  <rect x="470" y="45" width="100" height="40" rx="6" fill="#c6f6d5" stroke="#2f855a"/>
+  <text x="520" y="70" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#22543d">Transcript</text>
+
+  <!-- End-to-end -->
+  <text x="350" y="115" font-family="sans-serif" font-size="14" text-anchor="middle" font-weight="bold" fill="#6b46c1">End-to-end</text>
+  <rect x="30" y="125" width="80" height="30" rx="6" fill="#e9d8fd" stroke="#6b46c1"/>
+  <text x="70" y="145" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#44337a">Audio</text>
+  <line x1="115" y1="140" x2="465" y2="140" stroke="#6b46c1" stroke-width="3"/>
+  <rect x="470" y="125" width="100" height="30" rx="6" fill="#c6f6d5" stroke="#2f855a"/>
+  <text x="520" y="145" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#22543d">Transcript</text>
+</svg>
+</div>
+<figcaption>
+  Figure 11.1 — Traditional pipeline vs end-to-end. The traditional approach uses
+  hand-designed intermediate stages; end-to-end learns everything in one network.
+</figcaption>
+</figure>
+
+<h3>11.2 Other examples</h3>
+<ul>
+  <li><strong>Face recognition:</strong> Image → identity (end-to-end), vs. image → detect face → zoom → compare (pipeline).</li>
+  <li><strong>Machine translation:</strong> English → French (end-to-end), vs. English → text analysis → … → French (pipeline).</li>
+  <li><strong>Child age estimation:</strong> X-ray image → age (end-to-end), vs. image → bones → age (pipeline).</li>
+</ul>
+
+<div class="card warn">
+  <span class="label">🔴 Warning</span>
+  End-to-end learning needs <em>a lot</em> of labeled data. It is not suitable for every
+  problem. If your dataset is small, a pipeline with hand-designed components may work
+  better.
+</div>
+
+<!-- ============ 12. WHEN TO USE E2E ============ -->
+<h2 id="e2euse">12. Whether to Use End-to-End Learning</h2>
+
+<div class="card def">
+  <span class="label">🔵 Key question</span>
+  Do you have enough data to learn a function of the complexity needed to map \(x\) to \(y\)?
+</div>
+
+<h3>12.1 Pros</h3>
+<ul>
+  <li><strong>Let the data speak.</strong> The network learns from \(x\) to \(y\) directly,
+  rather than being forced to reflect human preconceptions.</li>
+  <li><strong>Less hand-designing of components.</strong> It simplifies the design workflow.</li>
+</ul>
+
+<h3>12.2 Cons</h3>
+<ul>
+  <li><strong>May need a large amount of labeled data.</strong> It cannot be used for
+  every problem.</li>
+  <li><strong>Excludes potentially useful hand-designed components.</strong> Data and
+  hand-designed features are the two main sources of knowledge for a learning algorithm.
+  If the dataset is small, hand-designed components can inject useful manual knowledge.</li>
+</ul>
+
+<div class="card ex">
+  <span class="label">🟣 Example — Autonomous driving</span>
+  <strong>Pipeline:</strong> image + radar + lidar → car detection (DL) → pedestrian
+  detection (DL) → motion planning → route → steering control.
+  <br>
+  <strong>End-to-end:</strong> image → steering.
+  <br>
+  In practice, a hybrid approach is often best: use DL for perception (car/pedestrian
+  detection) and traditional methods for motion planning and control, because data for
+  the intermediate steps is easier to collect.
+</div>
+
+<div class="card imp">
+  <span class="label">🟡 Important</span>
+  Choose the architecture based on <em>what data you can get</em>. If you have lots of
+  \((x, y)\) pairs for the full task, end-to-end may work. If you have data for
+  intermediate steps but not the full task, a pipeline is better.
+</div>
+
+<!-- ============ 13. SUMMARY ============ -->
+<h2 id="summary">13. Weekly Summary</h2>
+
+<div class="card def">
+  <span class="label">🔵 Key Concepts</span>
+  <ul>
+    <li><strong>Build first, iterate later.</strong> Set up dev/test + metric, build a quick baseline, then diagnose.</li>
+    <li><strong>Error analysis:</strong> manually examine ~100 errors, categorize, count.</li>
+    <li><strong>Parallel evaluation:</strong> spreadsheet with categories to prioritize fixes.</li>
+    <li><strong>Incorrect labels:</strong> random errors are tolerable; systematic errors are harmful.</li>
+    <li><strong>Data mismatch:</strong> train and dev/test from different distributions.</li>
+    <li><strong>Training-dev set:</strong> same distribution as training, not used for training — separates variance from mismatch.</li>
+    <li><strong>Artificial data synthesis:</strong> generate more training data, but watch for the tiny-subset trap.</li>
+    <li><strong>Transfer learning:</strong> pre-train on Task A, fine-tune on Task B.</li>
+    <li><strong>Multi-task learning:</strong> one network, multiple tasks, shared features.</li>
+    <li><strong>End-to-end learning:</strong> one network from x to y; needs lots of data.</li>
+  </ul>
+</div>
+
+<h3>Important Equations</h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Equation</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>Avoidable bias ≈ Human error − Training error</td><td>How much bias you can still remove.</td></tr>
+    <tr><td>Variance ≈ Training error − Training-dev error</td><td>Generalization within training distribution.</td></tr>
+    <tr><td>Data mismatch ≈ Training-dev error − Dev error</td><td>How different the target distribution is.</td></tr>
+    <tr><td>\(J = -\frac{1}{m}\sum_{i=1}^{m}\sum_{j=1}^{4}[y_j^{(i)}\log\hat{y}_j^{(i)} + (1-y_j^{(i)})\log(1-\hat{y}_j^{(i)})]\)</td><td>Multi-task learning loss (logistic loss summed over tasks).</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>Common Confusions</h3>
+<ul>
+  <li><strong>Variance vs. data mismatch:</strong> variance = same distribution, new examples; mismatch = different distribution.</li>
+  <li><strong>Transfer vs. multi-task:</strong> transfer = sequential (A then B); multi-task = simultaneous (A and B together).</li>
+  <li><strong>Random vs. systematic label errors:</strong> random is tolerable; systematic is harmful.</li>
+  <li><strong>End-to-end vs. pipeline:</strong> end-to-end needs more data; pipeline allows hand-designed components.</li>
+</ul>
+
+<!-- ============ 14. QUICK REVIEW ============ -->
+<h2 id="review">14. Quick Review (with answers)</h2>
+
+<details>
+  <summary>Q1: What is the recommended workflow for starting a new ML project?</summary>
+  <div class="ans">Set up dev/test sets and metrics, build an initial system quickly, then use bias/variance and error analysis to prioritize next steps.</div>
+</details>
+
+<details>
+  <summary>Q2: What is error analysis?</summary>
+  <div class="ans">Manually examining ~100 misclassified dev examples, categorizing them, and counting how many fall into each category to decide which problems are worth fixing.</div>
+</details>
+
+<details>
+  <summary>Q3: In the cat classifier example, if 5% of errors are dogs and dev error is 10%, what is the ceiling if you fix all dog errors?</summary>
+  <div class="ans">New dev error = 10% − (10% × 5%) = 9.5%. So the best possible improvement from fixing dogs is 0.5%.</div>
+</details>
+
+<details>
+  <summary>Q4: What is the difference between random and systematic label errors?</summary>
+  <div class="ans">Random errors are scattered and the model is robust to them. Systematic errors follow a pattern (e.g., all white cats labeled as dogs) and teach the model the wrong rule.</div>
+</details>
+
+<details>
+  <summary>Q5: What is a training-dev set and why is it useful?</summary>
+  <div class="ans">A training-dev set has the same distribution as the training set but is not used for training. It lets you separate variance (training → training-dev gap) from data mismatch (training-dev → dev gap).</div>
+</details>
+
+<details>
+  <summary>Q6: What does the gap between training-dev error and dev error represent?</summary>
+  <div class="ans">Data mismatch — how much worse the model does on the target distribution compared to the training distribution.</div>
+</details>
+
+<details>
+  <summary>Q7: What is the tiny-subset trap in artificial data synthesis?</summary>
+  <div class="ans">Synthesizing data from only a small subset of the real-world variation (e.g., 1 hour of car noise) can cause the model to overfit to that subset rather than generalizing.</div>
+</details>
+
+<details>
+  <summary>Q8: What is transfer learning?</summary>
+  <div class="ans">Using knowledge learned from Task A to help learn Task B. You pre-train on Task A, then replace the output layer and fine-tune on Task B.</div>
+</details>
+
+<details>
+  <summary>Q9: When does transfer learning make sense?</summary>
+  <div class="ans">When Task A and B have the same input x, you have more data for A than B, and low-level features from A are helpful for B.</div>
+</details>
+
+<details>
+  <summary>Q10: What is multi-task learning?</summary>
+  <div class="ans">Training one neural network to do several tasks simultaneously, sharing lower-level features. Each output head predicts a different label.</div>
+</details>
+
+<details>
+  <summary>Q11: How does the multi-task loss function differ from softmax regression?</summary>
+  <div class="ans">In softmax regression, labels are mutually exclusive (one correct class). In multi-task learning, multiple labels can be 1 at the same time (e.g., a car and a stop sign in the same image).</div>
+</details>
+
+<details>
+  <summary>Q12: When does multi-task learning make sense?</summary>
+  <div class="ans">When tasks share lower-level features, you have roughly similar amounts of data for each task, and you can train a big enough network.</div>
+</details>
+
+<details>
+  <summary>Q13: What is end-to-end deep learning?</summary>
+  <div class="ans">Replacing a multi-stage pipeline with a single neural network that maps x directly to y.</div>
+</details>
+
+<details>
+  <summary>Q14: What is the key question to ask before using end-to-end learning?</summary>
+  <div class="ans">Do you have enough data to learn a function of the complexity needed to map x to y?</div>
+</details>
+
+<details>
+  <summary>Q15: What are the pros and cons of end-to-end learning?</summary>
+  <div class="ans">Pros: lets the data speak, less hand-designing. Cons: needs large amounts of labeled data, excludes potentially useful hand-designed components.</div>
+</details>
+
+<details>
+  <summary>Q16: In the loan approval example, why is random shuffling into dev/test problematic?</summary>
+  <div class="ans">Because if the data comes from different income-level zip codes, random shuffling can produce a dev set dominated by one type, not matching the target distribution.</div>
+</details>
+
+<details>
+  <summary>Q17: What is the correct way to split data when train and target distributions differ?</summary>
+  <div class="ans">Put most of the large-distribution data in training, but make dev and test come from the target distribution you care about.</div>
+</details>
+
+<details>
+  <summary>Q18: How do you handle missing labels in multi-task learning?</summary>
+  <div class="ans">Sum the loss only over the tasks j that have labels for that example. Unlabeled entries do not affect the loss.</div>
+</details>
+
+<details>
+  <summary>Q19: Why is dev set error vs. test set error important?</summary>
+  <div class="ans">The gap between them tells you how much you have overfit to the dev set. Development should never be done on the test set.</div>
+</details>
+
+<details>
+  <summary>Q20: Give an example of a problem where ML significantly surpasses human-level performance.</summary>
+  <div class="ans">Online advertising, product recommendations, logistics (predicting transit time), loan approvals — structured data problems.</div>
+</details>
+
+<!-- ============ 15. SELF-TEST ============ -->
+<h2 id="selftest">15. Self-Test</h2>
+
+<h4>Easy</h4>
+<details>
+  <summary>1. What are the three steps of the build-first-then-iterate workflow?</summary>
+  <div class="ans">1. Set up dev/test sets and metrics. 2. Build an initial system quickly. 3. Use bias/variance and error analysis to prioritize next steps.</div>
+</details>
+
+<details>
+  <summary>2. What is error analysis in one sentence?</summary>
+  <div class="ans">Manually examining misclassified dev examples, categorizing them, and counting how many fall into each category.</div>
+</details>
+
+<details>
+  <summary>3. What does a training-dev set measure?</summary>
+  <div class="ans">Generalization within the training distribution (variance), separate from data mismatch.</div>
+</details>
+
+<details>
+  <summary>4. Define transfer learning.</summary>
+  <div class="ans">Using knowledge learned from Task A to help learn Task B by pre-training and fine-tuning.</div>
+</details>
+
+<details>
+  <summary>5. Define multi-task learning.</summary>
+  <div class="ans">Training one neural network to do several tasks simultaneously, sharing lower-level features.</div>
+</details>
+
+<h4>Medium</h4>
+<details>
+  <summary>6. You have 10% dev error and find that 20% of errors are blurry images. What is the ceiling if you fix all blurry errors?</summary>
+  <div class="ans">New dev error = 10% − (10% × 20%) = 8%. The maximum improvement is 2%.</div>
+</details>
+
+<details>
+  <summary>7. Training error = 1%, training-dev error = 9%, dev error = 10%. What is the diagnosis?</summary>
+  <div class="ans">Variance problem (1% → 9% gap is large). Data mismatch is small (9% → 10%). Focus on variance reduction.</div>
+</details>
+
+<details>
+  <summary>8. Training error = 1%, training-dev error = 1.5%, dev error = 10%. What is the diagnosis?</summary>
+  <div class="ans">Data mismatch problem (1.5% → 10% gap is large). Variance is small. Focus on making training data more similar to dev.</div>
+</details>
+
+<details>
+  <summary>9. Why is random label noise in the training set less harmful than systematic label noise?</summary>
+  <div class="ans">Random noise is scattered and the model learns the correct pattern from the majority of correct examples. Systematic noise teaches the model a wrong rule.</div>
+</details>
+
+<details>
+  <summary>10. What is the "tiny-subset trap" in artificial data synthesis?</summary>
+  <div class="ans">Synthesizing data from a small subset of real-world variation can cause overfitting to that subset. Always check coverage.</div>
+</details>
+
+<h4>Hard</h4>
+<details>
+  <summary>11. You have a cat classifier with 5% dev error. 10% of errors are dogs, 30% are blurry, 40% are great cats. What should you focus on?</summary>
+  <div class="ans">Great cats (40%) and blurry images (30%) are the biggest categories. Fixing great cats could reduce error by up to 2% (5% × 40% = 2%); blurry by 1.5%. Focus on great cats first.</div>
+</details>
+
+<details>
+  <summary>12. In the speech recognition example, why is dev/test from the rearview mirror distribution even though most data comes from other sources?</summary>
+  <div class="ans">Because the rearview mirror is the target application. Dev/test must reflect the data you expect in deployment, not the data that is easiest to collect.</div>
+</details>
+
+<details>
+  <summary>13. You have 200k web cat images and 10k app images. Design the train/dev/test split and explain why.</summary>
+  <div class="ans">Training: 200k web + 5k app (205k total). Dev: 5k app. Test: 5k app. Dev/test must come from the target distribution (app) so you optimize for what matters.</div>
+</details>
+
+<details>
+  <summary>14. Explain the difference between transfer learning and multi-task learning.</summary>
+  <div class="ans">Transfer learning is sequential: train on Task A, then fine-tune on Task B. Multi-task learning is simultaneous: one network trained on Tasks A, B, C, D at the same time.</div>
+</details>
+
+<details>
+  <summary>15. Why does end-to-end learning need more data than a pipeline?</summary>
+  <div class="ans">Because it must learn the entire mapping from x to y without hand-designed intermediate representations. The pipeline injects human knowledge at each stage, reducing what the model needs to learn.</div>
+</details>
+
+<details>
+  <summary>16. You have 1 hour of car noise and 10,000 hours of clean speech. What is the risk of synthesizing in-car audio?</summary>
+  <div class="ans">The synthesized audio may only cover the specific car noise in that 1 hour. The model may overfit to that noise type and fail on other car noises. Collect more diverse noise if possible.</div>
+</details>
+
+<details>
+  <summary>17. In multi-task learning, what happens if some examples have missing labels?</summary>
+  <div class="ans">You sum the loss only over the tasks that have labels for that example. Unlabeled entries do not contribute to the loss.</div>
+</details>
+
+<details>
+  <summary>18. Why is dev/test set error vs. training-dev error important for diagnosing data mismatch?</summary>
+  <div class="ans">Training-dev error shows performance on the training distribution (unseen examples). Dev error shows performance on the target distribution. The gap between them isolates data mismatch from variance.</div>
+</details>
+
+<details>
+  <summary>19. A model has training error 0.3%, training-dev error 0.5%, dev error 0.6%, human error 0.5%. What is the diagnosis?</summary>
+  <div class="ans">Avoidable bias is small (0.5% − 0.3% = 0.2%). Variance is small (0.3% → 0.5% = 0.2%). Data mismatch is small (0.5% → 0.6% = 0.1%). The model is close to human level; gains will be small.</div>
+</details>
+
+<details>
+  <summary>20. You have a small target dataset and a large related dataset. Should you use transfer learning, multi-task learning, or end-to-end learning? Why?</summary>
+  <div class="ans">Transfer learning. You pre-train on the large dataset (Task A) and fine-tune on the small target dataset (Task B). Multi-task learning needs similar amounts of data for all tasks; end-to-end needs a large target dataset.</div>
+</details>
+
+<!-- ============ NAV BOTTOM ============ -->
+<div class="navbottom">
+  <a class="btn" href="#toc">↑ Back to Contents</a>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a href="C3_W1.html" class="nav-btn">← Previous Week</a>
+    <a href="C4_W1.html" class="nav-btn">Next Week →</a>
+    <a class="btn" href="#" onclick="alert('Course 3 overview: Structuring Machine Learning Projects.');return false;">Back to Course</a>
+    <a class="btn" href="#" onclick="alert('Deep Learning Specialization — 5 courses.');return false;">Back to Specialization</a>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<!-- Back to top -->
+<button class="totop" id="totop" title="Back to top">↑</button>
+
+<script>
+/* ---------- Theme toggle ---------- */
+(function(){
+  const btn = document.getElementById('themeBtn');
+  const saved = localStorage.getItem('dl-theme');
+  if(saved === 'dark'){ document.documentElement.setAttribute('data-theme','dark'); btn.textContent='☀️'; }
+  btn.addEventListener('click', function(){
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if(isDark){ document.documentElement.removeAttribute('data-theme'); localStorage.setItem('dl-theme','light'); btn.textContent='🌙'; }
+    else{ document.documentElement.setAttribute('data-theme','dark'); localStorage.setItem('dl-theme','dark'); btn.textContent='☀️'; }
+  });
+})();
+
+/* ---------- Back to top ---------- */
+(function(){
+  const b = document.getElementById('totop');
+  window.addEventListener('scroll', function(){
+    if(window.scrollY > 400) b.classList.add('show'); else b.classList.remove('show');
+  });
+  b.addEventListener('click', function(){ window.scrollTo({top:0,behavior:'smooth'}); });
+})();
+
+/* ---------- Search ---------- */
+(function(){
+  const input = document.getElementById('searchInput');
+  const results = document.getElementById('searchResults');
+  const allH = Array.from(document.querySelectorAll('h2[id], h3[id], h4[id]'));
+
+  function search(q){
+    results.innerHTML = '';
+    if(q.length < 2){ results.style.display='none'; return; }
+    const lower = q.toLowerCase();
+    const matches = allH.filter(function(h){
+      return h.textContent.toLowerCase().includes(lower);
+    }).slice(0, 12);
+    if(matches.length === 0){
+      results.innerHTML = '<a>No matches</a>';
+    } else {
+      matches.forEach(function(h){
+        const a = document.createElement('a');
+        a.textContent = h.textContent.trim();
+        a.href = '#' + h.id;
+        a.addEventListener('click', function(){ results.style.display='none'; input.value=''; });
+        results.appendChild(a);
+      });
+    }
+    results.style.display = 'block';
+  }
+
+  input.addEventListener('input', function(){ search(this.value); });
+  document.addEventListener('click', function(e){
+    if(!e.target.closest('.search-wrap')) results.style.display='none';
+  });
+})();
+
+/* ---------- Assign IDs to headings that lack them ---------- */
+(function(){
+  document.querySelectorAll('h2, h3, h4').forEach(function(h, i){
+    if(!h.id){ h.id = 'sec-' + i; }
+  });
+})();
+</script>
+</body>
+</html>

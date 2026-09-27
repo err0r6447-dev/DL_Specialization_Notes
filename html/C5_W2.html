@@ -1,0 +1,2602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Course 5 Week 2 — NLP and Word Embeddings | Deep Learning Specialization Notes</title>
+
+<!-- MathJax for equation rendering -->
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']],
+      processEscapes: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+/* ============================================================
+   THEME VARIABLES
+   ============================================================ */
+:root {
+  --bg: #f7f9fc;
+  --bg-card: #ffffff;
+  --bg-alt: #eef2f7;
+  --bg-code: #1e293b;
+  --text: #1f2937;
+  --text-muted: #4b5563;
+  --heading: #0f172a;
+  --border: #dbe2ea;
+  --border-strong: #b9c4d1;
+  --accent: #2563eb;
+  --accent-soft: #dbeafe;
+  --accent-hover: #1d4ed8;
+  --def-bg: #e0f2fe;   --def-border: #0284c7;
+  --int-bg: #dcfce7;   --int-border: #16a34a;
+  --imp-bg: #fef3c7;   --imp-border: #d97706;
+  --warn-bg: #fee2e2;  --warn-border: #dc2626;
+  --ex-bg: #f3e8ff;    --ex-border: #9333ea;
+  --impl-bg: #ecfeff;  --impl-border: #0891b2;
+  --ins-bg: #fff7ed;   --ins-border: #ea580c;
+  --rem-bg: #f1f5f9;   --rem-border: #64748b;
+  --cm-bg: #fce7f3;    --cm-border: #db2777;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.08);
+  --radius: 10px;
+}
+
+[data-theme="dark"] {
+  --bg: #0f172a;
+  --bg-card: #1e293b;
+  --bg-alt: #172033;
+  --bg-code: #0b1220;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --heading: #f1f5f9;
+  --border: #334155;
+  --border-strong: #475569;
+  --accent: #60a5fa;
+  --accent-soft: #1e3a8a;
+  --accent-hover: #93c5fd;
+  --def-bg: #0c2a3d;   --def-border: #38bdf8;
+  --int-bg: #0a2e1a;   --int-border: #4ade80;
+  --imp-bg: #3a2a08;   --imp-border: #fbbf24;
+  --warn-bg: #3a1010;  --warn-border: #f87171;
+  --ex-bg: #2a1240;    --ex-border: #c084fc;
+  --impl-bg: #0a2a30;  --impl-border: #22d3ee;
+  --ins-bg: #3a1c08;   --ins-border: #fb923c;
+  --rem-bg: #1e2637;   --rem-border: #94a3b8;
+  --cm-bg: #3a0a24;    --cm-border: #f472b6;
+  --shadow: 0 1px 3px rgba(0,0,0,0.4);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 70px; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 17px;
+  line-height: 1.7;
+  background: var(--bg);
+  color: var(--text);
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px 80px;
+}
+
+/* ============================================================
+   HEADER / TOP BAR
+   ============================================================ */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(8px);
+}
+
+.topbar-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.topbar-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--heading);
+  flex: 1;
+  min-width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar-btn {
+  background: var(--bg-alt);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.topbar-btn:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent-hover);
+}
+
+/* ============================================================
+   PAGE HEADER
+   ============================================================ */
+.page-header {
+  margin: 40px 0 30px;
+  padding: 30px 24px;
+  background: linear-gradient(135deg, var(--accent) 0%, #7c3aed 100%);
+  border-radius: var(--radius);
+  color: #ffffff;
+  box-shadow: var(--shadow-lg);
+}
+
+.page-header .course-tag {
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  opacity: 0.9;
+  margin-bottom: 8px;
+}
+
+.page-header h1 {
+  margin: 0 0 10px;
+  font-size: 32px;
+  line-height: 1.25;
+  color: #ffffff;
+}
+
+.page-header .subtitle {
+  font-size: 16px;
+  opacity: 0.95;
+  margin: 0;
+}
+
+/* ============================================================
+   HEADINGS
+   ============================================================ */
+h2 {
+  font-size: 26px;
+  color: var(--heading);
+  margin-top: 55px;
+  margin-bottom: 18px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+  scroll-margin-top: 80px;
+}
+
+h3 {
+  font-size: 21px;
+  color: var(--heading);
+  margin-top: 36px;
+  margin-bottom: 12px;
+  scroll-margin-top: 80px;
+}
+
+h4 {
+  font-size: 17.5px;
+  color: var(--heading);
+  margin-top: 26px;
+  margin-bottom: 10px;
+}
+
+p { margin: 12px 0; }
+
+ul, ol { padding-left: 26px; }
+li { margin: 6px 0; }
+
+a { color: var(--accent); }
+a:hover { color: var(--accent-hover); }
+
+/* ============================================================
+   TABLE OF CONTENTS
+   ============================================================ */
+.toc {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin: 30px 0;
+  box-shadow: var(--shadow);
+}
+
+.toc h2 {
+  margin-top: 0;
+  font-size: 20px;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.toc ol {
+  columns: 2;
+  column-gap: 30px;
+  margin: 12px 0 0;
+  padding-left: 20px;
+}
+
+.toc li {
+  break-inside: avoid;
+  margin: 4px 0;
+  font-size: 15px;
+}
+
+@media (max-width: 640px) {
+  .toc ol { columns: 1; }
+}
+
+/* ============================================================
+   CALLOUT BOXES
+   ============================================================ */
+.callout {
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin: 20px 0;
+  border-left: 5px solid;
+  box-shadow: var(--shadow);
+}
+
+.callout .callout-title {
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.callout p:first-of-type { margin-top: 0; }
+.callout p:last-child { margin-bottom: 0; }
+
+.callout.definition { background: var(--def-bg); border-color: var(--def-border); }
+.callout.definition .callout-title { color: var(--def-border); }
+
+.callout.intuition { background: var(--int-bg); border-color: var(--int-border); }
+.callout.intuition .callout-title { color: var(--int-border); }
+
+.callout.important { background: var(--imp-bg); border-color: var(--imp-border); }
+.callout.important .callout-title { color: var(--imp-border); }
+
+.callout.warning { background: var(--warn-bg); border-color: var(--warn-border); }
+.callout.warning .callout-title { color: var(--warn-border); }
+
+.callout.example { background: var(--ex-bg); border-color: var(--ex-border); }
+.callout.example .callout-title { color: var(--ex-border); }
+
+.callout.implementation { background: var(--impl-bg); border-color: var(--impl-border); }
+.callout.implementation .callout-title { color: var(--impl-border); }
+
+.callout.insight { background: var(--ins-bg); border-color: var(--ins-border); }
+.callout.insight .callout-title { color: var(--ins-border); }
+
+.callout.remember { background: var(--rem-bg); border-color: var(--rem-border); }
+.callout.remember .callout-title { color: var(--rem-border); }
+
+.callout.mistake { background: var(--cm-bg); border-color: var(--cm-border); }
+.callout.mistake .callout-title { color: var(--cm-border); }
+
+/* ============================================================
+   TABLES
+   ============================================================ */
+.table-wrap {
+  overflow-x: auto;
+  margin: 20px 0;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 480px;
+  background: var(--bg-card);
+  font-size: 15px;
+}
+
+th, td {
+  padding: 11px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+th {
+  background: var(--bg-alt);
+  font-weight: 700;
+  color: var(--heading);
+  font-size: 14px;
+  letter-spacing: 0.3px;
+}
+
+tr:last-child td { border-bottom: none; }
+
+tr:hover td { background: var(--bg-alt); }
+
+/* ============================================================
+   CODE
+   ============================================================ */
+pre {
+  background: var(--bg-code);
+  color: #e2e8f0;
+  padding: 16px 20px;
+  border-radius: var(--radius);
+  overflow-x: auto;
+  font-size: 14px;
+  line-height: 1.55;
+  margin: 18px 0;
+  box-shadow: var(--shadow);
+}
+
+code {
+  font-family: "SF Mono", Monaco, Menlo, Consolas, "Courier New", monospace;
+  font-size: 0.92em;
+}
+
+p code, li code, td code {
+  background: var(--bg-alt);
+  color: var(--accent);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+pre code { background: transparent; color: inherit; padding: 0; border: none; }
+
+.kw { color: #c792ea; }
+.str { color: #c3e88d; }
+.num { color: #f78c6c; }
+.com { color: #6b7a99; font-style: italic; }
+.fn { color: #82aaff; }
+
+/* ============================================================
+   SVG DIAGRAMS
+   ============================================================ */
+.diagram {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin: 24px 0;
+  text-align: center;
+  overflow-x: auto;
+  box-shadow: var(--shadow);
+}
+
+.diagram svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.diagram-caption {
+  margin-top: 12px;
+  font-size: 14px;
+  color: var(--text-muted);
+  font-style: italic;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   EQUATIONS
+   ============================================================ */
+.eq {
+  overflow-x: auto;
+  padding: 8px 0;
+  margin: 14px 0;
+}
+
+mjx-container { font-size: 105% !important; }
+
+/* ============================================================
+   COLLAPSIBLE Q&A
+   ============================================================ */
+details {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin: 10px 0;
+  box-shadow: var(--shadow);
+  transition: all 0.15s;
+}
+
+details[open] {
+  border-color: var(--accent);
+}
+
+details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--heading);
+  list-style: none;
+  outline: none;
+  position: relative;
+  padding-right: 26px;
+  font-size: 15.5px;
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details summary::after {
+  content: "▸";
+  position: absolute;
+  right: 0;
+  top: 0;
+  font-size: 14px;
+  color: var(--accent);
+  transition: transform 0.15s;
+}
+
+details[open] summary::after {
+  content: "▾";
+  transform: rotate(0deg);
+}
+
+details .answer {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+  color: var(--text);
+  font-weight: normal;
+  font-size: 15.5px;
+}
+
+details .answer p:first-child { margin-top: 0; }
+details .answer p:last-child { margin-bottom: 0; }
+
+/* ============================================================
+   NAVIGATION FOOTER
+   ============================================================ */
+.page-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  margin: 50px 0 20px;
+  padding: 20px 0;
+  border-top: 1px solid var(--border);
+}
+
+.nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-card);
+  color: var(--accent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  font-size: 14.5px;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: var(--shadow);
+  transition: all 0.15s;
+}
+
+.nav-btn:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.nav-btn.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* ============================================================
+   BACK TO TOP
+   ============================================================ */
+#backToTop {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #ffffff;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: var(--shadow-lg);
+  display: none;
+  z-index: 90;
+  transition: transform 0.15s, background 0.15s;
+}
+
+#backToTop:hover { background: var(--accent-hover); transform: translateY(-2px); }
+#backToTop.visible { display: block; }
+
+/* ============================================================
+   SEARCH BOX
+   ============================================================ */
+.search-wrap {
+  margin: 20px 0;
+  position: relative;
+}
+
+.search-wrap input {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 15px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  outline: none;
+  transition: border 0.15s;
+}
+
+.search-wrap input:focus { border-color: var(--accent); }
+
+.search-info {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  padding-left: 4px;
+}
+
+.highlight { background: #fde68a; color: #1f2937; border-radius: 3px; padding: 0 2px; }
+[data-theme="dark"] .highlight { background: #a16207; color: #fef3c7; }
+
+/* ============================================================
+   MISC
+   ============================================================ */
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 40px 0;
+}
+
+.small-note {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.kbd {
+  display: inline-block;
+  padding: 1px 7px;
+  font-size: 12.5px;
+  font-family: monospace;
+  background: var(--bg-alt);
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 640px) {
+  body { font-size: 16px; }
+  .container { padding: 0 14px 60px; }
+  .page-header { padding: 22px 18px; margin-top: 22px; }
+  .page-header h1 { font-size: 24px; }
+  h2 { font-size: 22px; margin-top: 42px; }
+  h3 { font-size: 18.5px; }
+  .topbar-title { font-size: 13px; }
+  .topbar-btn { padding: 6px 10px; font-size: 13px; }
+  .callout { padding: 14px 16px; }
+  pre { padding: 12px 14px; font-size: 13px; }
+  details { padding: 10px 14px; }
+}
+
+/* Print */
+@media print {
+  .topbar, #backToTop, .page-nav, .search-wrap { display: none; }
+  body { background: white; color: black; font-size: 12pt; }
+  .callout { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     TOP BAR
+     ============================================================ -->
+<div class="topbar">
+  <div class="topbar-inner">
+    <span class="topbar-title">C5 · W2 — NLP and Word Embeddings</span>
+    <a href="#toc" class="topbar-btn">📖 TOC</a>
+    <button class="topbar-btn" id="themeToggle" title="Toggle dark mode">🌙 Dark</button>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ============================================================
+     PAGE HEADER
+     ============================================================ -->
+<div class="page-header">
+  <div class="course-tag">Deep Learning Specialization · Course 5 · Week 2</div>
+  <h1>NLP and Word Embeddings</h1>
+  <p class="subtitle">How machines learn the meaning of words — from one-hot vectors to Word2Vec, GloVe, sentiment classification, and debiasing.</p>
+</div>
+
+<!-- ============================================================
+     SEARCH
+     ============================================================ -->
+<div class="search-wrap">
+  <input type="text" id="searchInput" placeholder="🔍 Search this week's notes…" aria-label="Search notes">
+  <div class="search-info" id="searchInfo"></div>
+</div>
+
+<!-- ============================================================
+     TABLE OF CONTENTS
+     ============================================================ -->
+<div class="toc" id="toc">
+  <h2>📑 Table of Contents</h2>
+  <ol>
+    <li><a href="#intro">Introduction &amp; Big Picture</a></li>
+    <li><a href="#word-rep">Word Representation</a></li>
+    <li><a href="#one-hot">One-Hot Representation</a></li>
+    <li><a href="#word-emb">Featurized Representation: Word Embeddings</a></li>
+    <li><a href="#visualize">Visualizing Word Embeddings</a></li>
+    <li><a href="#using">Using Word Embeddings (Transfer Learning)</a></li>
+    <li><a href="#face">Relation to Face Encoding</a></li>
+    <li><a href="#properties">Properties of Word Embeddings (Analogies)</a></li>
+    <li><a href="#cosine">Cosine Similarity</a></li>
+    <li><a href="#matrix">Embedding Matrix</a></li>
+    <li><a href="#learning">Learning Word Embeddings</a></li>
+    <li><a href="#context">Context/Target Pairs</a></li>
+    <li><a href="#word2vec">Word2Vec — Skip-Grams</a></li>
+    <li><a href="#softmax-problem">Problems with Softmax Classification</a></li>
+    <li><a href="#negative">Negative Sampling</a></li>
+    <li><a href="#glove">GloVe Word Vectors</a></li>
+    <li><a href="#sentiment">Sentiment Classification</a></li>
+    <li><a href="#rnn-sentiment">RNN for Sentiment Classification</a></li>
+    <li><a href="#bias">The Problem of Bias in Word Embeddings</a></li>
+    <li><a href="#debiasing">Debiasing Word Embeddings</a></li>
+    <li><a href="#summary">Weekly Summary</a></li>
+    <li><a href="#mustknow">Must-Know Concepts</a></li>
+    <li><a href="#equations">Important Equations</a></li>
+    <li><a href="#confusions">Common Confusions</a></li>
+    <li><a href="#review">Quick Review (Q&amp;A)</a></li>
+    <li><a href="#selftest">Self-Test</a></li>
+  </ol>
+</div>
+
+<!-- ============================================================
+     1. INTRODUCTION
+     ============================================================ -->
+<h2 id="intro">1. Introduction &amp; Big Picture</h2>
+
+<p>Natural Language Processing (NLP) is the branch of AI that teaches computers to understand and generate human language — text and speech. Deep learning has transformed NLP because neural networks can learn the <em>meaning</em> of words directly from large amounts of text.</p>
+
+<p>This week answers a deceptively simple question: <strong>how do we represent a word to a neural network?</strong></p>
+
+<p>Computers cannot understand the word <em>"orange"</em> — they only understand numbers. So we need a numerical representation of every word in our vocabulary. The naive approach (one-hot vectors) is easy but almost useless because it treats every word as completely unrelated to every other word. The better approach — <strong>word embeddings</strong> — represents each word as a compact, dense vector of numbers where <em>similar words end up with similar vectors</em>.</p>
+
+<div class="callout intuition">
+  <span class="callout-title">🟢 Intuition — The Core Idea of the Week</span>
+  <p>Imagine you had to describe each word by a list of numbers along "meaning axes": how male/female is it? how royal? how old? how edible? how big? Once every word is described this way, then:</p>
+  <ul>
+    <li>Words with similar meaning ("orange" and "apple") will have similar numbers.</li>
+    <li>We can do <em>arithmetic on meaning</em>: <code>king − man + woman ≈ queen</code>.</li>
+    <li>Neural networks can transfer what they learn about "orange" to "apple" because their vectors are close.</li>
+  </ul>
+  <p>That is what word embeddings achieve.</p>
+</div>
+
+<p>By the end of this week, you will understand:</p>
+<ol>
+  <li>Why one-hot vectors are a poor representation and what embedding vectors fix.</li>
+  <li>How to <em>learn</em> embeddings from a large text corpus using Word2Vec and GloVe.</li>
+  <li>How to <em>use</em> pretrained embeddings in downstream tasks like sentiment classification.</li>
+  <li>How to detect and reduce harmful <em>bias</em> baked into embeddings.</li>
+</ol>
+
+<!-- ============================================================
+     2. WORD REPRESENTATION
+     ============================================================ -->
+<h2 id="word-rep">2. Word Representation</h2>
+
+<h3>2.1 The Vocabulary</h3>
+
+<p>Before we can represent words numerically, we must decide which words exist in our "language." The set of all words we care about is called the <strong>vocabulary</strong>, usually denoted \(V\).</p>
+
+<p>The course shows a vocabulary like:</p>
+
+<div class="eq">
+$$V = [\,a,\ \text{aaron},\ \dots,\ \text{zulu},\ \langle \text{UNK} \rangle\,]$$
+</div>
+
+<p>where:</p>
+<ul>
+  <li>Each entry is a distinct word (token).</li>
+  <li>\(\langle \text{UNK} \rangle\) stands for <em>"unknown"</em> — a catch-all token used for any word not in the vocabulary.</li>
+  <li>\(|V| = 10{,}000\) in this example (the size of the vocabulary).</li>
+</ul>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 Definition — Vocabulary (V)</span>
+  <p>The vocabulary is the finite set of all words (tokens) that our model knows about. Its size \(|V|\) is a hyperparameter we choose. Typical NLP vocabularies range from 10,000 to 1,000,000 words.</p>
+</div>
+
+<div class="callout important">
+  <span class="callout-title">🟡 Important — Tokenization</span>
+  <p>Before building a vocabulary, text must be split into tokens — typically by whitespace and punctuation. Modern systems often use <em>sub-word</em> tokens (e.g., "un", "believ", "able"), but the course for simplicity assumes whole-word tokens.</p>
+</div>
+
+<!-- ============================================================
+     3. ONE-HOT REPRESENTATION
+     ============================================================ -->
+<h2 id="one-hot">3. One-Hot Representation</h2>
+
+<p>The simplest way to represent a word as a vector is <strong>one-hot encoding</strong>: a vector that is all zeros except for a single 1 at the position corresponding to that word's index in the vocabulary.</p>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 Definition — One-Hot Vector</span>
+  <p>If the vocabulary has size \(|V|\), a one-hot vector for the \(i\)-th word is a vector of length \(|V|\) where the \(i\)-th entry is 1 and all other entries are 0.</p>
+</div>
+
+<h3>3.1 Example</h3>
+
+<p>Suppose the vocabulary positions are: Man (5391), Woman (9853), King (4914), Queen (7157), Apple (456), Orange (6257). Then:</p>
+
+<div class="diagram">
+<svg viewBox="0 0 780 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="One-hot vectors for six example words">
+  <!-- Column headers -->
+  <text x="70" y="25" font-size="15" font-weight="700" text-anchor="middle" fill="#0f172a">Man</text>
+  <text x="70" y="43" font-size="12" text-anchor="middle" fill="#4b5563">(5391)</text>
+  <text x="190" y="25" font-size="15" font-weight="700" text-anchor="middle" fill="#0f172a">Woman</text>
+  <text x="190" y="43" font-size="12" text-anchor="middle" fill="#4b5563">(9853)</text>
+  <text x="310" y="25" font-size="15" font-weight="700" text-anchor="middle" fill="#0f172a">King</text>
+  <text x="310" y="43" font-size="12" text-anchor="middle" fill="#4b5563">(4914)</text>
+  <text x="430" y="25" font-size="15" font-weight="700" text-anchor="middle" fill="#0f172a">Queen</text>
+  <text x="430" y="43" font-size="12" text-anchor="middle" fill="#4b5563">(7157)</text>
+  <text x="550" y="25" font-size="15" font-weight="700" text-anchor="middle" fill="#0f172a">Apple</text>
+  <text x="550" y="43" font-size="12" text-anchor="middle" fill="#4b5563">(456)</text>
+  <text x="670" y="25" font-size="15" font-weight="700" text-anchor="middle" fill="#0f172a">Orange</text>
+  <text x="670" y="43" font-size="12" text-anchor="middle" fill="#4b5563">(6257)</text>
+
+  <!-- Column vectors (just columns of zeros with a 1 marker) -->
+  <g font-size="12" text-anchor="middle" fill="#1f2937">
+    <!-- Man column -->
+    <rect x="55" y="55" width="30" height="240" fill="none" stroke="#b9c4d1" rx="4"/>
+    <text x="70" y="75">0</text><text x="70" y="95">0</text><text x="70" y="115">0</text>
+    <text x="70" y="135">⋮</text>
+    <text x="70" y="175" font-weight="700" fill="#dc2626">1</text>
+    <text x="70" y="215">⋮</text><text x="70" y="255">0</text><text x="70" y="285">0</text>
+
+    <!-- Woman column -->
+    <rect x="175" y="55" width="30" height="240" fill="none" stroke="#b9c4d1" rx="4"/>
+    <text x="190" y="75">0</text><text x="190" y="95">0</text><text x="190" y="115">0</text>
+    <text x="190" y="135">⋮</text><text x="190" y="175">0</text>
+    <text x="190" y="215">⋮</text>
+    <text x="190" y="255" font-weight="700" fill="#dc2626">1</text>
+    <text x="190" y="285">0</text>
+
+    <!-- King column -->
+    <rect x="295" y="55" width="30" height="240" fill="none" stroke="#b9c4d1" rx="4"/>
+    <text x="310" y="75">0</text><text x="310" y="95">0</text><text x="310" y="115">0</text>
+    <text x="310" y="135">⋮</text>
+    <text x="310" y="175" font-weight="700" fill="#dc2626">1</text>
+    <text x="310" y="215">⋮</text><text x="310" y="255">0</text><text x="310" y="285">0</text>
+
+    <!-- Queen column -->
+    <rect x="415" y="55" width="30" height="240" fill="none" stroke="#b9c4d1" rx="4"/>
+    <text x="430" y="75">0</text><text x="430" y="95">0</text><text x="430" y="115">0</text>
+    <text x="430" y="135">⋮</text>
+    <text x="430" y="175">0</text><text x="430" y="215">⋮</text>
+    <text x="430" y="255" font-weight="700" fill="#dc2626">1</text>
+    <text x="430" y="285">0</text>
+
+    <!-- Apple column -->
+    <rect x="535" y="55" width="30" height="240" fill="none" stroke="#b9c4d1" rx="4"/>
+    <text x="550" y="75">0</text>
+    <text x="550" y="95">⋮</text>
+    <text x="550" y="130" font-weight="700" fill="#dc2626">1</text>
+    <text x="550" y="175">⋮</text><text x="550" y="215">0</text><text x="550" y="255">0</text><text x="550" y="285">0</text>
+
+    <!-- Orange column -->
+    <rect x="655" y="55" width="30" height="240" fill="none" stroke="#b9c4d1" rx="4"/>
+    <text x="670" y="75">0</text><text x="670" y="95">0</text>
+    <text x="670" y="115">⋮</text>
+    <text x="670" y="205" font-weight="700" fill="#dc2626">1</text>
+    <text x="670" y="245">⋮</text><text x="670" y="275">0</text><text x="670" y="295">0</text>
+  </g>
+</svg>
+<p class="diagram-caption"><strong>Figure 1.</strong> Each word becomes a column vector of length 10,000 with a single "1" at the word's index in the vocabulary. The red numbers mark the "on" position. Notice the vector for "orange" is almost entirely zeros — it only "knows" where orange sits in the list.</p>
+</div>
+
+<h3>3.2 The Big Problem with One-Hot Vectors</h3>
+
+<p>Consider these two sentences:</p>
+
+<div class="callout example">
+  <span class="callout-title">🟣 Example</span>
+  <p>Sentence A: "I want a glass of <strong>orange</strong> <span style="text-decoration: underline;">juice</span>."<br>
+     Sentence B: "I want a glass of <strong>apple</strong> ____."</p>
+  <p>If a model has learned from Sentence A that "orange juice" is a common pairing, it should be able to guess that Sentence B ends in "juice" — because apple and orange are both fruits.</p>
+</div>
+
+<p>But if "orange" is \([0,0,\dots,1,\dots,0]\) and "apple" is \([0,\dots,1,\dots,0,0]\) at completely different indices, then their <em>inner product</em> is:</p>
+
+<div class="eq">
+$$\text{orange}^T \cdot \text{apple} = 0$$
+</div>
+
+<p>The model sees <em>zero similarity</em> between orange and apple. It has no way to know they belong to the same category of fruit.</p>
+
+<div class="callout mistake">
+  <span class="callout-title">🔴 Common Mistake</span>
+  <p>Assuming one-hot vectors carry meaning. They don't. They are just identity labels — like different house numbers on the same street. Two words being "close" in one-hot space means nothing about their meaning.</p>
+</div>
+
+<div class="callout insight">
+  <span class="callout-title">💡 Insight — What We Need Instead</span>
+  <p>We need a representation where "orange" and "apple" have vectors that are <em>close together</em>, while "orange" and "king" are far apart. In other words, we need a representation that encodes <strong>semantic similarity</strong>. This is exactly what word embeddings provide.</p>
+</div>
+
+<!-- ============================================================
+     4. WORD EMBEDDINGS
+     ============================================================ -->
+<h2 id="word-emb">4. Featurized Representation: Word Embeddings</h2>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 Definition — Word Embedding</span>
+  <p>A word embedding is a dense, low-dimensional, real-valued vector that represents a word's meaning. Instead of a 10,000-dimensional sparse one-hot vector, each word is mapped to, say, a 300-dimensional dense vector \(\mathbf{e}_w \in \mathbb{R}^{300}\) such that words with similar meanings have vectors that are close in Euclidean (or cosine) distance.</p>
+</div>
+
+<h3>4.1 The Feature-Based Intuition</h3>
+
+<p>The clearest mental model is to imagine a set of <em>feature axes</em>. For each word, ask: "how much does this word score on each feature?"</p>
+
+<p>The lecture shows a table like this:</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>Man (5391)</th>
+      <th>Woman (9853)</th>
+      <th>King (4914)</th>
+      <th>Queen (7157)</th>
+      <th>Apple (456)</th>
+      <th>Orange (6257)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>Gender</td><td>−1</td><td>1</td><td>−0.95</td><td>0.97</td><td>0.00</td><td>0.01</td></tr>
+    <tr><td>Royal</td><td>0.01</td><td>0.02</td><td>0.93</td><td>0.95</td><td>−0.01</td><td>0.00</td></tr>
+    <tr><td>Age</td><td>0.03</td><td>0.02</td><td>0.70</td><td>0.69</td><td>0.03</td><td>−0.02</td></tr>
+    <tr><td>Food</td><td>0.09</td><td>0.01</td><td>0.02</td><td>0.01</td><td>0.95</td><td>0.97</td></tr>
+    <tr><td>⋮</td><td>⋮</td><td>⋮</td><td>⋮</td><td>⋮</td><td>⋮</td><td>⋮</td></tr>
+    <tr><td>Size</td><td>…</td><td>…</td><td>…</td><td>…</td><td>…</td><td>…</td></tr>
+    <tr><td>Cost</td><td>…</td><td>…</td><td>…</td><td>…</td><td>…</td><td>…</td></tr>
+    <tr><td>Alive</td><td>…</td><td>…</td><td>…</td><td>…</td><td>…</td><td>…</td></tr>
+    <tr><td>Verb</td><td>…</td><td>…</td><td>…</td><td>…</td><td>…</td><td>…</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>Now, instead of a 10,000-length one-hot vector, each word can be represented by the <em>column</em> of these feature values:</p>
+
+<div class="eq">
+$$\mathbf{e}_{\text{Man}} = \begin{bmatrix} -1 \\ 0.01 \\ 0.03 \\ 0.09 \\ \vdots \end{bmatrix}, \quad
+\mathbf{e}_{\text{Orange}} = \begin{bmatrix} 0.01 \\ 0.00 \\ -0.02 \\ 0.97 \\ \vdots \end{bmatrix}, \quad
+\dots$$
+</div>
+
+<div class="callout important">
+  <span class="callout-title">🟡 Important — Two Ways to Read the Diagram</span>
+  <ul>
+    <li><strong>Row view:</strong> each row is a "feature" (Gender, Royal, Age, …).</li>
+    <li><strong>Column view:</strong> each column is one word's embedding vector \(\mathbf{e}_w\) — a stack of feature scores.</li>
+  </ul>
+  <p>In practice, we never hand-design features. The network <em>learns</em> the embedding vectors from data. The "Gender/Royal/Age/Food" labels are just for human intuition — the actual learned features won't have clean names.</p>
+</div>
+
+<h3>4.2 Why Embeddings Are Useful</h3>
+
+<p>Look at the table again:</p>
+<ul>
+  <li>Man and Woman have similar scores on most rows except <em>Gender</em> — they are close in embedding space.</li>
+  <li>King and Queen share <em>Royal</em> = high and differ on <em>Gender</em>.</li>
+  <li>Apple and Orange share <em>Food</em> = high.</li>
+  <li>Man and Apple have essentially <em>nothing</em> in common — they are far apart.</li>
+</ul>
+
+<div class="callout intuition">
+  <span class="callout-title">🟢 Intuition — Why This Solves the "Orange vs Apple" Problem</span>
+  <p>Because \(\mathbf{e}_{\text{apple}}\) and \(\mathbf{e}_{\text{orange}}\) are both high on "Food", "Size", "Cost", "Alive", and low on "Gender", "Royal" — their vector difference is small. So the model that has learned "orange juice" can generalize to "apple juice." This is the entire point of embeddings: they let the model transfer what it learned about one word to semantically similar words.</p>
+</div>
+
+<h3>4.3 Dimensionality</h3>
+
+<p>A common choice in the course is a <strong>300-dimensional</strong> embedding, though 50, 100, 200, and even 1024 dimensions are used in practice. The vocabulary in the course is often 10,000 words, so the full embedding table has size \(300 \times 10{,}000\).</p>
+
+<div class="callout remember">
+  <span class="callout-title">🔵 Remember</span>
+  <p>Embedding dimension (\(d_e\)) is a hyperparameter. Bigger vocabularies and more complex tasks often benefit from larger embedding dimensions — but larger dimensions cost more memory and compute.</p>
+</div>
+
+<!-- ============================================================
+     5. VISUALIZING WORD EMBEDDINGS
+     ============================================================ -->
+<h2 id="visualize">5. Visualizing Word Embeddings</h2>
+
+<p>Embedding vectors live in high-dimensional space (e.g., 300 dimensions), so we can't plot them directly. Instead, we use dimensionality reduction techniques such as <strong>t-SNE</strong> to squash them down to 2D for human inspection.</p>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 Definition — t-SNE</span>
+  <p>t-SNE (t-distributed Stochastic Neighbor Embedding) is an algorithm that maps high-dimensional points into 2D or 3D while trying to keep points that were close in high dimensions close in the low-dimensional plot. It is only a visualization tool — the 2D coordinates are not used for training.</p>
+</div>
+
+<div class="diagram">
+<svg viewBox="0 0 500 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="2D t-SNE visualization of word embedding clusters">
+  <rect x="0" y="0" width="500" height="340" fill="#ffffff" rx="8"/>
+  <!-- Axes -->
+  <line x1="40" y1="310" x2="470" y2="310" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="40" y1="310" x2="40" y2="20" stroke="#94a3b8" stroke-width="1"/>
+  <text x="255" y="335" font-size="12" text-anchor="middle" fill="#64748b">dimension 1</text>
+  <text x="18" y="170" font-size="12" text-anchor="middle" fill="#64748b" transform="rotate(-90,18,170)">dimension 2</text>
+
+  <!-- Cluster 1: royalty / gender -->
+  <g fill="#7c3aed">
+    <circle cx="120" cy="90" r="4"/><text x="128" y="94" font-size="12" fill="#1f2937">man</text>
+    <circle cx="155" cy="75" r="4"/><text x="163" y="79" font-size="12" fill="#1f2937">woman</text>
+    <circle cx="110" cy="120" r="4"/><text x="118" y="124" font-size="12" fill="#1f2937">king</text>
+    <circle cx="145" cy="110" r="4"/><text x="153" y="114" font-size="12" fill="#1f2937">queen</text>
+  </g>
+
+  <!-- Cluster 2: animals -->
+  <g fill="#16a34a">
+    <circle cx="330" cy="80" r="4"/><text x="338" y="84" font-size="12" fill="#1f2937">dog</text>
+    <circle cx="300" cy="95" r="4"/><text x="308" y="99" font-size="12" fill="#1f2937">cat</text>
+    <circle cx="355" cy="115" r="4"/><text x="363" y="119" font-size="12" fill="#1f2937">fish</text>
+  </g>
+
+  <!-- Cluster 3: numbers -->
+  <g fill="#ea580c">
+    <circle cx="100" cy="230" r="4"/><text x="108" y="234" font-size="12" fill="#1f2937">one</text>
+    <circle cx="130" cy="245" r="4"/><text x="138" y="249" font-size="12" fill="#1f2937">two</text>
+    <circle cx="160" cy="235" r="4"/><text x="168" y="239" font-size="12" fill="#1f2937">three</text>
+    <circle cx="190" cy="245" r="4"/><text x="198" y="249" font-size="12" fill="#1f2937">four</text>
+  </g>
+
+  <!-- Cluster 4: fruits -->
+  <g fill="#dc2626">
+    <circle cx="350" cy="235" r="4"/><text x="358" y="239" font-size="12" fill="#1f2937">apple</text>
+    <circle cx="385" cy="245" r="4"/><text x="393" y="249" font-size="12" fill="#1f2937">orange</text>
+    <circle cx="320" cy="250" r="4"/><text x="328" y="254" font-size="12" fill="#1f2937">grape</text>
+  </g>
+</svg>
+<p class="diagram-caption"><strong>Figure 2.</strong> A 2D projection (e.g., t-SNE) of word embeddings. Words used in similar contexts cluster together: royalty and gendered words cluster at the top-left; animals at the top-right; numbers at the bottom-left; fruits at the bottom-right. The exact positions are meaningless — only the <em>relative closeness</em> matters.</p>
+</div>
+
+<div class="callout warning">
+  <span class="callout-title">🔴 Warning — Don't Over-Read t-SNE Plots</span>
+  <p>Distances and cluster shapes in t-SNE plots are not fully reliable — t-SNE sometimes creates artificial gaps and clusters. Use them for intuition, not for quantitative analysis.</p>
+</div>
+
+<!-- ============================================================
+     6. USING WORD EMBEDDINGS
+     ============================================================ -->
+<h2 id="using">6. Using Word Embeddings (Transfer Learning)</h2>
+
+<p>The single biggest reason embeddings matter in practice is <strong>transfer learning</strong>: embeddings learned from massive amounts of unlabeled text can be reused to build models for tasks that have very little labeled data.</p>
+
+<h3>6.1 A Worked Example — Named Entity Recognition</h3>
+
+<p><strong>Task:</strong> Given a sentence, identify which words are person names. This is called <em>named entity recognition</em> (NER).</p>
+
+<div class="callout example">
+  <span class="callout-title">🟣 Example — NER with embeddings</span>
+  <p>Training data (small):</p>
+  <ul>
+    <li>"<u>Sally Johnson</u> is an orange farmer" — Sally Johnson is a person.</li>
+  </ul>
+  <p>Test sentence (never seen before):</p>
+  <ul>
+    <li>"<u>Robert Lin</u> is an apple farmer."</li>
+  </ul>
+  <p>If the model uses <em>one-hot</em> vectors, "orange" and "apple" are unrelated. So the model has no reason to think "apple farmer" behaves like "orange farmer."</p>
+  <p>If the model uses <em>embeddings</em>, "orange" and "apple" have similar vectors. Then recognizing "<u>Sally Johnson</u>" as a person in the training sentence transfers to recognizing "<u>Robert Lin</u>" as a person in the test sentence — because the surrounding context is semantically equivalent.</p>
+</div>
+
+<h3>6.2 The Three-Step Transfer Recipe</h3>
+
+<ol>
+  <li><strong>Learn embeddings</strong> from a large text corpus (1–100 billion words) — or download pretrained embeddings (GloVe, Word2Vec, fastText).</li>
+  <li><strong>Transfer</strong> the embeddings to your new task, which has a much smaller labeled dataset (say 100,000 words). Each word ID is mapped to a 300-dim embedding instead of a 10,000-dim one-hot.</li>
+  <li><strong>(Optional) Fine-tune</strong> the embeddings on the new task's data — if you have enough data, letting the embedding vectors continue to adjust helps them fit the new task's distribution.</li>
+</ol>
+
+<div class="callout implementation">
+  <span class="callout-title">⚙️ Implementation — When to Fine-Tune</span>
+  <ul>
+    <li>Very small new dataset (e.g., &lt; 10k examples): keep embeddings <strong>frozen</strong>.</li>
+    <li>Moderate dataset (e.g., 100k+ examples): <strong>fine-tune</strong> embeddings together with the rest of the model.</li>
+    <li>Huge dataset: you can even learn embeddings from scratch — but starting from pretrained is still cheaper.</li>
+  </ul>
+</div>
+
+<div class="callout insight">
+  <span class="callout-title">💡 Insight — Why This Works</span>
+  <p>Embeddings encode general-purpose <em>meaning</em> learned from vast text. That meaning is largely task-agnostic — knowing that "orange" and "apple" are similar is useful for NER, sentiment analysis, question answering, translation, and more. Pretraining lets us offload the "what does each word mean?" problem, so we only need to learn the "what does this specific task want?" problem from labels.</p>
+</div>
+
+<!-- ============================================================
+     7. RELATION TO FACE ENCODING
+     ============================================================ -->
+<h2 id="face">7. Relation to Face Encoding</h2>
+
+<p>The idea of embedding is not unique to words. In Course 4 (Face Recognition), you learned to encode a face as a 128-dimensional vector. Two encodings are compared with a similarity function: same person → high similarity; different person → low similarity.</p>
+
+<div class="diagram">
+<svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Face encoding vs word embedding analogy">
+  <!-- Face encoding side -->
+  <text x="170" y="22" font-size="14" font-weight="700" text-anchor="middle" fill="#0f172a">Face Encoding</text>
+
+  <!-- Face A -->
+  <circle cx="60" cy="90" r="26" fill="#fde68a" stroke="#d97706" stroke-width="2"/>
+  <circle cx="52" cy="84" r="3" fill="#1f2937"/><circle cx="68" cy="84" r="3" fill="#1f2937"/>
+  <path d="M52 98 Q60 106 68 98" stroke="#1f2937" stroke-width="2" fill="none"/>
+  <text x="60" y="132" font-size="11" text-anchor="middle" fill="#4b5563">Person A</text>
+
+  <path d="M92 90 L120 90" stroke="#1f2937" stroke-width="2"/>
+  <polygon points="120,85 130,90 120,95" fill="#1f2937"/>
+  <rect x="135" y="60" width="60" height="60" rx="6" fill="#3b82f6"/>
+  <text x="165" y="95" font-size="11" text-anchor="middle" fill="#ffffff">CNN</text>
+
+  <path d="M200 90 L225 90" stroke="#1f2937" stroke-width="2"/>
+  <polygon points="225,85 235,90 225,95" fill="#1f2937"/>
+  <text x="252" y="86" font-size="11" fill="#4b5563">128-D</text>
+  <text x="252" y="100" font-size="11" fill="#4b5563">vector</text>
+
+  <!-- Separator -->
+  <line x1="350" y1="20" x2="350" y2="200" stroke="#cbd5e1" stroke-dasharray="4 4"/>
+
+  <!-- Word embedding side -->
+  <text x="525" y="22" font-size="14" font-weight="700" text-anchor="middle" fill="#0f172a">Word Embedding</text>
+
+  <text x="410" y="90" font-size="12" fill="#4b5563">"orange"</text>
+  <path d="M455 86 L480 86" stroke="#1f2937" stroke-width="2"/>
+  <polygon points="480,81 490,86 480,91" fill="#1f2937"/>
+  <rect x="495" y="60" width="60" height="60" rx="6" fill="#7c3aed"/>
+  <text x="525" y="95" font-size="11" text-anchor="middle" fill="#ffffff">Embed</text>
+
+  <path d="M560 90 L585 90" stroke="#1f2937" stroke-width="2"/>
+  <polygon points="585,85 595,90 585,95" fill="#1f2937"/>
+  <text x="625" y="86" font-size="11" fill="#4b5563">300-D</text>
+  <text x="625" y="100" font-size="11" fill="#4b5563">vector</text>
+</svg>
+<p class="diagram-caption"><strong>Figure 3.</strong> The same abstract idea — map a discrete object (a face, a word) to a dense vector so that similarity in vector space = semantic similarity — underlies both face recognition and word embeddings.</p>
+</div>
+
+<div class="callout insight">
+  <span class="callout-title">💡 Insight — Unified View</span>
+  <p>Embeddings are a general-purpose machine-learning tool: any time you have discrete entities (users, products, movies, words) that should have a notion of "similarity," you can learn an embedding for them. Word embeddings are the NLP-specific instance.</p>
+</div>
+
+<!-- ============================================================
+     8. PROPERTIES / ANALOGIES
+     ============================================================ -->
+<h2 id="properties">8. Properties of Word Embeddings — Analogies</h2>
+
+<p>One of the most striking properties of good embeddings is that <em>vector arithmetic encodes semantic relationships</em>.</p>
+
+<h3>8.1 The Analogy Task</h3>
+
+<div class="callout example">
+  <span class="callout-title">🟣 Example — The Classic Analogy</span>
+  <p>"Man is to Woman as King is to ____."</p>
+  <p>The model computes:</p>
+  <div class="eq">
+  $$\mathbf{e}_{\text{man}} - \mathbf{e}_{\text{woman}} \approx \begin{bmatrix} -2 \\ 0 \\ 0 \\ 0 \\ \vdots \end{bmatrix}, \qquad
+  \mathbf{e}_{\text{king}} - \mathbf{e}_{\text{queen}} \approx \begin{bmatrix} -2 \\ 0 \\ 0 \\ 0 \\ \vdots \end{bmatrix}$$
+  </div>
+  <p>The difference vectors are almost identical — both capture "male → female" along the Gender axis. So to solve the analogy, we look for a word \(w\) whose embedding is closest to:</p>
+  <div class="eq">
+  $$\mathbf{e}_{\text{king}} - \mathbf{e}_{\text{man}} + \mathbf{e}_{\text{woman}} \approx \mathbf{e}_{\text{queen}}$$
+  </div>
+</div>
+
+<div class="diagram">
+<svg viewBox="0 0 520 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Parallelogram of analogy: man, woman, king, queen">
+  <!-- Points -->
+  <circle cx="100" cy="260" r="6" fill="#2563eb"/>
+  <text x="60" y="285" font-size="15" font-weight="700" fill="#0f172a">man</text>
+
+  <circle cx="160" cy="90" r="6" fill="#7c3aed"/>
+  <text x="155" y="75" font-size="15" font-weight="700" fill="#0f172a">woman</text>
+
+  <circle cx="360" cy="260" r="6" fill="#2563eb"/>
+  <text x="350" y="285" font-size="15" font-weight="700" fill="#0f172a">king</text>
+
+  <circle cx="420" cy="90" r="6" fill="#7c3aed"/>
+  <text x="415" y="75" font-size="15" font-weight="700" fill="#0f172a">queen</text>
+
+  <!-- Arrows: man -> woman, king -> queen (parallel) -->
+  <defs>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <polygon points="0,0 10,3 0,6" fill="#2563eb"/>
+    </marker>
+    <marker id="arrowPurple" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <polygon points="0,0 10,3 0,6" fill="#7c3aed"/>
+    </marker>
+  </defs>
+
+  <line x1="105" y1="255" x2="155" y2="98" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)" stroke-dasharray="4 2"/>
+  <line x1="365" y1="255" x2="415" y2="98" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrowPurple)" stroke-dasharray="4 2"/>
+
+  <!-- Bottom arrow: man -> king -->
+  <line x1="105" y1="260" x2="355" y2="260" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <!-- Top arrow: woman -> queen -->
+  <line x1="165" y1="90" x2="415" y2="90" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3 3"/>
+
+  <text x="255" y="185" font-size="13" fill="#4b5563" font-style="italic" text-anchor="middle">The two arrows are</text>
+  <text x="255" y="203" font-size="13" fill="#4b5563" font-style="italic" text-anchor="middle">(nearly) parallel — the</text>
+  <text x="255" y="221" font-size="13" fill="#4b5563" font-style="italic" text-anchor="middle">same "male→female" shift</text>
+</svg>
+<p class="diagram-caption"><strong>Figure 4.</strong> Analogies form parallelograms in embedding space. The vector from "man" to "woman" is (approximately) the same as the vector from "king" to "queen": both encode a male→female shift. To solve "man : woman :: king : ?", find the word nearest to \(\mathbf{e}_{\text{king}} - \mathbf{e}_{\text{man}} + \mathbf{e}_{\text{woman}}\).</p>
+</div>
+
+<h3>8.2 More Analogy Examples from the Lecture</h3>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>Analogy</th><th>Meaning relationship</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Man : Woman :: Boy : Girl</td><td>Gender</td></tr>
+    <tr><td>Ottawa : Canada :: Nairobi : Kenya</td><td>Capital : Country</td></tr>
+    <tr><td>Big : Bigger :: Tall : Taller</td><td>Comparative degree</td></tr>
+    <tr><td>Yen : Japan :: Ruble : Russia</td><td>Currency : Country</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>8.3 The Algorithm for Solving Analogies</h3>
+
+<ol>
+  <li>Compute the target vector: \(\mathbf{v} = \mathbf{e}_b - \mathbf{e}_a + \mathbf{e}_c\) for the analogy "<em>a</em> is to <em>b</em> as <em>c</em> is to <em>?</em>".</li>
+  <li>Find the word \(w\) in the vocabulary that maximizes similarity with \(\mathbf{v}\):</li>
+</ol>
+<div class="eq">
+$$\text{Find } w : \quad \arg\max_w \ \text{sim}\!\left(\mathbf{e}_w,\ \mathbf{e}_b - \mathbf{e}_a + \mathbf{e}_c\right)$$
+</div>
+
+<div class="callout important">
+  <span class="callout-title">🟡 Important — Realistic Accuracy</span>
+  <p>The lecture mentions analogy accuracy around <strong>30–75%</strong> depending on the dataset and embeddings. It's impressive but far from perfect — do not assume it always works.</p>
+</div>
+
+<!-- ============================================================
+     9. COSINE SIMILARITY
+     ============================================================ -->
+<h2 id="cosine">9. Cosine Similarity</h2>
+
+<p>To "find the closest word," we need a way to measure how similar two embedding vectors are. The most common measure is <strong>cosine similarity</strong>.</p>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 Definition — Cosine Similarity</span>
+  <p>For two vectors \(u, v \in \mathbb{R}^n\),</p>
+  <div class="eq">
+  $$\text{sim}(u, v) = \frac{u \cdot v}{\|u\| \, \|v\|}$$
+  </div>
+  <p>It measures the <em>cosine of the angle</em> between the vectors. It ranges from \(-1\) (opposite directions) through \(0\) (orthogonal) to \(+1\) (identical direction).</p>
+</div>
+
+<h3>9.1 Why Cosine Instead of Euclidean Distance?</h3>
+
+<ul>
+  <li>Cosine ignores vector <em>magnitude</em> — only direction matters. Two words with the same <em>meaning profile</em> but different "strength" (e.g., <em>very royal</em> vs. <em>slightly royal</em>) will still be considered similar.</li>
+  <li>Cosine is naturally bounded in \([-1, 1]\), making it easy to interpret.</li>
+  <li>For embeddings trained with certain objectives, cosine similarity is the standard metric used to evaluate embedding quality.</li>
+</ul>
+
+<h3>9.2 Mini Numerical Example</h3>
+
+<div class="callout example">
+  <span class="callout-title">🟣 Example — Cosine Similarity by Hand</span>
+  <p>Let \(u = [1, 0, 1]\) and \(v = [0, 1, 1]\). Then:</p>
+  <ul>
+    <li>\(u \cdot v = 1{\cdot}0 + 0{\cdot}1 + 1{\cdot}1 = 1\)</li>
+    <li>\(\|u\| = \sqrt{1+0+1} = \sqrt{2} \approx 1.414\)</li>
+    <li>\(\|v\| = \sqrt{0+1+1} = \sqrt{2} \approx 1.414\)</li>
+    <li>\(\text{sim}(u, v) = \dfrac{1}{1.414 \times 1.414} = \dfrac{1}{2} = 0.5\)</li>
+  </ul>
+  <p>The angle between them is \(\cos^{-1}(0.5) = 60^\circ\) — moderately similar.</p>
+</div>
+
+<!-- ============================================================
+     10. EMBEDDING MATRIX
+     ============================================================ -->
+<h2 id="matrix">10. Embedding Matrix</h2>
+
+<p>Instead of storing 10,000 individual vectors, we store all embeddings in a single <strong>embedding matrix</strong> \(E\).</p>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 Definition — Embedding Matrix</span>
+  <p>The embedding matrix \(E\) is a matrix of shape \(d_e \times |V|\), where \(d_e\) is the embedding dimension (e.g., 300) and \(|V|\) is the vocabulary size (e.g., 10,000). The \(j\)-th column of \(E\) is the embedding for the \(j\)-th word in the vocabulary:</p>
+  <div class="eq">
+  $$E \cdot O_j = \mathbf{e}_j$$
+  </div>
+  <p>where \(O_j\) is the one-hot vector for word \(j\) (a column vector of length \(|V|\) with a 1 at position \(j\)).</p>
+</div>
+
+<div class="diagram">
+<svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Embedding matrix multiplication by one-hot vector">
+  <!-- E matrix -->
+  <rect x="40" y="60" width="280" height="150" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="4"/>
+  <text x="180" y="48" font-size="15" font-weight="700" text-anchor="middle" fill="#0f172a">E</text>
+  <text x="180" y="230" font-size="13" text-anchor="middle" fill="#4b5563">300 × 10,000</text>
+  <!-- Column highlight -->
+  <rect x="290" y="60" width="22" height="150" fill="#fca5a5" opacity="0.7"/>
+  <text x="301" y="45" font-size="12" text-anchor="middle" fill="#dc2626">orange (6257)</text>
+
+  <!-- multiply sign -->
+  <text x="345" y="145" font-size="26" text-anchor="middle" fill="#0f172a">×</text>
+
+  <!-- one-hot vector -->
+  <rect x="375" y="50" width="40" height="170" fill="#fee2e2" stroke="#dc2626" stroke-width="2" rx="4"/>
+  <text x="395" y="40" font-size="13" text-anchor="middle" fill="#0f172a">O_6257</text>
+  <g font-size="11" text-anchor="middle" fill="#1f2937">
+    <text x="395" y="72">0</text>
+    <text x="395" y="94">0</text>
+    <text x="395" y="116">⋮</text>
+    <text x="395" y="150" font-weight="700" fill="#dc2626">1</text>
+    <text x="395" y="184">⋮</text>
+    <text x="395" y="212">0</text>
+  </g>
+  <text x="395" y="240" font-size="13" text-anchor="middle" fill="#4b5563">10,000 × 1</text>
+
+  <!-- equals sign -->
+  <text x="440" y="145" font-size="26" text-anchor="middle" fill="#0f172a">=</text>
+
+  <!-- resulting embedding -->
+  <rect x="475" y="70" width="40" height="130" fill="#dcfce7" stroke="#16a34a" stroke-width="2" rx="4"/>
+  <text x="495" y="60" font-size="13" text-anchor="middle" fill="#0f172a">e_6257</text>
+  <g font-size="11" text-anchor="middle" fill="#1f2937">
+    <text x="495" y="92">0.01</text>
+    <text x="495" y="114">0.00</text>
+    <text x="495" y="136">−0.02</text>
+    <text x="495" y="158">0.97</text>
+    <text x="495" y="180">⋮</text>
+  </g>
+  <text x="495" y="225" font-size="13" text-anchor="middle" fill="#4b5563">300 × 1</text>
+
+  <!-- annotation -->
+  <text x="610" y="145" font-size="14" fill="#2563eb" font-weight="700">= embedding</text>
+  <text x="610" y="165" font-size="14" fill="#2563eb" font-weight="700">for "orange"</text>
+</svg>
+<p class="diagram-caption"><strong>Figure 5.</strong> Multiplying the embedding matrix \(E\) by a one-hot vector \(O_j\) "selects" the \(j\)-th column of \(E\). This is mathematically elegant, but in practice we just <em>look up</em> the column directly with a specialized embedding-lookup function.</p>
+</div>
+
+<div class="callout implementation">
+  <span class="callout-title">⚙️ Implementation — Lookup &gt; Matrix Multiply</span>
+  <p>If \(E\) is a \(300 \times 10{,}000\) matrix and \(O_j\) is a 10,000-dim one-hot, then multiplying \(E \cdot O_j\) costs \(300 \times 10{,}000\) floating-point operations — just to pick one column. In real code, we use an <em>embedding lookup</em> instead:</p>
+<pre><code><span class="com"># Pseudocode: embedding lookup in PyTorch / Keras style</span>
+e_j = EmbeddingLayer(vocab_size=<span class="num">10000</span>, dim=<span class="num">300</span>)(word_index_j)
+
+<span class="com"># Under the hood: just index column j of E. No matrix multiply needed.</span></code></pre>
+</div>
+
+<h3>10.1 Notation Summary</h3>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Symbol</th><th>Meaning</th><th>Shape</th></tr></thead>
+  <tbody>
+    <tr><td>\(E\)</td><td>Embedding matrix (learned)</td><td>\(d_e \times |V|\)</td></tr>
+    <tr><td>\(O_j\)</td><td>One-hot vector for the \(j\)-th word</td><td>\(|V| \times 1\)</td></tr>
+    <tr><td>\(\mathbf{e}_j\)</td><td>Embedding of the \(j\)-th word</td><td>\(d_e \times 1\)</td></tr>
+    <tr><td>\(|V|\)</td><td>Vocabulary size</td><td>scalar</td></tr>
+    <tr><td>\(d_e\)</td><td>Embedding dimension</td><td>scalar (typically 50–1024)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ============================================================
+     11. LEARNING WORD EMBEDDINGS
+     ============================================================ -->
+<h2 id="learning">11. Learning Word Embeddings</h2>
+
+<p>So far we've assumed embeddings exist. How do we actually <em>learn</em> them? The idea is to train a neural network on a language-modelling task that forces the embeddings to capture word meaning. We start with the historical <strong>neural language model</strong> of Bengio et al., 2003.</p>
+
+<h3>11.1 Neural Language Model — The Setup</h3>
+
+<p>Given a sequence of words, predict the next word.</p>
+
+<div class="callout example">
+  <span class="callout-title">🟣 Example — "I want a glass of orange ___"</span>
+  <p>Input context: "I want a glass of orange"</p>
+  <p>Target (label): "juice"</p>
+  <p>The model must learn to output a probability distribution over the entire vocabulary. Because "juice" is the correct answer, the embeddings for "orange" and "juice" get pulled closer — and also "apple" because apple appears in similar contexts elsewhere in the training corpus.</p>
+</div>
+
+<div class="diagram">
+<svg viewBox="0 0 900 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Neural language model architecture">
+  <!-- Context words -->
+  <g font-size="13" fill="#1f2937">
+    <text x="40" y="35">I</text><text x="40" y="55" font-size="11" fill="#4b5563">4343</text>
+    <text x="40" y="90">want</text><text x="40" y="110" font-size="11" fill="#4b5563">9665</text>
+    <text x="40" y="145">a</text><text x="40" y="165" font-size="11" fill="#4b5563">1</text>
+    <text x="40" y="200">glass</text><text x="40" y="220" font-size="11" fill="#4b5563">3852</text>
+    <text x="40" y="255">of</text><text x="40" y="275" font-size="11" fill="#4b5563">6163</text>
+    <text x="40" y="310">orange</text><text x="40" y="328" font-size="11" fill="#4b5563">6257</text>
+  </g>
+
+  <!-- Arrows to E -->
+  <g stroke="#94a3b8" stroke-width="1.5" fill="none">
+    <path d="M105 35 L150 35"/>
+    <path d="M105 100 L150 100"/>
+    <path d="M105 155 L150 155"/>
+    <path d="M105 210 L150 210"/>
+    <path d="M105 265 L150 265"/>
+    <path d="M105 320 L150 320"/>
+  </g>
+
+  <!-- E column (shared) -->
+  <rect x="155" y="20" width="35" height="315" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="4"/>
+  <text x="172" y="14" font-size="14" text-anchor="middle" font-weight="700" fill="#0f172a">E</text>
+
+  <!-- Arrows to embeddings -->
+  <g stroke="#94a3b8" stroke-width="1.5" fill="none">
+    <path d="M195 35 L245 35"/>
+    <path d="M195 100 L245 100"/>
+    <path d="M195 155 L245 155"/>
+    <path d="M195 210 L245 210"/>
+    <path d="M195 265 L245 265"/>
+    <path d="M195 320 L245 320"/>
+  </g>
+
+  <!-- Embeddings e_* -->
+  <g font-size="12" fill="#1f2937">
+    <rect x="250" y="20" width="30" height="35" fill="#dcfce7" stroke="#16a34a"/><text x="265" y="42" text-anchor="middle">e₄₃₄₃</text>
+    <rect x="250" y="85" width="30" height="35" fill="#dcfce7" stroke="#16a34a"/><text x="265" y="107" text-anchor="middle">e₉₆₆₅</text>
+    <rect x="250" y="140" width="30" height="35" fill="#dcfce7" stroke="#16a34a"/><text x="265" y="162" text-anchor="middle">e₁</text>
+    <rect x="250" y="195" width="30" height="35" fill="#dcfce7" stroke="#16a34a"/><text x="265" y="217" text-anchor="middle">e₃₈₅₂</text>
+    <rect x="250" y="250" width="30" height="35" fill="#dcfce7" stroke="#16a34a"/><text x="265" y="272" text-anchor="middle">e₆₁₆₃</text>
+    <rect x="250" y="305" width="30" height="20" fill="#dcfce7" stroke="#16a34a"/><text x="265" y="320" text-anchor="middle" font-size="10">e₆₂₅₇</text>
+  </g>
+
+  <!-- Arrows to hidden -->
+  <g stroke="#94a3b8" stroke-width="1.5" fill="none">
+    <path d="M285 40 L380 170"/>
+    <path d="M285 105 L380 175"/>
+    <path d="M285 160 L380 180"/>
+    <path d="M285 215 L380 185"/>
+    <path d="M285 270 L380 190"/>
+    <path d="M285 315 L380 195"/>
+  </g>
+
+  <!-- Hidden layer -->
+  <rect x="385" y="150" width="90" height="70" fill="#fef3c7" stroke="#d97706" stroke-width="2" rx="6"/>
+  <text x="430" y="178" font-size="13" text-anchor="middle" fill="#0f172a" font-weight="700">Hidden</text>
+  <text x="430" y="196" font-size="11" text-anchor="middle" fill="#4b5563">(sum / avg)</text>
+
+  <!-- Arrow to softmax -->
+  <path d="M480 185 L545 185" stroke="#94a3b8" stroke-width="1.5" fill="none"/>
+
+  <!-- Softmax -->
+  <rect x="550" y="140" width="100" height="90" fill="#fee2e2" stroke="#dc2626" stroke-width="2" rx="6"/>
+  <text x="600" y="178" font-size="13" text-anchor="middle" fill="#0f172a" font-weight="700">Softmax</text>
+  <text x="600" y="196" font-size="11" text-anchor="middle" fill="#4b5563">10,000 outputs</text>
+
+  <!-- Arrow to output -->
+  <path d="M655 185 L720 185" stroke="#94a3b8" stroke-width="1.5" fill="none"/>
+
+  <!-- Output distribution -->
+  <g font-size="12" fill="#1f2937">
+    <text x="730" y="150">juice → 0.7</text>
+    <text x="730" y="172">milk → 0.1</text>
+    <text x="730" y="194">water → 0.05</text>
+    <text x="730" y="216">⋮</text>
+    <text x="730" y="240" font-size="11" fill="#dc2626" font-weight="700">target: juice</text>
+  </g>
+</svg>
+<p class="diagram-caption"><strong>Figure 6.</strong> The neural language model takes a few preceding words as input. Each word is converted to its embedding via \(E\). The embeddings are combined (often averaged or summed) into a hidden representation, then passed through a softmax to predict the next word. The network is trained on a large corpus of text; its side effect is that \(E\) learns meaningful word vectors.</p>
+</div>
+
+<h3>11.2 The Loss</h3>
+
+<p>Training uses the standard <strong>cross-entropy loss</strong> over the vocabulary:</p>
+
+<div class="eq">
+$$\mathcal{L}(\hat{y}, y) = -\sum_{i=1}^{|V|} y_i \log \hat{y}_i$$
+</div>
+
+<p>where \(y\) is the one-hot true label (1 at the target word) and \(\hat{y}\) is the softmax output (a probability distribution over the vocabulary).</p>
+
+<h3>11.3 Key Idea — The "Side Effect"</h3>
+
+<div class="callout insight">
+  <span class="callout-title">💡 Insight — Why Language Modelling Learns Embeddings</span>
+  <p>To predict "juice" after "orange," the model must <em>know</em> that orange is a fruit-like word that is typically followed by juice. The only flexible parameters the network has to encode that knowledge are the embedding vectors. Therefore, backpropagation pushes the embeddings of "orange" and "juice" (and "apple") into positions that reflect their statistical relationships. The embedding matrix \(E\) is where the meaning gets stored.</p>
+</div>
+
+<h3>11.4 Layer Sizes in the Course Example</h3>
+
+<p>The lecture notes vocabulary size 10,000, embedding dimension 300, hidden layer 300 (or 1,200 in some versions), and output softmax of size 10,000. The exact sizes vary between implementations — the important point is that <em>E is learned</em>.</p>
+
+<!-- ============================================================
+     12. CONTEXT/TARGET PAIRS
+     ============================================================ -->
+<h2 id="context">12. Context / Target Pairs</h2>
+
+<p>If you want to train an embedding matrix, you need to decide <em>what predicts what</em>. There are many possible choices. The lecture lists several:</p>
+
+<div class="callout example">
+  <span class="callout-title">🟣 Example Sentence</span>
+  <p>"I want a <strong>glass</strong> of <strong>orange</strong> <span style="color:#7c3aed; text-decoration: underline;">juice</span> to go along with my cereal."</p>
+</div>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>Context type</th><th>What the model sees</th><th>Target</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Last 4 words</td><td>"a glass of orange"</td><td>juice</td></tr>
+    <tr><td>4 words on left &amp; right</td><td>"a glass of orange" + "to go along with"</td><td>juice</td></tr>
+    <tr><td>Last 1 word</td><td>"orange"</td><td>juice</td></tr>
+    <tr><td>Nearby 1 word (skip-gram)</td><td>"orange"</td><td>juice, glass, my, …</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout important">
+  <span class="callout-title">🟡 Important — You Don't Need Labels</span>
+  <p>Notice that all of these context/target pairs are generated <em>automatically</em> from raw text — no human labeling required. This is why we can use billions of words of unlabeled text to train embeddings.</p>
+</div>
+
+<div class="callout insight">
+  <span class="callout-title">💡 Insight — Context Choice Affects Embedding Quality</span>
+  <ul>
+    <li><strong>Last 4 words</strong>: simple, good for small datasets.</li>
+    <li><strong>4 words left &amp; right</strong>: captures more context; better in practice.</li>
+    <li><strong>Last 1 word</strong>: too little context.</li>
+    <li><strong>Nearby 1 word (skip-gram)</strong>: extremely simple and works remarkably well — this is the basis of Word2Vec.</li>
+  </ul>
+</div>
+
+<!-- ============================================================
+     13. WORD2VEC — SKIP-GRAMS
+     ============================================================ -->
+<h2 id="word2vec">13. Word2Vec — Skip-Grams</h2>
+
+<p>Word2Vec is a family of embedding-learning algorithms introduced by Mikolov et al. at Google. The two main variants are:</p>
+<ul>
+  <li><strong>Skip-gram</strong>: given a context word, predict nearby target words.</li>
+  <li><strong>CBOW</strong> (Continuous Bag of Words): given surrounding context words, predict the center word.</li>
+</ul>
+<p>The course focuses on skip-grams and negative sampling.</p>
+
+<h3>13.1 Skip-Gram Intuition</h3>
+
+<div class="callout intuition">
+  <span class="callout-title">🟢 Intuition — Words That Share Contexts Share Meaning</span>
+  <p>The skip-gram algorithm says: "If two words tend to appear near the same kinds of words, they probably mean similar things." So instead of predicting whether "orange" and "apple" are similar directly, we train the model to predict whether they <em>co-occur with the same neighbors</em>. That indirect task produces embeddings that capture meaning.</p>
+</div>
+
+<h3>13.2 Skip-Gram Model Formulation</h3>
+
+<p>Take the sentence:</p>
+<p style="text-align:center; font-style: italic;">"I want a glass of orange juice to go along with my cereal."</p>
+
+<p>Fix "orange" as the <em>context</em> word \(c\). The skip-gram model tries to predict each nearby word \(t\) (the <em>target</em>):</p>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Context \(c\)</th><th>Target \(t\)</th></tr></thead>
+  <tbody>
+    <tr><td>orange</td><td>juice</td></tr>
+    <tr><td>orange</td><td>glass</td></tr>
+    <tr><td>orange</td><td>my</td></tr>
+    <tr><td>orange</td><td>(other nearby words)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>13.3 The Model Equation</h3>
+
+<p>We start by mapping the context word to its embedding:</p>
+
+<div class="eq">
+$$\mathbf{e}_c = E \cdot O_c$$
+</div>
+
+<p>where \(O_c\) is the one-hot vector of the context word and \(E\) is the embedding matrix. Then we compute a softmax over the whole vocabulary:</p>
+
+<div class="eq">
+$$p(t \mid c) = \frac{\exp\!\left(\theta_t^T \mathbf{e}_c\right)}{\sum_{j=1}^{|V|} \exp\!\left(\theta_j^T \mathbf{e}_c\right)}$$
+</div>
+
+<p>where:</p>
+<ul>
+  <li>\(c\) = context word (input).</li>
+  <li>\(t\) = target word (the word we are trying to predict).</li>
+  <li>\(\mathbf{e}_c \in \mathbb{R}^{d_e}\) = embedding of the context word.</li>
+  <li>\(\theta_t \in \mathbb{R}^{d_e}\) = a separate <em>output parameter vector</em> associated with target word \(t\).</li>
+  <li>\(|V|\) = vocabulary size.</li>
+  <li>The denominator normalizes over all words so the output is a valid probability distribution.</li>
+</ul>
+
+<div class="callout important">
+  <span class="callout-title">🟡 Important — Two Sets of Vectors</span>
+  <p>In skip-gram there are two vector sets: the <em>input</em> embeddings \(\mathbf{e}_w\) (columns of \(E\)) and the <em>output</em> parameters \(\theta_w\). Both are learned. At the end, the input embeddings are usually kept as <em>the</em> word vectors.</p>
+</div>
+
+<h3>13.4 The Loss Function</h3>
+
+<p>We train the model with cross-entropy loss:</p>
+
+<div class="eq">
+$$\mathcal{L}(\hat{y}, y) = -\sum_{i=1}^{|V|} y_i \log \hat{y}_i$$
+</div>
+
+<p>where \(y\) is the one-hot true target word and \(\hat{y}\) is the softmax output.</p>
+
+<h3>13.5 The Problem with Plain Softmax</h3>
+
+<div class="callout warning">
+  <span class="callout-title">🔴 Warning — The Softmax Is Expensive</span>
+  <p>Computing the denominator \(\sum_{j=1}^{10{,}000} \exp(\theta_j^T \mathbf{e}_c)\) requires summing over the <em>entire</em> vocabulary for every training example. If the vocabulary is 1,000,000 words (realistic for modern NLP), each step is prohibitively slow. This is the main practical bottleneck of skip-gram with softmax.</p>
+</div>
+
+<!-- ============================================================
+     14. HIERARCHICAL SOFTMAX
+     ============================================================ -->
+<h2 id="softmax-problem">14. Problems with Softmax Classification — Hierarchical Softmax</h2>
+
+<p>One solution to the expensive-softmax problem is <strong>hierarchical softmax</strong>. Instead of a flat 10,000-way classification, we organize the vocabulary as a binary tree.</p>
+
+<div class="diagram">
+<svg viewBox="0 0 520 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hierarchical softmax tree">
+  <!-- Root -->
+  <circle cx="260" cy="40" r="16" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="260" y="45" font-size="11" text-anchor="middle" fill="#0f172a">root</text>
+
+  <!-- Level 1 -->
+  <line x1="260" y1="56" x2="150" y2="100" stroke="#94a3b8"/>
+  <line x1="260" y1="56" x2="370" y2="100" stroke="#94a3b8"/>
+  <circle cx="150" cy="110" r="14" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <circle cx="370" cy="110" r="14" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+
+  <!-- Level 2 left -->
+  <line x1="150" y1="124" x2="90" y2="170" stroke="#94a3b8"/>
+  <line x1="150" y1="124" x2="210" y2="170" stroke="#94a3b8"/>
+  <circle cx="90" cy="180" r="13" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <circle cx="210" cy="180" r="13" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+
+  <!-- Level 2 right -->
+  <line x1="370" y1="124" x2="310" y2="170" stroke="#94a3b8"/>
+  <line x1="370" y1="124" x2="440" y2="170" stroke="#94a3b8"/>
+  <circle cx="310" cy="180" r="13" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <circle cx="440" cy="180" r="13" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+
+  <!-- Level 3 left-left -->
+  <line x1="90" y1="193" x2="60" y2="240" stroke="#94a3b8"/>
+  <line x1="90" y1="193" x2="120" y2="240" stroke="#94a3b8"/>
+  <circle cx="60" cy="250" r="12" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <circle cx="120" cy="250" r="12" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <text x="60" y="282" font-size="11" text-anchor="middle" fill="#1f2937">the</text>
+  <text x="120" y="282" font-size="11" text-anchor="middle" fill="#1f2937">of</text>
+
+  <!-- Deep path for "driv(e)" -->
+  <line x1="210" y1="193" x2="200" y2="240" stroke="#94a3b8"/>
+  <circle cx="200" cy="255" r="11" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <line x1="200" y1="266" x2="230" y2="300" stroke="#94a3b8"/>
+  <circle cx="235" cy="308" r="10" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <text x="255" y="312" font-size="11" fill="#1f2937">driv…</text>
+
+  <text x="260" y="40" font-size="11" text-anchor="middle" fill="#0f172a"></text>
+
+  <!-- Depth annotation -->
+  <text x="470" y="40" font-size="12" fill="#4b5563">Depth ~ log₂|V|</text>
+  <text x="470" y="58" font-size="12" fill="#4b5563">≈ 13 for |V|=10,000</text>
+</svg>
+<p class="diagram-caption"><strong>Figure 7.</strong> A hierarchical softmax tree. To assign probability to a word, the model follows a path from the root to that word's leaf, making a binary decision at each node. The cost is \(O(\log |V|)\) rather than \(O(|V|)\) per example.</p>
+</div>
+
+<p>The lecture notes two important consequences:</p>
+<ul>
+  <li>Instead of \(|V|\) probabilities to compute, we only need \(\log_2 |V|\) binary decisions along the path.</li>
+  <li>Frequent words end up near the top of the tree; rare words sink deeper. The tree is usually built using Huffman coding so that frequent words get shorter paths.</li>
+</ul>
+
+<div class="callout important">
+  <span class="callout-title">🟡 Important — This Doesn't Fully Solve It</span>
+  <p>Hierarchical softmax is faster than flat softmax but still complex to implement. A simpler and often preferred alternative is <strong>negative sampling</strong>, which we cover next.</p>
+</div>
+
+<h3>14.1 How to Sample the Context \(c\)?</h3>
+
+<p>Another subtlety: if we sample context words uniformly from the corpus, we will be swamped by common words like "the," "of," "a," "and," "to" — which carry little semantic information. The lecture suggests balancing:</p>
+
+<ul>
+  <li>Sampling more from frequent words so the model learns useful frequent-word associations.</li>
+  <li>Sampling some from less frequent words so the model still learns about rare words.</li>
+</ul>
+
+<div class="callout example">
+  <span class="callout-title">🟣 Example — Skewed Sampling</span>
+  <p>Sample 1% from common words (the, of, a, and, to), 99% from less common words (orange, apple, division). This is a heuristic that balances coverage and signal.</p>
+</div>
+
+<!-- ============================================================
+     15. NEGATIVE SAMPLING
+     ============================================================ -->
+<h2 id="negative">15. Negative Sampling</h2>
+
+<p>Negative sampling is a clever reformulation that avoids the expensive softmax entirely. Instead of a 10,000-way classification, we turn the problem into 10,000 tiny <em>binary</em> classifications.</p>
+
+<h3>15.1 The New Learning Problem</h3>
+
+<p>Given a context word \(c\), we generate:</p>
+<ul>
+  <li><strong>1 positive example</strong>: a real target word that actually occurred near \(c\), labelled \(y = 1\).</li>
+  <li><strong>\(k\) negative examples</strong>: random words drawn from the vocabulary that did <em>not</em> occur near \(c\), labelled \(y = 0\).</li>
+</ul>
+
+<div class="callout example">
+  <span class="callout-title">🟣 Example — Positive and Negative Pairs</span>
+  <p>Context = "orange":</p>
+  <div class="table-wrap" style="margin-top:10px;">
+  <table>
+    <thead><tr><th>Context</th><th>Word</th><th>Target \(y\)</th></tr></thead>
+    <tbody>
+      <tr><td>orange</td><td>juice</td><td style="color:#16a34a; font-weight:700;">1</td></tr>
+      <tr><td>orange</td><td>king</td><td style="color:#dc2626; font-weight:700;">0</td></tr>
+      <tr><td>orange</td><td>book</td><td style="color:#dc2626; font-weight:700;">0</td></tr>
+      <tr><td>orange</td><td>the</td><td style="color:#dc2626; font-weight:700;">0</td></tr>
+      <tr><td>orange</td><td>of</td><td style="color:#dc2626; font-weight:700;">0</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<h3>15.2 Choosing \(k\)</h3>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Dataset size</th><th>Typical \(k\)</th></tr></thead>
+  <tbody>
+    <tr><td>Small dataset</td><td>5 – 20</td></tr>
+    <tr><td>Large dataset</td><td>2 – 5</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>Smaller \(k\) is used when data is abundant (each example is cheap to generate); larger \(k\) compensates when data is scarce.</p>
+
+<h3>15.3 The Binary Classification Model</h3>
+
+<p>For each (context, word) pair, the model outputs:</p>
+
+<div class="eq">
+$$P(y=1 \mid c, t) = \sigma\!\left(\theta_t^T \mathbf{e}_c\right)$$
+</div>
+
+<p>where:</p>
+<ul>
+  <li>\(c\) = context word.</li>
+  <li>\(t\) = candidate target word.</li>
+  <li>\(\mathbf{e}_c\) = embedding of the context word (column of \(E\)).</li>
+  <li>\(\theta_t\) = output parameter vector for candidate word \(t\).</li>
+  <li>\(\sigma\) = sigmoid function \(\sigma(z) = \frac{1}{1 + e^{-z}}\).</li>
+</ul>
+
+<p>The training objective for a single pair is the standard binary cross-entropy:</p>
+
+<div class="eq">
+$$\mathcal{L} = -\left[\, y \log \hat{y} + (1-y) \log(1-\hat{y}) \,\right]$$
+</div>
+
+<h3>15.4 How to Sample Negative Words</h3>
+
+<p>Negative words are sampled from the vocabulary according to a distribution based on word frequencies:</p>
+
+<div class="eq">
+$$P(w_i) = \frac{f(w_i)^{3/4}}{\sum_{j=1}^{|V|} f(w_j)^{3/4}}$$
+</div>
+
+<p>where \(f(w_i)\) is the empirical frequency of word \(w_i\) in the corpus.</p>
+
+<div class="callout important">
+  <span class="callout-title">🟡 Important — Why the 3/4 Exponent?</span>
+  <p>If we sample proportional to raw frequency \(f(w_i)\), common words like "the" dominate. If we sample uniformly (\(1/|V|\)), rare words are over-sampled. The \(3/4\) power is a heuristic in between: it dampens the dominance of very frequent words while still giving them more weight than rare words. This was found empirically to work well in the original Word2Vec paper.</p>
+</div>
+
+<h3>15.5 Why This Is Fast</h3>
+
+<div class="callout insight">
+  <span class="callout-title">💡 Insight — From |V| to k+1</span>
+  <p>Instead of computing a normalization over 10,000 outputs, we do \(k+1\) sigmoid evaluations (each a single dot product + sigmoid) per training example. If \(k = 5\), that's 6 evaluations instead of 10,000 — roughly 1000× faster. This is why negative sampling made it feasible to train embeddings on billions of words.</p>
+</div>
+
+<div class="callout example">
+  <span class="callout-title">🟣 Example — Same Corpus, Different Learning Problem</span>
+  <p>Original softmax problem: "Given context 'orange', what is the distribution over 10,000 words?"</p>
+  <p>Negative sampling problem: "Given pair (orange, juice), is it real? Given pair (orange, king), is it real? …" — \(k+1\) binary questions.</p>
+</div>
+
+<!-- ============================================================
+     16. GLOVE
+     ============================================================ -->
+<h2 id="glove">16. GloVe Word Vectors</h2>
+
+<p>GloVe (Global Vectors for Word Representation) is another popular embedding-learning method, developed by Pennington, Socher, and Manning at Stanford. It is simpler in some ways than Word2Vec and leverages <em>global co-occurrence statistics</em> of the corpus.</p>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 Definition — GloVe</span>
+  <p>GloVe learns word vectors by factorizing a word-context co-occurrence matrix \(X\), where \(X_{ij}\) counts how often word \(j\) appears in the context of word \(i\). The learned vectors are optimized so that their dot product predicts \(\log X_{ij}\).</p>
+</div>
+
+<h3>16.1 The Co-Occurrence Count \(X_{ij}\)</h3>
+
+<div class="eq">
+$$X_{ij} = \#\{\text{times word } i \text{ appears in context of word } j\}$$
+</div>
+
+<p>The context is usually defined as a window of a few words around \(j\).</p>
+
+<p>GloVe is <em>symmetric</em> in an important sense:</p>
+
+<div class="eq">
+$$X_{ij} = X_{ji}$$
+</div>
+
+<p>(If you use a symmetric context window — e.g., 10 words on either side.) This symmetry is what makes the resulting vectors commute nicely under swap.</p>
+
+<h3>16.2 The GloVe Objective</h3>
+
+<p>The training objective is to minimize:</p>
+
+<div class="eq">
+$$\min \sum_{i=1}^{|V|} \sum_{j=1}^{|V|} f(X_{ij}) \left( \theta_i^T \mathbf{e}_j + b_i + b_j' - \log X_{ij} \right)^2$$
+</div>
+
+<p>where:</p>
+<ul>
+  <li>\(\theta_i\) = output vector for word \(i\).</li>
+  <li>\(\mathbf{e}_j\) = input embedding for word \(j\).</li>
+  <li>\(b_i, b_j'\) = bias terms for \(i\) and \(j\).</li>
+  <li>\(X_{ij}\) = co-occurrence count between \(i\) and \(j\).</li>
+  <li>\(f(X_{ij})\) = a weighting function that down-weights very frequent pairs and <em>zeros out</em> pairs that never co-occur: \(f(0) = 0\).</li>
+</ul>
+
+<div class="callout important">
+  <span class="callout-title">🟡 Important — Why the Weighting Function \(f\)?</span>
+  <ul>
+    <li>When \(X_{ij} = 0\), the log is undefined. Setting \(f(0) = 0\) removes those terms.</li>
+    <li>Very frequent pairs (e.g., "the of") would otherwise dominate. Weighting function \(f\) clamps their contribution.</li>
+    <li>The exact form used in the paper is \(f(x) = \min(1, (x/x_{\max})^{0.75})\) with \(x_{\max} = 100\).</li>
+  </ul>
+</div>
+
+<h3>16.3 The Final Word Vector</h3>
+
+<p>Because GloVe is symmetric in \(i\) and \(j\), the two vectors \(\theta_i\) and \(\mathbf{e}_i\) are essentially interchangeable. In practice, the final embedding for word \(w\) is the average:</p>
+
+<div class="eq">
+$$\mathbf{e}_w^{\text{(final)}} = \frac{\mathbf{e}_w + \theta_w}{2}$$
+</div>
+
+<h3>16.4 What Makes GloVe Distinct</h3>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Aspect</th><th>Word2Vec (Skip-Gram)</th><th>GloVe</th></tr></thead>
+  <tbody>
+    <tr><td>Approach</td><td>Iterates over contexts; predicts targets</td><td>Factorizes a global co-occurrence matrix</td></tr>
+    <tr><td>Uses global statistics</td><td>Implicitly, via many passes</td><td>Explicitly, via \(X_{ij}\)</td></tr>
+    <tr><td>Speed</td><td>Fast with negative sampling</td><td>Fast because it does fewer passes over the corpus</td></tr>
+    <tr><td>Quality</td><td>Excellent</td><td>Comparable / sometimes better on analogy tasks</td></tr>
+    <tr><td>Key idea</td><td>Predict local context</td><td>Regress \(\log X_{ij}\) from vector dot products</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout insight">
+  <span class="callout-title">💡 Insight — All Methods Are "The Same Family"</span>
+  <p>Word2Vec, GloVe, and others ultimately all learn embeddings by solving some optimization problem whose solution pushes \(\mathbf{e}_i \cdot \mathbf{e}_j\) to be large when words \(i\) and \(j\) co-occur frequently. The differences are mostly in <em>how</em> the objective is formulated and how efficiently it can be optimized.</p>
+</div>
+
+<!-- ============================================================
+     17. SENTIMENT CLASSIFICATION
+     ============================================================ -->
+<h2 id="sentiment">17. Sentiment Classification</h2>
+
+<p>Sentiment classification is the task of deciding whether a piece of text expresses a positive or negative opinion. It's one of the most common NLP applications and a great way to see embeddings in action.</p>
+
+<div class="callout example">
+  <span class="callout-title">🟣 Example — Restaurant Reviews</span>
+  <ul>
+    <li>"The dessert is excellent." → ★★★★</li>
+    <li>"Service was quite slow." → ★★</li>
+    <li>"Good for a quick meal, but nothing special." → ★★★</li>
+    <li>"Completely lacking in good taste, good service, and good ambience." → ★</li>
+  </ul>
+</div>
+
+<div class="callout important">
+  <span class="callout-title">🟡 Important — Why This Is Hard</span>
+  <p>The training set may be small (~100,000 words). Without pretrained embeddings, the model would need to learn word meanings from scratch — impossible with so little data. With embeddings, semantic knowledge transfers from the pretraining corpus.</p>
+</div>
+
+<h3>17.1 A Simple Averaging Model</h3>
+
+<p>The simplest sentiment classifier:</p>
+<ol>
+  <li>Convert each word in the review to its embedding \(\mathbf{e}_w\).</li>
+  <li>Average all embeddings into a single vector.</li>
+  <li>Feed the average into a softmax that outputs a star rating (1–5).</li>
+</ol>
+
+<div class="diagram">
+<svg viewBox="0 0 780 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Simple average-embedding sentiment classifier">
+  <g font-size="13" fill="#1f2937">
+    <text x="40" y="40">The</text><text x="40" y="58" font-size="11" fill="#4b5563">8928</text>
+    <text x="40" y="95">dessert</text><text x="40" y="113" font-size="11" fill="#4b5563">2468</text>
+    <text x="40" y="150">is</text><text x="40" y="168" font-size="11" fill="#4b5563">4694</text>
+    <text x="40" y="205">excellent</text><text x="40" y="223" font-size="11" fill="#4b5563">3180</text>
+  </g>
+
+  <g stroke="#94a3b8" stroke-width="1.5" fill="none">
+    <path d="M110 40 L165 40"/>
+    <path d="M110 100 L165 100"/>
+    <path d="M110 155 L165 155"/>
+    <path d="M110 210 L165 210"/>
+  </g>
+
+  <rect x="170" y="20" width="30" height="210" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="4"/>
+  <text x="185" y="14" font-size="13" text-anchor="middle" fill="#0f172a" font-weight="700">E</text>
+
+  <g stroke="#94a3b8" stroke-width="1.5" fill="none">
+    <path d="M205 40 L260 40"/>
+    <path d="M205 100 L260 100"/>
+    <path d="M205 155 L260 155"/>
+    <path d="M205 210 L260 210"/>
+  </g>
+
+  <g font-size="12">
+    <rect x="265" y="25" width="35" height="30" fill="#dcfce7" stroke="#16a34a"/><text x="282" y="45" text-anchor="middle">e₈₉₂₈</text>
+    <rect x="265" y="85" width="35" height="30" fill="#dcfce7" stroke="#16a34a"/><text x="282" y="105" text-anchor="middle">e₂₄₆₈</text>
+    <rect x="265" y="140" width="35" height="30" fill="#dcfce7" stroke="#16a34a"/><text x="282" y="160" text-anchor="middle">e₄₆₉₄</text>
+    <rect x="265" y="195" width="35" height="30" fill="#dcfce7" stroke="#16a34a"/><text x="282" y="215" text-anchor="middle">e₃₁₈₀</text>
+  </g>
+
+  <g stroke="#94a3b8" stroke-width="1.5" fill="none">
+    <path d="M305 40 L380 120"/>
+    <path d="M305 100 L380 125"/>
+    <path d="M305 155 L380 130"/>
+    <path d="M305 210 L380 135"/>
+  </g>
+
+  <rect x="385" y="105" width="90" height="50" fill="#fef3c7" stroke="#d97706" stroke-width="2" rx="6"/>
+  <text x="430" y="135" font-size="13" text-anchor="middle" font-weight="700" fill="#0f172a">Average</text>
+
+  <path d="M480 130 L545 130" stroke="#94a3b8" stroke-width="1.5" fill="none"/>
+
+  <rect x="550" y="100" width="100" height="60" fill="#fee2e2" stroke="#dc2626" stroke-width="2" rx="6"/>
+  <text x="600" y="125" font-size="13" text-anchor="middle" font-weight="700" fill="#0f172a">Softmax</text>
+  <text x="600" y="145" font-size="11" text-anchor="middle" fill="#4b5563">1 – 5</text>
+
+  <path d="M655 130 L720 130" stroke="#94a3b8" stroke-width="1.5" fill="none"/>
+  <text x="735" y="135" font-size="14" fill="#1f2937" font-weight="700">ŷ</text>
+</svg>
+<p class="diagram-caption"><strong>Figure 8.</strong> A simple sentiment classifier averages the embeddings of all words in the review and feeds the result into a softmax. It's fast and uses embedding knowledge, but ignores word order.</p>
+</div>
+
+<h3>17.2 The Problem with Averaging</h3>
+
+<div class="callout warning">
+  <span class="callout-title">🔴 Warning — Averaging Ignores Word Order</span>
+  <p>Consider: "Completely lacking in <strong>good</strong> taste, <strong>good</strong> service, and <strong>good</strong> ambience."</p>
+  <p>Because "good" appears three times, the average embedding is heavily "good" → the classifier may wrongly label this review as <em>positive</em>, even though "lacking in good" is obviously negative.</p>
+  <p>Averaging cannot represent negation or word order. To fix this, we need a sequence model — an RNN.</p>
+</div>
+
+<!-- ============================================================
+     18. RNN FOR SENTIMENT
+     ============================================================ -->
+<h2 id="rnn-sentiment">18. RNN for Sentiment Classification</h2>
+
+<p>Instead of averaging, we feed the word embeddings into a Recurrent Neural Network (RNN). The RNN reads the words one by one and builds up a representation that respects order.</p>
+
+<div class="diagram">
+<svg viewBox="0 0 860 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Many-to-one RNN for sentiment classification">
+  <!-- Left arrow a<0> -->
+  <text x="20" y="130" font-size="14" fill="#0f172a" font-weight="700">a⟨0⟩</text>
+  <path d="M55 125 L90 125" stroke="#94a3b8" stroke-width="1.5" fill="none"/>
+
+  <!-- RNN cells -->
+  <g>
+    <rect x="95" y="100" width="70" height="50" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <text x="130" y="130" font-size="14" text-anchor="middle" font-weight="700" fill="#0f172a">a⟨1⟩</text>
+
+    <rect x="195" y="100" width="70" height="50" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <text x="230" y="130" font-size="14" text-anchor="middle" font-weight="700" fill="#0f172a">a⟨2⟩</text>
+
+    <rect x="295" y="100" width="70" height="50" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <text x="330" y="130" font-size="14" text-anchor="middle" font-weight="700" fill="#0f172a">a⟨3⟩</text>
+
+    <rect x="395" y="100" width="70" height="50" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <text x="430" y="130" font-size="14" text-anchor="middle" font-weight="700" fill="#0f172a">a⟨4⟩</text>
+
+    <text x="490" y="130" font-size="16" fill="#0f172a">…</text>
+
+    <rect x="520" y="100" width="80" height="50" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+    <text x="560" y="130" font-size="14" text-anchor="middle" font-weight="700" fill="#0f172a">a⟨10⟩</text>
+  </g>
+
+  <!-- Arrows between cells -->
+  <g stroke="#94a3b8" stroke-width="1.5" fill="none">
+    <path d="M165 125 L195 125"/>
+    <path d="M265 125 L295 125"/>
+    <path d="M365 125 L395 125"/>
+    <path d="M465 125 L515 125"/>
+    <path d="M600 125 L635 125"/>
+  </g>
+
+  <!-- Bottom: words -->
+  <g font-size="12" fill="#1f2937" text-anchor="middle">
+    <text x="130" y="240">Completely</text>
+    <text x="230" y="240">lacking</text>
+    <text x="330" y="240">in</text>
+    <text x="430" y="240">good</text>
+    <text x="560" y="240">ambience</text>
+  </g>
+
+  <g stroke="#94a3b8" stroke-width="1.5" fill="none">
+    <path d="M130 210 L130 150"/>
+    <path d="M230 210 L230 150"/>
+    <path d="M330 210 L330 150"/>
+    <path d="M430 210 L430 150"/>
+    <path d="M560 210 L560 150"/>
+  </g>
+
+  <!-- Embedding labels -->
+  <g font-size="11" fill="#16a34a" text-anchor="middle">
+    <text x="130" y="180">e₁₈₅₂</text>
+    <text x="230" y="180">e₄₉₆₆</text>
+    <text x="330" y="180">e₄₄₂₇</text>
+    <text x="430" y="180">e₃₈₈₂</text>
+    <text x="560" y="180">e₃₃₀</text>
+  </g>
+
+  <!-- Output -->
+  <path d="M560 100 L560 60" stroke="#94a3b8" stroke-width="1.5" fill="none"/>
+  <rect x="520" y="25" width="80" height="35" fill="#fee2e2" stroke="#dc2626" stroke-width="2" rx="4"/>
+  <text x="560" y="48" font-size="13" text-anchor="middle" fill="#0f172a" font-weight="700">softmax</text>
+
+  <path d="M560 25 L560 5" stroke="#94a3b8" stroke-width="1.5" fill="none"/>
+  <text x="560" y="-5" font-size="16" text-anchor="middle" font-weight="700" fill="#0f172a">ŷ</text>
+
+  <text x="750" y="130" font-size="13" fill="#4b5563" font-style="italic">many-to-one RNN</text>
+</svg>
+<p class="diagram-caption"><strong>Figure 9.</strong> Many-to-one RNN for sentiment classification. Each word's embedding \(e\) is fed into an RNN cell. The hidden state \(a^{\langle t\rangle}\) is passed along, capturing the meaning of the sequence so far. The final hidden state \(a^{\langle 10\rangle}\) is fed through a softmax to produce the sentiment probability \(\hat{y}\).</p>
+</div>
+
+<h3>18.1 Why the RNN Works Better</h3>
+
+<ul>
+  <li>It <strong>processes words in order</strong>, so "lacking in good" is not equivalent to "good."</li>
+  <li>The hidden state \(a^{\langle t\rangle}\) acts as a <em>summary of everything seen so far</em>.</li>
+  <li>If pretrained embeddings are used, the RNN only needs to learn the sentiment task on top of them — much less data required.</li>
+</ul>
+
+<div class="callout insight">
+  <span class="callout-title">💡 Insight — Course 5 Preview</span>
+  <p>The next weeks of Course 5 (Weeks 3–4) will develop RNNs, GRUs, LSTMs, and attention in much more detail. Here, the point is that embeddings + sequence models together form the backbone of modern NLP.</p>
+</div>
+
+<!-- ============================================================
+     19. BIAS
+     ============================================================ -->
+<h2 id="bias">19. The Problem of Bias in Word Embeddings</h2>
+
+<p>Embeddings are learned from real-world text, which contains real-world stereotypes. As a result, embeddings often <em>reproduce and amplify</em> those stereotypes.</p>
+
+<div class="callout warning">
+  <span class="callout-title">🔴 Warning — Embeddings Reflect Human Bias</span>
+  <p>The lecture gives these examples:</p>
+  <ul>
+    <li>Man : Woman &nbsp;::&nbsp; Computer Programmer : Homemaker</li>
+    <li>Father : Doctor &nbsp;::&nbsp; Mother : Nurse</li>
+  </ul>
+  <p>These analogies are true in the embedding space because they are true (statistically) in the training corpus. The model isn't inventing bias — it is <em>learning</em> it from human text.</p>
+</div>
+
+<div class="callout important">
+  <span class="callout-title">🟡 Important — Types of Bias</span>
+  <p>Embeddings can reflect bias along many axes: <strong>gender</strong>, <strong>ethnicity</strong>, <strong>age</strong>, <strong>sexual orientation</strong>, <strong>religion</strong>, <strong>nationality</strong>, and more. Removing bias is an active research area — the methods below are a starting point, not a complete solution.</p>
+</div>
+
+<!-- ============================================================
+     20. DEBIASING
+     ============================================================ -->
+<h2 id="debiasing">20. Debiasing Word Embeddings</h2>
+
+<p>There are three main steps to reduce (not eliminate) gender bias in an embedding space. The lecture is careful to note that "eliminate" is too strong a word — bias is often entangled with legitimate meaning.</p>
+
+<h3>Step 1 — Identify the Bias Direction</h3>
+
+<p>We compute the difference between pairs of gendered words and average them to get a single <em>bias direction</em> in the embedding space:</p>
+
+<div class="eq">
+$$\text{bias direction} \approx \text{mean}\!\left( \mathbf{e}_{\text{he}} - \mathbf{e}_{\text{she}},\ \mathbf{e}_{\text{male}} - \mathbf{e}_{\text{female}},\ \dots \right)$$
+</div>
+
+<p>Concretely, you take many gender-defining pairs (he/she, male/female, boy/girl, …), compute each difference vector, and average them. The result is a single direction \(g \in \mathbb{R}^{300}\).</p>
+
+<div class="callout important">
+  <span class="callout-title">🟡 Important — Why "Non-Bias Direction" Is 299D</span>
+  <p>If the embedding space has 300 dimensions and the bias direction is one direction in that space, then the subspace orthogonal to it has 299 dimensions. The lecture calls this the "non-bias direction (299D)". Neutralizing a word means <em>projecting it onto that 299-dimensional subspace</em>, effectively removing its component along the bias direction.</p>
+</div>
+
+<h3>Step 2 — Neutralize Non-Definitional Words</h3>
+
+<p>Many words have no inherent gender — "doctor," "babysitter," "engineer," "teacher." We project each such word's embedding onto the non-bias direction, so its component along the bias axis is removed.</p>
+
+<div class="diagram">
+<svg viewBox="0 0 640 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Projection onto non-bias direction for debiasing">
+  <!-- Axes -->
+  <line x1="320" y1="300" x2="320" y2="30" stroke="#94a3b8" stroke-width="1.5"/>
+  <line x1="80" y1="180" x2="580" y2="180" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="330" y="25" font-size="13" fill="#dc2626" font-weight="700">bias direction</text>
+  <text x="555" y="170" font-size="13" fill="#2563eb" font-weight="700">non-bias (299D)</text>
+
+  <!-- Example word vectors as points -->
+  <circle cx="140" cy="90" r="6" fill="#7c3aed"/>
+  <text x="100" y="80" font-size="12" fill="#1f2937">babysitter</text>
+
+  <circle cx="500" cy="85" r="6" fill="#7c3aed"/>
+  <text x="510" y="80" font-size="12" fill="#1f2937">doctor</text>
+
+  <circle cx="200" cy="240" r="6" fill="#db2777"/>
+  <text x="130" y="262" font-size="12" fill="#1f2937">grandmother</text>
+
+  <circle cx="440" cy="240" r="6" fill="#db2777"/>
+  <text x="450" y="262" font-size="12" fill="#1f2937">grandfather</text>
+
+  <circle cx="180" cy="300" r="6" fill="#ea580c"/>
+  <text x="120" y="320" font-size="12" fill="#1f2937">girl</text>
+
+  <circle cx="460" cy="300" r="6" fill="#ea580c"/>
+  <text x="470" y="320" font-size="12" fill="#1f2937">boy</text>
+
+  <!-- Dotted projection lines for babysitter -->
+  <line x1="140" y1="90" x2="140" y2="180" stroke="#dc2626" stroke-dasharray="3 3" stroke-width="1.5"/>
+  <circle cx="140" cy="180" r="5" fill="#16a34a"/>
+  <text x="90" y="175" font-size="11" fill="#16a34a" font-weight="700">neutralized</text>
+
+  <!-- Dotted projection for doctor -->
+  <line x1="500" y1="85" x2="500" y2="180" stroke="#dc2626" stroke-dasharray="3 3" stroke-width="1.5"/>
+  <circle cx="500" cy="180" r="5" fill="#16a34a"/>
+</svg>
+<p class="diagram-caption"><strong>Figure 10.</strong> Neutralization projects each non-definitional word onto the 299-dimensional subspace orthogonal to the bias direction. The word loses its component along the gender axis but retains all other meaning. Words like "grandmother" and "grandfather" are not neutralized — they are genuinely gendered.</p>
+</div>
+
+<h3>Step 3 — Equalize Pairs</h3>
+
+<p>Some word pairs <em>should</em> differ only along the gender axis — e.g., "grandmother"/"grandfather," "girl"/"boy." After neutralization, we still want these pairs to be symmetric around the bias axis so that neither side is favored.</p>
+
+<div class="callout example">
+  <span class="callout-title">🟣 Example — Equalizing Grandmother &amp; Grandfather</span>
+  <p>Compute the axis perpendicular to the bias direction, and make the two words equally distant from the bias axis:</p>
+  <ul>
+    <li>Before equalization: "grandmother" might be slightly closer to "babysitter" than "grandfather" is to "babysitter."</li>
+    <li>After equalization: grandmother and grandfather are symmetric with respect to the bias axis, so neither is closer to gender-stereotyped words.</li>
+  </ul>
+</div>
+
+<div class="callout warning">
+  <span class="callout-title">🔴 Warning — Debiasing Is Not Perfect</span>
+  <ul>
+    <li>It only removes <em>linear</em> bias directions. Non-linear bias can remain.</li>
+    <li>Bias often co-occurs with legitimate meaning (e.g., "mother" really is gendered). Aggressive neutralization can erase meaningful distinctions.</li>
+    <li>Bias can be reintroduced by downstream fine-tuning.</li>
+  </ul>
+  <p>Debiasing is an important tool, but treating it as a complete solution would be a mistake.</p>
+</div>
+
+<div class="callout insight">
+  <span class="callout-title">💡 Insight — Why This Matters</span>
+  <p>If an embedding is used in a hiring tool, a loan-approval system, or a translation product, the bias in the embedding can translate into unfair outcomes for real people. Debiasing embeddings is one of the earliest places where responsible AI becomes concrete.</p>
+</div>
+
+<!-- ============================================================
+     21. WEEKLY SUMMARY
+     ============================================================ -->
+<h2 id="summary">21. Weekly Summary</h2>
+
+<p>This week built a complete pipeline: from raw words → one-hot vectors → word embeddings → applications → ethical considerations.</p>
+
+<ul>
+  <li><strong>One-hot vectors</strong> are simple but useless for capturing meaning — every word is orthogonal to every other.</li>
+  <li><strong>Word embeddings</strong> map each word to a dense vector where similar words have similar vectors.</li>
+  <li>Embeddings are usually learned from a large unlabeled corpus, then <strong>transferred</strong> to a downstream task with little labeled data.</li>
+  <li>Embeddings exhibit remarkable properties: <strong>analogies</strong> (king − man + woman ≈ queen), <strong>clustering</strong> of similar words, and <strong>cosine similarity</strong> that behaves sensibly.</li>
+  <li>We store all embeddings in an <strong>embedding matrix</strong> \(E \in \mathbb{R}^{d_e \times |V|}\) and look up the \(j\)-th column via \(E \cdot O_j\).</li>
+  <li><strong>Learning methods</strong>: neural language model (Bengio et al.), <strong>Word2Vec skip-gram</strong> with negative sampling, and <strong>GloVe</strong> which factorizes co-occurrence counts.</li>
+  <li>For sentiment classification, a <strong>simple averaging</strong> model works but ignores word order; an <strong>RNN</strong> fixes this.</li>
+  <li>Embeddings carry <strong>bias</strong> from their training corpus. Debiasing involves (1) identifying the bias direction, (2) neutralizing non-definitional words, (3) equalizing genuinely gendered pairs.</li>
+</ul>
+
+<!-- ============================================================
+     22. MUST-KNOW CONCEPTS
+     ============================================================ -->
+<h2 id="mustknow">22. Must-Know Concepts</h2>
+
+<div class="callout important">
+  <span class="callout-title">🟡 If You Remember Only Ten Things From This Week…</span>
+  <ol>
+    <li>The difference between one-hot and embedding representations.</li>
+    <li>Why embeddings enable transfer learning.</li>
+    <li>The embedding matrix \(E\) and the lookup \(E \cdot O_j = \mathbf{e}_j\).</li>
+    <li>How skip-gram predicts target from context and why the softmax is expensive.</li>
+    <li>How negative sampling turns 1 softmax into \(k+1\) binary classifications.</li>
+    <li>The GloVe objective and why the weighting \(f(X_{ij})\) matters.</li>
+    <li>Cosine similarity and its role in analogy solving.</li>
+    <li>Why averaging embeddings fails for sentiment (word order).</li>
+    <li>Why RNNs handle sentiment better than averaging.</li>
+    <li>The three-step debiasing pipeline.</li>
+  </ol>
+</div>
+
+<!-- ============================================================
+     23. EQUATIONS
+     ============================================================ -->
+<h2 id="equations">23. Important Equations (Reference)</h2>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 1. Embedding Lookup</span>
+  <div class="eq">$$E \cdot O_j = \mathbf{e}_j$$</div>
+  <p>\(E\) is the embedding matrix of shape \(d_e \times |V|\), \(O_j\) is the one-hot vector for word \(j\), and \(\mathbf{e}_j\) is the resulting \(d_e\)-dimensional embedding.</p>
+</div>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 2. Cosine Similarity</span>
+  <div class="eq">$$\text{sim}(u, v) = \frac{u \cdot v}{\|u\| \, \|v\|}$$</div>
+  <p>Measures the angle between two vectors. Range \([-1, 1]\).</p>
+</div>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 3. Analogy Solution</span>
+  <div class="eq">$$\arg\max_w \ \text{sim}\!\left(\mathbf{e}_w,\ \mathbf{e}_{\text{king}} - \mathbf{e}_{\text{man}} + \mathbf{e}_{\text{woman}}\right)$$</div>
+  <p>Finds the word whose embedding best matches the "gender-shifted king" direction.</p>
+</div>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 4. Skip-Gram Softmax</span>
+  <div class="eq">$$p(t \mid c) = \frac{\exp(\theta_t^T \mathbf{e}_c)}{\sum_{j=1}^{|V|} \exp(\theta_j^T \mathbf{e}_c)}$$</div>
+  <p>Probability of target \(t\) given context \(c\). \(\theta_t\) = output parameter for word \(t\); \(\mathbf{e}_c\) = embedding of context \(c\).</p>
+</div>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 5. Cross-Entropy Loss (Language Model)</span>
+  <div class="eq">$$\mathcal{L}(\hat{y}, y) = -\sum_{i=1}^{|V|} y_i \log \hat{y}_i$$</div>
+  <p>\(y\) = one-hot true label; \(\hat{y}\) = predicted probability distribution.</p>
+</div>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 6. Negative Sampling Probability</span>
+  <div class="eq">$$P(y=1 \mid c, t) = \sigma\!\left(\theta_t^T \mathbf{e}_c\right), \quad \sigma(z) = \frac{1}{1+e^{-z}}$$</div>
+  <p>Binary classifier for a (context, word) pair. Trained with binary cross-entropy.</p>
+</div>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 7. Negative Sampling Distribution</span>
+  <div class="eq">$$P(w_i) = \frac{f(w_i)^{3/4}}{\sum_{j=1}^{|V|} f(w_j)^{3/4}}$$</div>
+  <p>Distribution for drawing negative examples. The \(3/4\) power dampens the dominance of very frequent words.</p>
+</div>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 8. GloVe Objective</span>
+  <div class="eq">$$\min \sum_{i,j=1}^{|V|} f(X_{ij}) \left( \theta_i^T \mathbf{e}_j + b_i + b_j' - \log X_{ij} \right)^2$$</div>
+  <p>Regresses the log co-occurrence \(\log X_{ij}\) from the dot product of two word vectors plus biases.</p>
+</div>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 9. GloVe Final Embedding</span>
+  <div class="eq">$$\mathbf{e}_w^{\text{(final)}} = \frac{\mathbf{e}_w + \theta_w}{2}$$</div>
+  <p>Averages the two symmetric representations to get the final word vector.</p>
+</div>
+
+<div class="callout definition">
+  <span class="callout-title">🔵 10. Bias Direction</span>
+  <div class="eq">$$\text{bias} = \text{mean}\!\left( \mathbf{e}_{\text{he}} - \mathbf{e}_{\text{she}},\ \mathbf{e}_{\text{male}} - \mathbf{e}_{\text{female}},\ \dots \right)$$</div>
+  <p>Average of many gender-pair difference vectors gives the direction of gender bias in the embedding space.</p>
+</div>
+
+<!-- ============================================================
+     24. COMMON CONFUSIONS
+     ============================================================ -->
+<h2 id="confusions">24. Common Confusions</h2>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>Concept A</th><th>Concept B</th><th>Key difference</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>One-hot representation</td>
+      <td>Word embedding</td>
+      <td>One-hot: sparse, \(|V|\)-dim, no similarity. Embedding: dense, \(d_e\)-dim, similarity is meaningful.</td>
+    </tr>
+    <tr>
+      <td>Input embedding \(\mathbf{e}_w\)</td>
+      <td>Output parameter \(\theta_w\)</td>
+      <td>Both are vectors for the same word, but one is used as input and the other as output in skip-gram. GloVe averages them at the end.</td>
+    </tr>
+    <tr>
+      <td>Word2Vec (skip-gram)</td>
+      <td>GloVe</td>
+      <td>Word2Vec: predicts context/target pairs (local). GloVe: factorizes global co-occurrence counts \(X_{ij}\).</td>
+    </tr>
+    <tr>
+      <td>Hierarchical softmax</td>
+      <td>Negative sampling</td>
+      <td>Both speed up training. Hierarchical: \(O(\log |V|)\) via a tree. Negative sampling: turns 1 softmax into \(k+1\) binary problems.</td>
+    </tr>
+    <tr>
+      <td>Cosine similarity</td>
+      <td>Euclidean distance</td>
+      <td>Cosine: only direction matters, invariant to magnitude. Euclidean: sensitive to magnitude.</td>
+    </tr>
+    <tr>
+      <td>Simple averaging classifier</td>
+      <td>RNN classifier</td>
+      <td>Averaging ignores word order; RNN preserves order via hidden state.</td>
+    </tr>
+    <tr>
+      <td>Neutralization</td>
+      <td>Equalization</td>
+      <td>Neutralization removes bias component from non-gendered words. Equalization makes gendered pairs symmetric about the bias axis.</td>
+    </tr>
+    <tr>
+      <td>\(X_{ij}\)</td>
+      <td>\(f(X_{ij})\)</td>
+      <td>\(X_{ij}\) is the raw co-occurrence count. \(f\) is a weighting function applied to \(X_{ij}\), with \(f(0) = 0\).</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ============================================================
+     25. QUICK REVIEW
+     ============================================================ -->
+<h2 id="review">25. Quick Review (Q&amp;A)</h2>
+
+<p class="small-note">Click each question to reveal its answer.</p>
+
+<details>
+  <summary>Q1. Why is one-hot representation bad for NLP?</summary>
+  <div class="answer"><p>Because it treats every word as completely unrelated to every other word — the inner product of any two different one-hot vectors is 0. There is no notion of similarity, so a model cannot generalize what it learns about "orange" to "apple."</p></div>
+</details>
+
+<details>
+  <summary>Q2. What is a word embedding, in one sentence?</summary>
+  <div class="answer"><p>A dense, low-dimensional vector representation of a word such that words with similar meanings end up with similar vectors.</p></div>
+</details>
+
+<details>
+  <summary>Q3. What is the shape of the embedding matrix \(E\)?</summary>
+  <div class="answer"><p>\(d_e \times |V|\) where \(d_e\) is the embedding dimension (e.g., 300) and \(|V|\) is the vocabulary size (e.g., 10,000). Each column is one word's embedding.</p></div>
+</details>
+
+<details>
+  <summary>Q4. What does \(E \cdot O_j\) compute?</summary>
+  <div class="answer"><p>It selects the \(j\)-th column of \(E\) — i.e., the embedding for word \(j\). Multiplying by a one-hot vector is equivalent to a lookup.</p></div>
+</details>
+
+<details>
+  <summary>Q5. Why do we use an embedding lookup instead of matrix multiply in practice?</summary>
+  <div class="answer"><p>Because \(E \cdot O_j\) wastes computation — it multiplies by thousands of zeros. A direct lookup of column \(j\) is far faster and produces the same result.</p></div>
+</details>
+
+<details>
+  <summary>Q6. What is the skip-gram model trying to predict?</summary>
+  <div class="answer"><p>Given a context word \(c\) ("orange"), predict each nearby target word \(t\) ("juice", "glass", "my", …) that occurs within a window around \(c\).</p></div>
+</details>
+
+<details>
+  <summary>Q7. Why is softmax over the full vocabulary expensive in skip-gram?</summary>
+  <div class="answer"><p>The denominator \(\sum_{j=1}^{|V|} \exp(\theta_j^T \mathbf{e}_c)\) sums over the entire vocabulary for every training example. For \(|V| = 10^6\), that's millions of operations per step.</p></div>
+</details>
+
+<details>
+  <summary>Q8. How does hierarchical softmax reduce this cost?</summary>
+  <div class="answer"><p>It organizes the vocabulary as a binary tree. Each word corresponds to a path from root to leaf, and the model makes \(\log_2 |V|\) binary decisions instead of computing \(|V|\) probabilities.</p></div>
+</details>
+
+<details>
+  <summary>Q9. What problem does negative sampling solve, and how?</summary>
+  <div class="answer"><p>It replaces the expensive \(|V|\)-way softmax with \(k+1\) binary classification problems: 1 positive (real context-target pair) and \(k\) negative (randomly drawn) pairs. Each is a simple sigmoid on a dot product. This is ~1000× faster when \(k \ll |V|\).</p></div>
+</details>
+
+<details>
+  <summary>Q10. What is the difference between \(P(w_i) = 1/|V|\) and \(P(w_i) \propto f(w_i)^{3/4}\) for negative sampling?</summary>
+  <div class="answer"><p>Uniform sampling (\(1/|V|\)) over-samples rare words. Raw frequency over-samples common words like "the". The \(3/4\) power is a middle ground — it dampens the dominance of frequent words while still giving them more weight than rare words.</p></div>
+</details>
+
+<details>
+  <summary>Q11. What is the GloVe objective minimizing?</summary>
+  <div class="answer"><p>\(\sum_{i,j} f(X_{ij}) \left( \theta_i^T \mathbf{e}_j + b_i + b_j' - \log X_{ij} \right)^2\) — it tries to make the dot product of two word vectors (plus biases) predict the log of their co-occurrence count.</p></div>
+</details>
+
+<details>
+  <summary>Q12. Why does the GloVe weighting function \(f\) have \(f(0) = 0\)?</summary>
+  <div class="answer"><p>Because if \(X_{ij} = 0\), \(\log X_{ij}\) is undefined. Setting \(f(0) = 0\) removes those terms from the loss, avoiding the problem and also preventing the objective from being dominated by the enormous number of non-co-occurring pairs.</p></div>
+</details>
+
+<details>
+  <summary>Q13. Why is cosine similarity preferred over Euclidean distance for embeddings?</summary>
+  <div class="answer"><p>Because cosine ignores magnitude and depends only on direction. Two words that are semantically similar but differ in "intensity" still get a high cosine similarity. Cosine is also naturally bounded in \([-1, 1]\), making it easy to interpret.</p></div>
+</details>
+
+<details>
+  <summary>Q14. How would you solve "Man : Woman :: King : ?" using embeddings?</summary>
+  <div class="answer"><p>Compute \(\mathbf{v} = \mathbf{e}_{\text{king}} - \mathbf{e}_{\text{man}} + \mathbf{e}_{\text{woman}}\) and find the word \(w\) that maximizes \(\text{sim}(\mathbf{e}_w, \mathbf{v})\). Answer: "queen".</p></div>
+</details>
+
+<details>
+  <summary>Q15. Why is a simple averaging classifier bad for sentiment classification?</summary>
+  <div class="answer"><p>It ignores word order. "Good for a quick meal, but nothing special" and "nothing good, special for a quick meal" have identical averages, even though they could have different sentiments. Also, "lacking in good" gets a strong positive contribution from "good" alone.</p></div>
+</details>
+
+<details>
+  <summary>Q16. How does an RNN fix the averaging problem?</summary>
+  <div class="answer"><p>It processes words sequentially and maintains a hidden state that captures the order. So "lacking in good" is processed differently from "good, lacking in." Negation and word order can be modeled.</p></div>
+</details>
+
+<details>
+  <summary>Q17. What are the three steps to debias word embeddings?</summary>
+  <div class="answer"><p>(1) Identify the bias direction by averaging gender-pair difference vectors. (2) Neutralize non-definitional words by projecting them onto the 299-D subspace orthogonal to the bias direction. (3) Equalize genuinely gendered pairs (grandmother/grandfather) so neither is closer to gender-stereotyped words.</p></div>
+</details>
+
+<details>
+  <summary>Q18. Why can't debiasing fully remove bias?</summary>
+  <div class="answer"><p>It only removes <em>linear</em> bias directions; non-linear bias can remain. Bias is often entangled with legitimate meaning (mother is gendered by definition), and downstream fine-tuning can reintroduce bias. Debiasing is a mitigation, not a cure.</p></div>
+</details>
+
+<details>
+  <summary>Q19. What is the difference between the input embedding \(\mathbf{e}_w\) and the output parameter \(\theta_w\) in Word2Vec?</summary>
+  <div class="answer"><p>They are both \(d_e\)-dimensional vectors for the same word, but they are learned separately: \(\mathbf{e}_w\) is used when the word is the input (context), \(\theta_w\) is used when it is the output (target) in the softmax. In GloVe, both are learned and averaged to get the final embedding.</p></div>
+</details>
+
+<details>
+  <summary>Q20. What is the core reason word embeddings enable transfer learning?</summary>
+  <div class="answer"><p>Because embeddings encode general-purpose semantics learned from a huge unlabeled corpus. A downstream task with little labeled data can reuse these semantics directly, only learning the task-specific head on top — rather than learning word meaning from scratch.</p></div>
+</details>
+
+<!-- ============================================================
+     26. SELF TEST
+     ============================================================ -->
+<h2 id="selftest">26. Self-Test</h2>
+
+<p class="small-note">Conceptual questions from easy → hard. Click to reveal.</p>
+
+<h3>Easy</h3>
+
+<details>
+  <summary>ST1. In your own words, what is the difference between one-hot and embedding representations?</summary>
+  <div class="answer"><p>One-hot is a sparse vector of length \(|V|\) with a single 1 — it says nothing about similarity between words. An embedding is a dense vector of length \(d_e\) (much smaller than \(|V|\)) whose direction encodes meaning, so similar words get similar vectors.</p></div>
+</details>
+
+<details>
+  <summary>ST2. What is the vocabulary size in the course's running example, and what is the embedding dimension?</summary>
+  <div class="answer"><p>Vocabulary size is 10,000 (in the running example) and embedding dimension is 300. In some sections the embedding dimension is 300 and hidden layer 1,200, but the exact numbers vary.</p></div>
+</details>
+
+<details>
+  <summary>ST3. Give two examples of analogy tasks that embeddings can solve.</summary>
+  <div class="answer"><p>Any two from: Man:Woman :: Boy:Girl; Ottawa:Canada :: Nairobi:Kenya; Big:Bigger :: Tall:Taller; Yen:Japan :: Ruble:Russia; Man:Woman :: King:Queen.</p></div>
+</details>
+
+<h3>Medium</h3>
+
+<details>
+  <summary>ST4. Why does the course call embeddings a "side effect" of the language model training?</summary>
+  <div class="answer"><p>Because the training objective of the language model is to predict the next word, not to learn meaningful vectors. But the only flexible place to store word meaning is the embedding matrix, so learning to predict the next word forces the embeddings to become meaningful as a byproduct.</p></div>
+</details>
+
+<details>
+  <summary>ST5. Explain why the negative sampling objective is essentially \(10{,}000\) binary classification problems instead of one \(10{,}000\)-way classification problem.</summary>
+  <div class="answer"><p>Instead of asking "which of 10,000 words is most likely?", negative sampling asks "is this particular (context, word) pair real or fake?" — a yes/no question. Each training example creates 1 positive + \(k\) negative binary pairs, each solved by a sigmoid. The class of "all words" is decomposed into individual binary decisions.</p></div>
+</details>
+
+<details>
+  <summary>ST6. Suppose you have a small labeled dataset of 5,000 movie reviews. Should you freeze or fine-tune the pretrained embeddings? Justify.</summary>
+  <div class="answer"><p>With only 5,000 reviews, you should freeze the embeddings. The task-specific signal is weak, so fine-tuning would overfit and damage the general semantic knowledge. Fine-tuning is typically reserved for larger datasets (100,000+ examples).</p></div>
+</details>
+
+<details>
+  <summary>ST7. Why does the GloVe objective include two bias terms \(b_i\) and \(b_j'\) instead of just one?</summary>
+  <div class="answer"><p>Because GloVe treats \(i\) (the input word) and \(j\) (the context word) as having separate roles, so each gets its own bias. The symmetry between the two is handled later by averaging \(\mathbf{e}_w\) and \(\theta_w\) into a final embedding.</p></div>
+</details>
+
+<h3>Hard</h3>
+
+<details>
+  <summary>ST8. The lecture mentions that embeddings can encode bias. Explain a mechanism by which a model could <em>amplify</em> bias relative to the training corpus.</summary>
+  <div class="answer"><p>Because embedding training optimizes for statistical prediction — it maximizes the probability of co-occurring pairs. Even if a biased association appears only slightly more often in text (e.g., "programmer" is 60% male), the loss gradient will push the embeddings toward that pattern, and the resulting geometry (e.g., the direction of "male→female") can concentrate this bias into a single axis, making it <em>look</em> larger in the embedding space than it looks in raw statistics. Additionally, downstream models using these embeddings can inherit and apply the amplified signal.</p></div>
+</details>
+
+<details>
+  <summary>ST9. You want to solve analogies using cosine similarity. What could go wrong if you don't normalize embeddings first?</summary>
+  <div class="answer"><p>Cosine similarity already normalizes by \(\|u\| \|v\|\), so it is invariant to magnitude. So the question is really: what could go wrong if you used raw dot products instead of cosine? Raw dot products would be biased toward high-magnitude vectors — words with larger embeddings would tend to win arguments even if their direction is wrong. Normalizing (i.e., using cosine) removes this magnitude bias.</p></div>
+</details>
+
+<details>
+  <summary>ST10. You're told that the training corpus for a GloVe model contains 1 billion words and \(|V| = 500{,}000\). Estimate the memory footprint of the co-occurrence matrix \(X\), and explain why the weighting function \(f\) is essential.</summary>
+  <div class="answer"><p>\(X\) has shape \(|V| \times |V| = 500{,}000 \times 500{,}000 = 2.5 \times 10^{11}\) entries. If stored as 4-byte floats, that's ~1 terabyte. Most entries are zero (since any word pair only co-occurs sometimes). The weighting function \(f\) sets \(f(0) = 0\), so the vast majority of zero entries contribute nothing to the loss. Without \(f\), the loss would be undefined for \(X_{ij} = 0\) (log 0) and dominated by zeros. GloVe implementations exploit sparsity to store only nonzero \(X_{ij}\).</p></div>
+</details>
+
+<details>
+  <summary>ST11. Why might averaging the two GloVe vectors \(\mathbf{e}_w\) and \(\theta_w\) give a better final embedding than using just \(\mathbf{e}_w\)?</summary>
+  <div class="answer"><p>Because GloVe is symmetric: word \(i\) appears as input in some pairs and as context in others. \(\mathbf{e}_w\) captures the "input role" and \(\theta_w\) captures the "context role." Both contain the same underlying meaning, but each is noisier on its own. Averaging reduces the variance and yields a more stable, symmetric final representation.</p></div>
+</details>
+
+<details>
+  <summary>ST12. In the sentiment classification RNN, why does the lecture say it works even if the RNN does not use pretrained embeddings? And why do pretrained embeddings still help?</summary>
+  <div class="answer"><p>An RNN can in principle learn embeddings from scratch on the sentiment task because it can backpropagate through the embedding layer. But with only ~100k words of training data, learning word meanings from scratch is difficult. Pretrained embeddings provide a strong initialization — the RNN only needs to learn how sentiment relates to those already-meaningful vectors. This is the same transfer-learning argument as elsewhere in the week.</p></div>
+</details>
+
+<!-- ============================================================
+     NAVIGATION FOOTER
+     ============================================================ -->
+<div class="page-nav">
+  <a href="C5_W1.html" class="nav-btn">← Previous Week</a>
+  <a href="#toc" class="nav-btn">↑ Table of Contents</a>
+  <a href="C5_W3.html" class="nav-btn">Next Week →</a>
+</div>
+
+<p class="small-note" style="text-align:center; margin-top: 30px;">
+  Notes prepared from the DeepLearning.AI Deep Learning Specialization — Course 5, Week 2 ("NLP and Word Embeddings").<br>
+  All explanations, examples, and diagrams are expanded for beginner-friendly study and faithful to the original lecture material.
+</p>
+
+</div><!-- /.container -->
+
+<!-- BACK TO TOP -->
+<button id="backToTop" aria-label="Back to top">↑</button>
+
+<script>
+/* ============================================================
+   DARK / LIGHT MODE
+   ============================================================ */
+(function() {
+  const root = document.documentElement;
+  const toggle = document.getElementById('themeToggle');
+  const stored = localStorage.getItem('dl-theme');
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const initial = stored || (prefersDark ? 'dark' : 'light');
+  setTheme(initial);
+
+  function setTheme(theme) {
+    if (theme === 'dark') {
+      root.setAttribute('data-theme', 'dark');
+      toggle.textContent = '☀️ Light';
+    } else {
+      root.removeAttribute('data-theme');
+      toggle.textContent = '🌙 Dark';
+    }
+    localStorage.setItem('dl-theme', theme);
+  }
+
+  toggle.addEventListener('click', function() {
+    const current = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    setTheme(current === 'dark' ? 'light' : 'dark');
+  });
+})();
+
+/* ============================================================
+   BACK TO TOP
+   ============================================================ */
+(function() {
+  const btn = document.getElementById('backToTop');
+  window.addEventListener('scroll', function() {
+    if (window.scrollY > 600) btn.classList.add('visible');
+    else btn.classList.remove('visible');
+  });
+  btn.addEventListener('click', function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+})();
+
+/* ============================================================
+   SIMPLE CLIENT-SIDE SEARCH
+   ============================================================ */
+(function() {
+  const input = document.getElementById('searchInput');
+  const info = document.getElementById('searchInfo');
+  const container = document.querySelector('.container');
+  const original = container.innerHTML;
+  let timer = null;
+
+  function clearHighlights(html) {
+    // Remove existing highlight spans
+    return html.replace(/<span class="highlight">([^<]*)<\/span>/g, '$1');
+  }
+
+  function escapeRegExp(s) {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function doSearch(query) {
+    // Restore original content first
+    container.innerHTML = original;
+    if (!query) { info.textContent = ''; return; }
+
+    const q = query.trim();
+    if (q.length < 2) { info.textContent = 'Type at least 2 characters.'; return; }
+
+    // Only search text nodes in <p>, <li>, <td>, <h2>, <h3>, <h4>, <summary>, <div.answer>
+    const targets = container.querySelectorAll('p, li, td, h2, h3, h4, summary, .answer, .callout-title');
+    const re = new RegExp('(' + escapeRegExp(q) + ')', 'gi');
+    let count = 0;
+
+    targets.forEach(function(el) {
+      // Skip if inside pre/code
+      if (el.closest('pre') || el.closest('code')) return;
+      const html = el.innerHTML;
+      if (!re.test(html)) return;
+      // Avoid double highlighting
+      if (html.includes('<span class="highlight">')) return;
+      el.innerHTML = html.replace(re, '<span class="highlight">$1</span>');
+      count++;
+    });
+
+    info.textContent = count > 0
+      ? `Found ${count} section(s) matching "${q}".`
+      : `No results for "${q}".`;
+  }
+
+  input.addEventListener('input', function() {
+    clearTimeout(timer);
+    timer = setTimeout(function() {
+      doSearch(input.value);
+    }, 220);
+  });
+})();
+</script>
+
+</body>
+</html>
